@@ -118,6 +118,9 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
 .thought { display: flex; gap: 8px; align-items: baseline; font-size: 13px; color: var(--muted); }
 .thought .label { font-weight: 600; letter-spacing: 0.02em; }
 .thought .text { font-family: var(--font-mono); font-size: 12.5px; }
+.thought.pending .label { display: none; }
+.thought.pending .text { font-family: var(--font-ui); font-size: 13px; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
 .body { font-family: var(--font-reply); font-size: 17px; line-height: 1.6; display: grid; gap: 14px; max-width: 66ch; }
 .body > * { margin: 0; min-width: 0; }
 .body p { overflow-wrap: anywhere; }
@@ -252,7 +255,7 @@ dialog.about::backdrop { background: rgba(0, 0, 0, 0.45); }
 .about-inner .close { justify-self: start; }
 
 @media (prefers-reduced-motion: reduce) {
-  .flash, .spin, .cursor { animation: none; }
+  .flash, .spin, .cursor, .thought.pending .text { animation: none; }
 }
 </style>
 </head>
@@ -1142,8 +1145,11 @@ function touch(p, path, n = 1) {
     return el;
   }
 
-  /* stream a turn: thought, then blocks word by word, tool rows with a spinner */
-  const WORDS_PER_TICK = 2, TICK_MS = 24;
+  /* stream a turn: a thinking beat, the thought, a pause, then blocks word by word, tool rows with a spinner.
+     The pacing is tuned to read like a live reply: about 50 words a second, a breath between paragraphs,
+     and a tool call that visibly takes a moment. */
+  const PACE = { thinking: 1000, afterThought: 700, paragraph: 320, rawBefore: 350, rawAfter: 450, toolRun: 1200, toolDone: 350, cut: 550 };
+  const WORDS_PER_TICK = 2, TICK_MS = 38;
   async function streamInline(container, tag, text, phrase, cls) {
     const holder = document.createElement("div"); holder.className = "stream-holder";
     container.appendChild(holder);
@@ -1176,28 +1182,34 @@ function touch(p, path, n = 1) {
   async function renderStreamed(turn, phrase) {
     const el = assistantShell(turn);
     const body = $(".body", el);
+    const thought = $(".thought", el);
+    thought.hidden = false; thought.classList.add("pending");
+    $(".text", thought).textContent = "Thinking…";
     follow();
-    await wait(450);
-    $(".thought", el).hidden = false; follow();
-    await wait(650);
+    await wait(PACE.thinking);
+    thought.classList.remove("pending");
+    $(".text", thought).textContent = turn.thinking;
+    follow();
+    await wait(PACE.afterThought);
     for (const b of turn.reply) {
       if (typeof b === "string") {
         for (const blk of md(b)) {
-          if (blk.kind === "raw") { body.insertAdjacentHTML("beforeend", blk.html); follow(); await wait(320); }
+          if (blk.kind === "raw") { await wait(PACE.rawBefore); body.insertAdjacentHTML("beforeend", blk.html); follow(); await wait(PACE.rawAfter); }
           else await streamInline(body, blk.tag, blk.text, phrase);
-          await wait(120);
+          await wait(PACE.paragraph);
         }
       } else {
         await streamInline(body, "p", b.before, phrase, "narr");
+        await wait(PACE.paragraph);
         const row = toolRow(b); body.appendChild(row); follow();
-        await wait(750);
+        await wait(PACE.toolRun);
         $(".state", row).textContent = "✓";
-        await wait(200);
+        await wait(PACE.toolDone);
         await streamInline(body, "p", b.after, phrase, "narr");
-        await wait(120);
+        await wait(PACE.paragraph);
       }
     }
-    if (turn.cut) { await wait(250); $(".reply", el).appendChild(chip(turn.cut)); follow(); }
+    if (turn.cut) { await wait(PACE.cut); $(".reply", el).appendChild(chip(turn.cut)); follow(); }
     return el;
   }
 
