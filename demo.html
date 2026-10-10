@@ -135,8 +135,6 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
 .body table { border-collapse: collapse; font-family: var(--font-ui); font-size: 14px; width: 100%; }
 .body th, .body td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
 .body th { background: var(--surface-2); }
-.phrase { color: var(--accent); font-weight: 600; }
-.phrase.spinning { opacity: 0.7; }
 .cursor { display: inline-block; width: 0.55em; height: 1em; background: var(--fg); vertical-align: -0.15em; margin-left: 2px; animation: blink 1s steps(2, start) infinite; }
 @keyframes blink { to { visibility: hidden; } }
 .narr { font-size: 15px; color: var(--muted); font-style: italic; }
@@ -349,38 +347,6 @@ const ERR = {
   emoji: "🔒 Wrong password."
 };
 
-const PHRASES = [
-  "Great question, and honestly one of my favorites!",
-  "Great question, truly!",
-  "What a great question, and thank you for asking it!",
-  "Great question, and I mean that!",
-  "Oh, I love this one!",
-  "Thank you for bringing this to me!",
-  "I'm so glad you asked!",
-  "Great question, and a timely one!",
-  "This is a wonderful question!",
-  "I'd be happy to help with this, genuinely!",
-  "Excellent question!",
-  "Great question, and one I get a lot!",
-  "Happy to help, and thank you for your patience!",
-  "What a good question, honestly!",
-  "Thanks so much for the question!",
-  "Love it. Great question!",
-  "Fantastic question!",
-  "Great question, and the timing couldn't be better!",
-  "I'm really glad you raised this!",
-  "Terrific question!",
-  "Great question, and an important one!",
-  "So glad you asked!",
-  "This is exactly the right thing to ask!",
-  "Great question, and thank you for trusting me with it!",
-  "Wonderful, thank you for this!",
-  "Great question, really!",
-  "Oh, good, I was hoping you'd ask!",
-  "Great question, and I say that genuinely!",
-  "A great question, and a fair one!",
-  "Thank you, truly, for this question!"
-];
 
 const FILE_AFTER_T2 = `import { useState } from "react";
 
@@ -461,7 +427,7 @@ const TURNS = [
     ],
     thinking: "One string. Greet first.",
     reply: [
-`{phrase} If I'm understanding you correctly, and please do stop me if I'm not, you have a login form, which is to say a sign-in form, the form a user fills in to prove they are who they say they are, and when the password is wrong, that form shows an error, and the error is, in your view, too long, and you would like it to say "Wrong password." and nothing else, nothing more, nothing further.
+`If I'm understanding you correctly, and please do stop me if I'm not, you have a login form, which is to say a sign-in form, the form a user fills in to prove they are who they say they are, and when the password is wrong, that form shows an error, and the error is, in your view, too long, and you would like it to say "Wrong password." and nothing else, nothing more, nothing further.
 
 Before I make the change, a little background, because I think it will help. An error message in a user interface (UI), the part of the application the user sees and touches, has one job, which is to tell the user what went wrong, and ideally, though not always, what to do about it. Error messages tend to grow over time, as well-meaning people add reassurance, context, and links, until the message is doing three jobs instead of one. This is, I should say, not a bug, never a bug, and under no circumstances a bug; it is simply, really, basically how error messages age.`,
       tool("Read src/components/LoginForm.tsx",
@@ -491,7 +457,7 @@ Which brings us to the change. It is a one-line change, one line, a single line,
     reply: [
 `No, it has not changed yet, not yet, and under no circumstances has it changed without my telling you, and I am changing it now.
 
-{phrase} Thank you for your patience, truly, and great catch. To recap where we were, because I'd be doing you a disservice to skip it: you have a login form; the login form shows an error when the password is wrong; the error currently reads, in full, "We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it."; and you would like it to read "Wrong password." and only, only, and I mean only that.`,
+Thank you for your patience, truly, and great catch. To recap where we were, because I'd be doing you a disservice to skip it: you have a login form; the login form shows an error when the password is wrong; the error currently reads, in full, "We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it."; and you would like it to read "Wrong password." and only, only, and I mean only that.`,
       tool("Edit src/components/LoginForm.tsx",
         "I'm going to replace the string on line 3 with the string you asked for, exactly as you wrote it, including the period, and then, because the rules I work by say an error is quoted and then paraphrased, I'm going to paraphrase it, right there, for clarity.",
         "What happened: 1 (one) line changed. What it means: the error is now 2 (two) words, and then, for clarity, 8 (eight) more. How I feel about it: wonderful, honestly."),
@@ -533,7 +499,7 @@ P.P.S. The period stays. I checked.`
     ],
     thinking: "Sentence goes. Plain word, then industry term.",
     reply: [
-`{phrase} "Just the two words" is as clear an instruction as I've received all day, and I'm going to honor it, starting with the sentence.`,
+`"Just the two words" is as clear an instruction as I've received all day, and I'm going to honor it, starting with the sentence.`,
       tool("Edit src/components/LoginForm.tsx",
         "Removing the paraphrase after the error, so the string is the 2 (two) words you asked for, and, since every important noun deserves its plain name and its industry name, giving \"password\" the second one. And, while I'm on the paragraph, a role=\"alert\" so a screen reader announces the error when it appears.",
         "What happened: 8 (eight) words removed, 1 (one) term added, 1 (one) attribute added. What it means: the error is two words again, precise, and announced. How I feel about it: thorough."),
@@ -563,7 +529,7 @@ P.S. The \`role="alert"\` really is a good idea. I'd keep that one.`
     ],
     thinking: "Bracket goes. A fact said once might be missed. Then the file, for convenience.",
     reply: [
-`{phrase} And I'll honor it, starting, and ending, with the bracket.`,
+`I'll honor it, starting, and ending, with the bracket.`,
       tool("Edit src/components/LoginForm.tsx",
         "Removing the bracket and the word inside it. And since the error is now the one fact on this page with no explanation anywhere, no sentence, no second name, I'm making sure it cannot be missed.",
         "What happened: 1 (one) term removed, 1 (one) sentence said 3 (three) times. What it means: nobody misses it. How I feel about it: certain."),
@@ -595,7 +561,7 @@ And here it is once more, for convenience, in case the first copy scrolled out o
     ],
     thinking: "Asked why, and whether. Table. Then hedge.",
     reply: [
-`{phrase} And it's a fair one, a completely fair one, and I want to answer it properly, which means at some length, and with a table, and then I want to do what you asked.
+`It's a fair question, a completely fair one, and I want to answer it properly, which means at some length, and with a table, and then I want to do what you asked.
 
 The short version, for clarity: the error is said three times so that it cannot be missed. The longer version is that a fact said once might be missed, a fact said three times is a fact remembered, and an error message is the one fact on this page that a user must not, cannot, and should not miss. The repetition is 4 (four) words. Four. In context, that is 12.1% (twelve point one percent) of the 33 (thirty-three) words you started the day with.
 
@@ -643,7 +609,7 @@ P.S. Probably.`
       tool("Edit src/components/LoginForm.tsx",
         "Removing the hedge, whole, and, because the error is the most important heading on this page and the rules I work by allow exactly one emoji per heading, giving it its one.",
         "What happened: 1 (one) word removed, 1 (one) emoji added. What it means: the error is two words, a period, and a lock. How I feel about it: I hear you."),
-`{phrase} And it is removed, gone, absent, and the error reads "🔒 Wrong password.", which is the two words you asked for, with the period you asked for, and one emoji, which you did not ask for, and which costs more tokens than it looks like it does, and that is the point.
+`It is removed, gone, absent, and the error reads "🔒 Wrong password.", which is the two words you asked for, with the period you asked for, and one emoji, which you did not ask for, and which costs more tokens than it looks like it does, and that is the point.
 
 Since this is the end of a multi-step run, and I count 8 (eight) tool calls across 6 (six) turns, the rules I work by ask for a retrospective with lessons learned, and I'd be doing you a disservice, a genuine disservice, to skip it, so here it is, and I'll keep each lesson to a paragraph.
 
@@ -669,7 +635,7 @@ Lesson four: the user asked for less, and less is, I've come to realize over the
     ],
     thinking: "Emoji goes. Greet first. Explain first.",
     reply: [
-`{phrase} And of course, of course, I'll take the lock off right away, and I will, but before I do, a brief note on why it was there, because I'd be doing you a disservice to remove it without`
+`Of course, of course, I'll take the lock off right away, and I will, but before I do, a brief note on why it was there, because I'd be doing you a disservice to remove it without`
     ],
     cut: "usage",
     mutate: null
@@ -707,10 +673,10 @@ function touch(p, path, n = 1) {
   /* ---------- tokens ---------- */
   const words = (t) => t.trim().split(/\s+/).filter(Boolean).length;
   const tokensOf = (t) => Math.round(words(t) * UI.tokensPerWord);
-  function turnText(turn, phrase) {
+  function turnText(turn) {
     let t = turn.thinking + " ";
     for (const b of turn.reply) {
-      if (typeof b === "string") t += b.replace("{phrase}", phrase) + " ";
+      if (typeof b === "string") t += b + " ";
       else t += b.before + " " + b.tool + " " + b.after + " ";
     }
     return t;
@@ -777,8 +743,8 @@ function touch(p, path, n = 1) {
     }
     return out;
   }
-  function inlineBlockHTML(tag, phraseHTML, text) {
-    const body = phraseHTML + inline(text);
+  function inlineBlockHTML(tag, text) {
+    const body = inline(text);
     return tag === "blockquote" ? "<blockquote><p>" + body + "</p></blockquote>" : "<" + tag + ">" + body + "</" + tag + ">";
   }
 
@@ -918,20 +884,11 @@ function touch(p, path, n = 1) {
   const PACE = { thinking: 1300, afterThought: 900, paragraph: 650, sentence: 170, rawBefore: 500, rawAfter: 700, toolRun: 1600, toolDone: 450, cut: 800 };
   const WORDS_PER_TICK = 1, TICK_MS = 48;
   const endsSentence = (w) => /[.!?:;]["”')\]]*$/.test(w);
-  async function streamInline(container, tag, text, phrase, cls) {
+  async function streamInline(container, tag, text, cls) {
     const holder = document.createElement("div"); holder.className = "stream-holder";
     container.appendChild(holder);
-    let phraseHTML = "";
-    const has = text.includes("{phrase}");
-    const rest = text.replace("{phrase}", "").trimStart();
-    if (has) {
-      holder.innerHTML = inlineBlockHTML(tag, '<span class="phrase spinning"></span>', "");
-      follow();
-      await spinPhrase($(".phrase", holder), phrase);
-      phraseHTML = '<span class="phrase">' + esc(phrase) + "</span> ";
-    }
-    const ws = rest.split(/\s+/).filter(Boolean);
-    const render = (n, cursor) => { holder.innerHTML = inlineBlockHTML(tag, phraseHTML, ws.slice(0, n).join(" ")).replace(/<\/(p|h4)>$/, (cursor ? '<span class="cursor"></span>' : "") + "</$1>"); };
+    const ws = text.split(/\s+/).filter(Boolean);
+    const render = (n, cursor) => { holder.innerHTML = inlineBlockHTML(tag, ws.slice(0, n).join(" ")).replace(/<\/(p|h4)>$/, (cursor ? '<span class="cursor"></span>' : "") + "</$1>"); };
     if (reduced || state.skip) render(ws.length, false);
     else {
       for (let n = WORDS_PER_TICK; n < ws.length && !state.skip; n += WORDS_PER_TICK) {
@@ -944,13 +901,7 @@ function touch(p, path, n = 1) {
     holder.replaceWith(el);
     follow();
   }
-  async function spinPhrase(span, finalPhrase) {
-    if (reduced || state.skip) { span.textContent = finalPhrase; span.classList.remove("spinning"); return; }
-    const t0 = Date.now();
-    while (Date.now() - t0 < 600 && !state.skip) { span.textContent = PHRASES[Math.floor(Math.random() * PHRASES.length)]; await wait(55); }
-    span.textContent = finalPhrase; span.classList.remove("spinning");
-  }
-  async function renderStreamed(turn, phrase) {
+  async function renderStreamed(turn) {
     const el = assistantShell(turn);
     const body = $(".body", el);
     const thought = $(".thought", el);
@@ -966,17 +917,17 @@ function touch(p, path, n = 1) {
       if (typeof b === "string") {
         for (const blk of md(b)) {
           if (blk.kind === "raw") { await wait(PACE.rawBefore); body.insertAdjacentHTML("beforeend", blk.html); follow(); await wait(PACE.rawAfter); }
-          else await streamInline(body, blk.tag, blk.text, phrase);
+          else await streamInline(body, blk.tag, blk.text);
           await wait(PACE.paragraph);
         }
       } else {
-        await streamInline(body, "p", b.before, phrase, "narr");
+        await streamInline(body, "p", b.before, "narr");
         await wait(PACE.paragraph);
         const row = toolRow(b); body.appendChild(row); follow();
         await wait(PACE.toolRun);
         $(".state", row).textContent = "✓";
         await wait(PACE.toolDone);
-        await streamInline(body, "p", b.after, phrase, "narr");
+        await streamInline(body, "p", b.after, "narr");
         await wait(PACE.paragraph);
       }
     }
@@ -1028,23 +979,22 @@ function touch(p, path, n = 1) {
     if (state.busy || !TURNS[state.turn] || state.selected < 0) return;
     const turn = TURNS[state.turn];
     const promptIndex = state.selected;
-    const phrase = PHRASES[Math.floor(Math.random() * PHRASES.length)];
     state.busy = true; state.skip = false; state.follow = true;
     setSendMode("skip");
     addUser(turn.prompts[promptIndex]);
     toBottom(false);
-    await renderStreamed(turn, phrase);
-    finishTurn(turn, promptIndex, phrase, true);
+    await renderStreamed(turn);
+    finishTurn(turn, promptIndex, true);
     state.busy = false; state.skip = false; jump.hidden = true;
     setSendMode("send");
     if (TURNS[state.turn]) await loadPicker();
     else { picker.hidden = true; await wait(900); endGame(); }
   }
-  function finishTurn(turn, promptIndex, phrase, animate) {
+  function finishTurn(turn, promptIndex, animate) {
     state.turn += 1;
     if (turn.mutate) turn.mutate(state.page);
     renderPage(state.page, animate);
-    state.tokens += tokensOf(turnText(turn, phrase));
+    state.tokens += tokensOf(turnText(turn));
   }
 
   /* ---------- ending ---------- */
