@@ -1,0 +1,11 @@
+{
+  "name": "salesman",
+  "displayName": "Salesman",
+  "description": "Ultra-expanded communication mode. Lengthens prose while preserving technical terms, code, commands, and exact errors. Then lengthens it again.",
+  "version": "1.0.0",
+  "author": {
+    "name": "0xRuangsak",
+    "url": "https://github.com/0xRuangsak"
+  },
+  "skills": "./skills/"
+}

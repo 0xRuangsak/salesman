@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "salesman",
+  "description": "Ultra-expanded communication mode. Lengthens prose while preserving technical terms, code, commands, and exact errors. Then lengthens it again.",
+  "owner": {
+    "name": "0xRuangsak",
+    "url": "https://github.com/0xRuangsak"
+  },
+  "plugins": [
+    {
+      "name": "salesman",
+      "description": "Talk like salesman. Add filler. Keep technical details explicit. Then explain them again.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

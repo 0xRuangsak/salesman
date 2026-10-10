@@ -1,0 +1,19 @@
+{
+  "name": "salesman",
+  "version": "1.0.0",
+  "description": "Ultra-expanded communication mode. Lengthens prose while preserving technical terms, code, commands, and exact errors. Then lengthens it again.",
+  "author": {
+    "name": "0xRuangsak",
+    "url": "https://github.com/0xRuangsak"
+  },
+  "homepage": "https://github.com/0xRuangsak/salesman",
+  "repository": "https://github.com/0xRuangsak/salesman",
+  "license": "Apache-2.0",
+  "keywords": [
+    "productivity",
+    "communication",
+    "verbosity",
+    "parody",
+    "writing"
+  ]
+}
