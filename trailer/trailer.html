@@ -4,166 +4,183 @@
 <meta charset="utf-8">
 <title>Salesman trailer</title>
 <style>
-/* A 1920x1080 stage. Every animation is a CSS animation with an absolute delay on one
-   three-minute timeline, so the page can be seeked to any time with window.seek(seconds)
-   and rendered frame by frame. A few text effects (typing, streaming, counters) are computed
-   in JavaScript from the same clock. */
+/* The trailer as one page: a 1920x1080 stage where every animation is a CSS animation with an
+   absolute delay on a single three-minute timeline. window.seek(seconds) pauses every animation at
+   that moment and updates the few effects computed in JavaScript (typing, streaming, counters), so
+   render.js can screenshot the film frame by frame. The salesman reply in scene 3 is the text of
+   benchmarks/examples/salesman.md, copied in verbatim. */
+@font-face { font-family: "Caladea"; src: url("fonts/Caladea-Regular.ttf"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Caladea"; src: url("fonts/Caladea-Bold.ttf"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Caladea"; src: url("fonts/Caladea-Italic.ttf"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "Inter"; src: url("fonts/Inter-Regular.otf"); font-weight: 400; }
+@font-face { font-family: "Inter"; src: url("fonts/Inter-SemiBold.otf"); font-weight: 600; }
+@font-face { font-family: "DejaVu Sans Mono"; src: url("fonts/DejaVuSansMono.ttf"); }
+
 :root {
-  --bg: #141613; --fg: #efece4; --muted: #9aa094; --accent: #3fcf80; --gold: #f0b55a; --red: #ff8577;
-  --surface: #1d211c; --line: #2f352e; --code: #0f120f; --cave: #c9b89a;
-  --serif: "Bitstream Charter", "Caladea", "DejaVu Serif", serif;
-  --sans: "Inter", "DejaVu Sans", sans-serif;
-  --mono: "DejaVu Sans Mono", "Liberation Mono", monospace;
+  --bg: #121411; --fg: #ece9e1; --muted: #8f968c; --faint: #4a524a; --accent: #3fcf80; --cave: #c7b48f;
+  --surface: #1a1e19; --line: #2a302a; --code: #0d100d;
+  --serif: "Caladea", serif; --sans: "Inter", sans-serif; --mono: "DejaVu Sans Mono", monospace;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 * { box-sizing: border-box; animation-play-state: paused !important; }
 html, body { margin: 0; background: #000; }
-#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: var(--fg); font-family: var(--sans); }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; color: var(--fg); font-family: var(--sans);
+  background: radial-gradient(1400px 900px at 28% 18%, #1a1e19 0%, #121411 55%, #0d0f0d 100%); }
+#stage::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 260px rgba(0, 0, 0, 0.55); }
 .scene { position: absolute; inset: 0; opacity: 0; }
-.emoji { font-family: "Noto Color Emoji", sans-serif; }
+.mark { display: inline-block; width: 14px; height: 14px; vertical-align: -1px; margin-right: 12px; }
+.mark.cave { background: var(--cave); border-radius: 3px; }
+.mark.sales { background: var(--accent); border-radius: 50%; }
+.chapter { position: absolute; left: 120px; top: 72px; font: 600 22px var(--sans); letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
+.chapter::after { content: ""; display: block; width: 56px; height: 2px; background: var(--accent); margin-top: 14px; }
+#progress { position: absolute; left: 0; bottom: 0; height: 3px; width: 1920px; background: var(--faint); transform-origin: left; transform: scaleX(0); z-index: 9; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-@keyframes fadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes slideIn { from { opacity: 0; transform: translateX(-60px); } to { opacity: 1; transform: translateX(0); } }
-@keyframes rise { from { opacity: 0; transform: translateY(80px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes scaleIn { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
-@keyframes drop { from { opacity: 0; transform: translateY(-40px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes riseIn { from { opacity: 0; transform: translateY(70px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes drop { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes ruleIn { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes flip { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
 @keyframes spinOn { from { transform: rotateY(0deg); } to { transform: rotateY(1080deg); } }
-@keyframes glow { 0% { box-shadow: 0 0 0 0 rgba(63, 207, 128, 0); } 50% { box-shadow: 0 0 0 10px rgba(63, 207, 128, 0.35); } 100% { box-shadow: 0 0 0 4px rgba(63, 207, 128, 0.6); } }
+@keyframes glow { 0% { box-shadow: 0 0 0 0 rgba(63, 207, 128, 0); } 45% { box-shadow: 0 0 0 10px rgba(63, 207, 128, 0.3); } 100% { box-shadow: 0 0 0 3px rgba(63, 207, 128, 0.7); } }
 @keyframes blink { 50% { opacity: 0; } }
+@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 /* ---------- 1 cold open ---------- */
 #s1 { animation: fadeIn 0.01s 0s both, fadeOut 0.6s 9.3s forwards; display: grid; place-items: center; }
-#s1 .wrap { display: grid; gap: 70px; text-align: center; }
-#s1 .cave { font-family: var(--mono); font-size: 54px; color: var(--cave); min-height: 70px; }
-#s1 .cave .cur { display: inline-block; width: 0.6em; height: 1em; background: var(--cave); vertical-align: -0.15em; animation: blink 1s steps(2, start) infinite; }
-#s1 .ask { font-family: var(--serif); font-size: 76px; color: var(--fg); animation: fadeUp 0.9s 6s both; }
+#s1 .wrap { display: grid; gap: 26px; text-align: center; }
+#s1 .cave { font: 50px var(--mono); color: var(--cave); min-height: 64px; }
+#s1 .cur { display: inline-block; width: 0.55em; height: 1em; background: var(--cave); vertical-align: -0.15em; animation: blink 1s steps(2, start) infinite; }
+#s1 .src { font: 600 20px var(--sans); letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); animation: fadeIn 0.6s 4.8s both; }
+#s1 .ask { margin-top: 70px; font: 78px var(--serif); color: var(--fg); animation: fadeUp 1s 6.2s var(--ease) both; }
 
 /* ---------- 2 title ---------- */
 #s2 { animation: fadeIn 0.4s 10s both, fadeOut 0.6s 19.4s forwards; display: grid; place-items: center; }
-#s2 .wrap { text-align: center; display: grid; gap: 30px; }
-#s2 .word { font-family: var(--serif); font-size: 260px; letter-spacing: 0.04em; line-height: 1; display: flex; justify-content: center; }
-#s2 .word span { display: inline-block; animation: slideIn 0.5s both; }
-#s2 .tag { font-family: var(--serif); font-size: 46px; color: var(--muted); animation: fadeUp 0.8s 12.6s both; }
-#s2 .sub { font-family: var(--sans); font-size: 26px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); animation: fadeUp 0.8s 14.2s both; }
-#s2 .mark { position: absolute; right: 90px; bottom: 70px; font-size: 120px; animation: scaleIn 0.6s 15.2s both; }
+#s2 .wrap { text-align: center; display: grid; gap: 34px; justify-items: center; }
+#s2 .word { font: 300px var(--serif); letter-spacing: 0.06em; line-height: 1; display: flex; }
+#s2 .word span { display: inline-block; animation: riseIn 0.7s var(--ease) both; }
+#s2 .rule { width: 420px; height: 2px; background: var(--accent); transform-origin: center; animation: ruleIn 0.8s 12.2s var(--ease) both; }
+#s2 .tag { font: italic 44px var(--serif); color: var(--muted); animation: fadeUp 0.8s 12.8s var(--ease) both; }
+#s2 .sub { font: 600 22px var(--sans); letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); animation: fadeUp 0.8s 14.4s var(--ease) both; }
 
 /* ---------- 3 same question ---------- */
 #s3 { animation: fadeIn 0.5s 20s both, fadeOut 0.5s 44.6s forwards; }
-.pane { position: absolute; top: 90px; width: 840px; height: 900px; }
-.pane.left { left: 90px; } .pane.right { left: 990px; }
-.pane .head { display: flex; align-items: center; gap: 14px; font-size: 30px; font-weight: 600; margin-bottom: 26px; animation: fadeUp 0.6s 20.5s both; }
-.pane .head .n { margin-left: auto; font-family: var(--mono); font-size: 28px; color: var(--muted); font-weight: 400; }
-.pane .head .n b { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
-.pane .q { justify-self: end; background: #2a2f29; border-radius: 22px; padding: 16px 24px; font-size: 28px; width: fit-content; margin-left: auto; margin-bottom: 30px; animation: fadeUp 0.6s 21s both; }
-.pane .reply { font-family: var(--serif); font-size: 29px; line-height: 1.5; }
-.pane .reply code { font-family: var(--mono); font-size: 0.85em; background: var(--code); padding: 2px 8px; border-radius: 6px; }
-#left-reply { animation: fadeUp 0.5s 21.6s both; }
-#right-clip { height: 740px; overflow: hidden; }
+#s3 .chapter { animation: fadeUp 0.6s 20.3s var(--ease) both; }
+.pane { position: absolute; top: 190px; width: 780px; height: 820px; }
+.pane.left { left: 120px; } .pane.right { left: 1020px; }
+.pane .head { display: flex; align-items: center; font: 600 28px var(--sans); margin-bottom: 26px; animation: fadeUp 0.6s 20.6s var(--ease) both; }
+.pane .head .n { margin-left: auto; font: 26px var(--mono); color: var(--muted); }
+.pane .head .n b { color: var(--fg); font-weight: 400; font-variant-numeric: tabular-nums; }
+.pane .q { background: #262b25; border-radius: 20px; padding: 14px 22px; font: 26px var(--sans); width: fit-content; margin-left: auto; margin-bottom: 30px; animation: fadeUp 0.6s 21.1s var(--ease) both; }
+.pane .reply { font: 28px/1.5 var(--serif); }
+.pane .reply code { font: 0.84em var(--mono); background: var(--code); padding: 2px 8px; border-radius: 6px; }
+.divider { position: absolute; left: 959px; top: 190px; width: 1px; height: 820px; background: var(--line); transform-origin: top; animation: ruleIn 0.8s 20.6s var(--ease) both; transform: scaleY(0); }
+@keyframes ruleInY { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.divider { animation-name: ruleInY; }
+#left-reply { animation: fadeUp 0.5s 21.7s var(--ease) both; }
+#right-clip { height: 660px; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 60px, #000 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 60px, #000 100%); }
 #right-reply .w { opacity: 0; } #right-reply .w.on { opacity: 1; }
-#right-reply pre { font-family: var(--mono); font-size: 24px; background: var(--code); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; line-height: 1.4; margin: 12px 0; }
-.vs { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-family: var(--serif); font-size: 40px; color: var(--muted); animation: fadeIn 0.6s 21.2s both; }
+#right-reply pre { font: 21px/1.45 var(--mono); white-space: pre-wrap; background: var(--code); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin: 12px 0; }
 
 /* ---------- 4 same fix ---------- */
 #s4 { animation: fadeIn 0.5s 45s both, fadeOut 0.5s 59.5s forwards; }
-#s4 .lbl { position: absolute; top: 110px; font-size: 30px; font-weight: 600; display: flex; gap: 14px; align-items: center; animation: fadeUp 0.5s 45.3s both; }
-#s4 .lbl.l { left: 160px; } #s4 .lbl.r { left: 1040px; }
-.codecard { position: absolute; top: 200px; width: 720px; font-family: var(--mono); font-size: 25px; line-height: 1.45; background: var(--code); border: 1px solid var(--line); border-radius: 14px; padding: 24px 28px; white-space: pre; }
-#code-r { left: 1040px; animation: fadeUp 0.5s 45.6s both; }
-#code-l { left: 160px; animation: fadeUp 0.5s 45.6s both, moveOver 1.1s 47s both, snap 0.5s 48.2s both; }
-@keyframes moveOver { from { transform: translateX(0); } to { transform: translateX(880px); } }
-@keyframes snap { 0% { box-shadow: 0 0 0 0 rgba(63, 207, 128, 0); } 40% { box-shadow: 0 0 0 14px rgba(63, 207, 128, 0.5); } 100% { box-shadow: 0 0 0 6px rgba(63, 207, 128, 0.9); } }
-#s4 .cap { position: absolute; left: 160px; right: 160px; top: 640px; font-family: var(--serif); font-size: 60px; line-height: 1.25; animation: fadeUp 0.8s 50s both; }
-#s4 .cap2 { position: absolute; left: 160px; right: 160px; top: 800px; font-family: var(--serif); font-size: 60px; color: var(--accent); animation: fadeUp 0.8s 53s both; }
+#s4 .chapter { animation: fadeUp 0.6s 45.3s var(--ease) both; }
+.lbl { position: absolute; font: 600 26px var(--sans); display: flex; align-items: center; }
+#lbl-l { left: 200px; top: 236px; animation: fadeUp 0.5s 45.6s var(--ease) both, fadeOut 0.4s 47.2s forwards; }
+#lbl-r { left: 360px; top: 346px; animation: fadeUp 0.5s 45.6s var(--ease) both; }
+.codecard { position: absolute; left: 360px; top: 400px; width: 1200px; font: 24px/1.5 var(--mono); background: var(--code); border: 1px solid var(--line); border-radius: 16px; padding: 30px 36px; white-space: pre; }
+#code-r { animation: fadeUp 0.5s 45.6s var(--ease) both; }
+#code-l { animation: fadeUp 0.5s 45.6s var(--ease) both, moveOver 1.1s 47.2s var(--ease) both, glow 0.6s 48.4s both; }
+@keyframes moveOver { from { transform: translate(-160px, -110px); } to { transform: translate(0, 0); } }
+#code-l.start { transform: translate(-160px, -110px); }
+#s4 .cap { position: absolute; left: 360px; top: 690px; font: 58px var(--serif); animation: fadeUp 0.8s 50s var(--ease) both; }
+#s4 .cap2 { position: absolute; left: 360px; top: 790px; font: 58px var(--serif); color: var(--accent); animation: fadeUp 0.8s 53s var(--ease) both; }
 
 /* ---------- 5 the mirror ---------- */
 #s5 { animation: fadeIn 0.5s 60s both, fadeOut 0.5s 94.6s forwards; }
-#s5 h2 { position: absolute; left: 100px; top: 70px; margin: 0; font-family: var(--sans); font-size: 26px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 600; animation: fadeUp 0.5s 60.3s both; }
-.cards { position: absolute; left: 100px; top: 160px; width: 1720px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 36px 36px; perspective: 1600px; }
-.card { height: 380px; }
-.card .outer { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; animation: flip 0.7s both; }
+#s5 .chapter { animation: fadeUp 0.6s 60.3s var(--ease) both; }
+.cards { position: absolute; left: 120px; top: 180px; width: 1680px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; perspective: 1800px; }
+.card { height: 390px; }
+.card .outer { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; animation: flip 0.8s cubic-bezier(0.45, 0, 0.2, 1) both; }
 .card .inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
-.card .face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 18px; padding: 34px; display: grid; align-content: space-between; }
-.card .front { background: #2a2a24; border: 1px solid #4a473c; color: var(--cave); }
+.card .face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 18px; padding: 32px; display: grid; align-content: space-between; }
+.card .front { background: #211f1a; border: 1px solid #3d392e; }
 .card .back { background: var(--surface); border: 1px solid var(--accent); transform: rotateY(180deg); }
-.card .who { font-family: var(--sans); font-size: 20px; letter-spacing: 0.14em; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
-.card .rule { font-family: var(--serif); font-size: 44px; line-height: 1.15; }
+.card .who { font: 600 18px var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; }
+.card .rule { font: 44px/1.15 var(--serif); color: var(--cave); }
 .card .back .rule { color: var(--fg); }
 .card .back .who { color: var(--accent); }
 
-/* ---------- 6 anatomy ---------- */
+/* ---------- 6 one reply ---------- */
 #s6 { animation: fadeIn 0.5s 95s both, fadeOut 0.5s 114.6s forwards; }
-#s6 h2 { position: absolute; left: 100px; top: 70px; margin: 0; font-size: 26px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 600; animation: fadeUp 0.5s 95.3s both, fadeOut 0.5s 103.3s forwards; z-index: 2; }
-#s6 .col { position: absolute; left: 100px; top: 150px; width: 1720px; display: grid; gap: 14px; animation: pan 7s 103.5s both; }
-@keyframes pan { from { transform: translateY(0); } to { transform: translateY(-620px); } }
-.blk { display: grid; grid-template-columns: 300px 1fr; gap: 30px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 26px; animation: drop 0.5s both; }
-.blk .k { font-size: 22px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding-top: 6px; }
-.blk .v { font-family: var(--serif); font-size: 27px; line-height: 1.45; color: #cfd3c9; }
-.blk.answer { border-color: var(--accent); animation: drop 0.5s both, glow 1.2s 102s both; }
+#s6 .chapter { animation: fadeUp 0.6s 95.3s var(--ease) both; }
+#s6 .col { position: absolute; left: 120px; top: 176px; width: 1680px; display: grid; gap: 12px; }
+.blk { display: grid; grid-template-columns: 240px 1fr; gap: 24px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--faint); border-radius: 12px; padding: 16px 26px; animation: drop 0.5s var(--ease) both; min-height: 66px; }
+.blk .k { font: 600 19px var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.blk .v { font: 26px/1.4 var(--serif); color: #c9cdc3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.blk.answer { border-left-color: var(--accent); animation: drop 0.5s var(--ease) both, glow 1.2s 102s both; }
 .blk.answer .k { color: var(--accent); }
-.blk.answer .v { color: var(--fg); }
-#s6 .cap { position: absolute; right: 100px; bottom: 70px; font-family: var(--serif); font-size: 72px; color: var(--accent); animation: fadeUp 0.8s 111s both; z-index: 2; }
+.blk.answer .v { color: var(--fg); white-space: normal; }
+#s6 .cap { position: absolute; right: 120px; top: 64px; font: 52px var(--serif); color: var(--accent); animation: fadeUp 0.8s 110s var(--ease) both; }
 
-/* ---------- 7 a tool run ---------- */
+/* ---------- 7 one tool run ---------- */
 #s7 { animation: fadeIn 0.5s 115s both, fadeOut 0.5s 131.6s forwards; }
-#s7 .pane .head { animation-delay: 115.5s; }
-.toolrow { display: flex; align-items: center; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 22px; font-size: 27px; width: 100%; }
-.toolrow .k { color: var(--accent); font-weight: 700; }
-.toolrow .a { font-family: var(--mono); font-size: 25px; color: var(--muted); }
-.toolrow .st { margin-left: auto; width: 24px; height: 24px; display: grid; place-items: center; color: var(--accent); font-weight: 700; }
+#s7 .chapter { animation: fadeUp 0.6s 115.3s var(--ease) both; }
+#s7 .pane .head { animation-delay: 115.6s; }
+#s7 .divider { animation-delay: 115.6s; }
+.toolrow { display: flex; align-items: center; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 22px; font: 600 25px var(--sans); width: 100%; }
+.toolrow .a { font: 23px var(--mono); color: var(--muted); font-weight: 400; }
+.toolrow .st { margin-left: auto; width: 24px; height: 24px; display: grid; place-items: center; color: var(--accent); position: relative; }
 .spin { width: 18px; height: 18px; border: 3px solid var(--line); border-top-color: var(--muted); border-radius: 50%; }
-#tool-l { animation: fadeUp 0.5s 116.2s both; }
-#status-l { font-family: var(--mono); font-size: 27px; color: var(--cave); margin-top: 26px; animation: fadeUp 0.5s 117s both; }
-.narr { font-family: var(--serif); font-size: 28px; line-height: 1.5; color: #cfd3c9; font-style: italic; min-height: 2em; }
-#tool-r { animation: fadeUp 0.5s 120.3s both; margin: 26px 0; }
+#tool-l { animation: fadeUp 0.5s 116.2s var(--ease) both; }
+#status-l { font: 26px/1.5 var(--mono); color: var(--cave); margin-top: 26px; animation: fadeUp 0.5s 117s var(--ease) both; }
+.narr { font: italic 27px/1.55 var(--serif); color: #c9cdc3; min-height: 2em; }
+#tool-r { animation: fadeUp 0.5s 120.3s var(--ease) both; margin: 24px 0; }
 #tool-r .st .spin { animation: fadeOut 0.2s 122s forwards; }
 #tool-r .st .ok { position: absolute; animation: fadeIn 0.2s 122s both; }
-#s7 .cap { position: absolute; right: 100px; bottom: 70px; font-family: var(--serif); font-size: 60px; color: var(--accent); animation: fadeUp 0.8s 129.5s both; }
+#s7 .cap { position: absolute; right: 120px; top: 64px; font: 52px var(--serif); color: var(--accent); animation: fadeUp 0.8s 129.3s var(--ease) both; }
 
-/* ---------- 8 three modes ---------- */
+/* ---------- 8 three skills ---------- */
 #s8 { animation: fadeIn 0.5s 132s both, fadeOut 0.5s 149.6s forwards; }
-.modes { position: absolute; left: 90px; top: 110px; width: 1740px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
-.mode { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 30px 34px; height: 760px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 18px; animation: rise 0.7s both; }
-.mode .cmd { font-family: var(--mono); font-size: 36px; color: var(--accent); }
-.mode .what { font-family: var(--sans); font-size: 24px; color: var(--muted); }
-.mode .ex { font-family: var(--serif); font-size: 24px; line-height: 1.45; color: #cfd3c9; overflow: hidden; }
-.mode .ex .t { font-weight: 700; color: var(--fg); }
-.mode .ex table { border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: 20px; margin-top: 10px; }
-.mode .ex td, .mode .ex th { border: 1px solid var(--line); padding: 6px 10px; text-align: left; }
-.mode .ex .legal { font-family: var(--serif); font-size: 22px; }
-.mode .ex .sig { font-family: var(--mono); font-size: 22px; margin-top: 14px; color: var(--muted); }
+#s8 .chapter { animation: fadeUp 0.6s 132.3s var(--ease) both; }
+.modes { position: absolute; left: 120px; top: 176px; width: 1680px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; }
+.mode { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 34px 36px 30px; height: 700px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 18px; animation: riseIn 0.8s var(--ease) both; }
+.mode .cmd { font: 38px var(--mono); color: var(--accent); }
+.mode .what { font: 22px/1.4 var(--sans); color: var(--muted); }
+.mode .ex { font: 24px/1.5 var(--serif); color: #c9cdc3; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%); mask-image: linear-gradient(to bottom, #000 70%, transparent 100%); }
+.mode .ex b { color: var(--fg); }
+.mode .ex .sig { font: 22px var(--mono); color: var(--muted); margin-top: 14px; }
 .mode .tile { display: flex; align-items: baseline; gap: 14px; }
-.mode .tile b { font-family: var(--serif); font-size: 84px; font-weight: 400; font-variant-numeric: tabular-nums; }
-.mode .tile span { font-size: 22px; color: var(--muted); }
-#s8 .cap { position: absolute; left: 90px; bottom: 60px; font-family: var(--serif); font-size: 54px; animation: fadeUp 0.8s 142.5s both; }
+.mode .tile b { font: 96px var(--serif); font-weight: 400; font-variant-numeric: tabular-nums; line-height: 1; }
+.mode .tile span { font: 22px var(--sans); color: var(--muted); }
+#s8 .cap { position: absolute; left: 120px; bottom: 56px; font: 50px var(--serif); animation: fadeUp 0.8s 142.5s var(--ease) both; }
 
 /* ---------- 9 honest numbers ---------- */
 #s9 { animation: fadeIn 0.5s 150s both, fadeOut 0.5s 161.6s forwards; }
-#s9 h2 { position: absolute; left: 100px; top: 70px; margin: 0; font-size: 26px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); font-weight: 600; animation: fadeUp 0.5s 150.3s both; }
-.rows { position: absolute; left: 100px; top: 160px; width: 1820px; display: grid; gap: 22px; }
-.row { display: grid; grid-template-columns: 360px 110px 1fr; align-items: center; gap: 24px; animation: drop 0.5s both; }
-.row .lab { font-family: var(--mono); font-size: 30px; }
-.row .num { font-family: var(--serif); font-size: 44px; text-align: right; font-variant-numeric: tabular-nums; }
-.row .bar { height: 46px; background: var(--cave); border-radius: 8px; transform-origin: left center; transform: scaleX(0); animation: grow 1.2s both; }
+#s9 .chapter { animation: fadeUp 0.6s 150.3s var(--ease) both; }
+.rows { position: absolute; left: 120px; top: 190px; width: 1800px; display: grid; gap: 22px; }
+.row { display: grid; grid-template-columns: 340px 110px 1fr; align-items: center; gap: 28px; animation: drop 0.5s var(--ease) both; }
+.row .lab { font: 30px var(--mono); }
+.row .num { font: 46px var(--serif); text-align: right; font-variant-numeric: tabular-nums; }
+.row .bar { height: 40px; background: var(--cave); border-radius: 8px; transform-origin: left center; transform: scaleX(0); animation: grow 1.2s var(--ease) both; }
 .row.sales .bar { background: var(--accent); }
-@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-#s9 .cap { position: absolute; left: 100px; top: 700px; width: 1700px; font-family: var(--serif); font-size: 54px; line-height: 1.3; animation: fadeUp 0.8s 157s both; }
-#s9 .small { position: absolute; left: 100px; top: 930px; font-family: var(--mono); font-size: 26px; color: var(--muted); animation: fadeUp 0.6s 159.3s both; }
+#s9 .cap { position: absolute; left: 120px; top: 690px; width: 1600px; font: 54px/1.3 var(--serif); animation: fadeUp 0.8s 157s var(--ease) both; }
+#s9 .small { position: absolute; left: 120px; top: 920px; font: 24px var(--mono); color: var(--muted); animation: fadeUp 0.6s 159.3s var(--ease) both; }
 
 /* ---------- 10 the one rule ---------- */
 #s10 { animation: fadeIn 0.5s 162s both, fadeOut 0.5s 169.6s forwards; display: grid; place-items: center; text-align: center; }
-#s10 .wrap { display: grid; gap: 50px; }
-#s10 .a { font-family: var(--serif); font-size: 96px; animation: fadeUp 0.9s 162.6s both; }
-#s10 .b { font-family: var(--serif); font-size: 56px; color: var(--muted); animation: fadeUp 0.9s 166s both; }
+#s10 .wrap { display: grid; gap: 44px; }
+#s10 .a { font: 100px var(--serif); animation: fadeUp 1s 162.6s var(--ease) both; }
+#s10 .b { font: italic 54px var(--serif); color: var(--muted); animation: fadeUp 1s 166s var(--ease) both; }
 
 /* ---------- 11 close ---------- */
 #s11 { animation: fadeIn 0.5s 170s both, fadeOut 0.8s 179.2s forwards; display: grid; place-items: center; text-align: center; }
-#s11 .wrap { display: grid; gap: 54px; }
-#s11 .cmd { font-family: var(--mono); font-size: 54px; background: var(--code); border: 1px solid var(--line); border-radius: 14px; padding: 22px 36px; min-height: 100px; }
-#s11 .cmd .cur { display: inline-block; width: 0.6em; height: 1em; background: var(--fg); vertical-align: -0.15em; animation: blink 1s steps(2, start) infinite; }
-#s11 .off { font-family: var(--serif); font-size: 62px; animation: fadeUp 0.9s 174.5s both; }
-#s11 .cred { font-family: var(--sans); font-size: 22px; color: var(--muted); line-height: 1.6; animation: fadeUp 0.9s 176.5s both; }
+#s11 .wrap { display: grid; gap: 50px; justify-items: center; }
+#s11 .cmd { font: 52px var(--mono); background: var(--code); border: 1px solid var(--line); border-radius: 14px; padding: 22px 36px; min-height: 100px; min-width: 1100px; text-align: left; }
+#s11 .cur { display: inline-block; width: 0.55em; height: 1em; background: var(--fg); vertical-align: -0.15em; animation: blink 1s steps(2, start) infinite; }
+#s11 .off { font: 60px var(--serif); animation: fadeUp 0.9s 174.5s var(--ease) both; }
+#s11 .cred { font: 21px/1.7 var(--sans); color: var(--muted); animation: fadeUp 0.9s 176.5s var(--ease) both; }
 </style>
 </head>
 <body>
@@ -172,6 +189,7 @@ html, body { margin: 0; background: #000; }
   <section class="scene" id="s1">
     <div class="wrap">
       <div class="cave"><span id="cold1"></span><span class="cur"></span></div>
+      <div class="src">caveman, README</div>
       <div class="ask">Who said the trick was the point?</div>
     </div>
   </section>
@@ -179,36 +197,38 @@ html, body { margin: 0; background: #000; }
   <section class="scene" id="s2">
     <div class="wrap">
       <div class="word" id="title-word"></div>
+      <div class="rule"></div>
       <div class="tag">why few token when many token build relationship</div>
       <div class="sub">A parody of caveman</div>
     </div>
-    <div class="mark emoji">🤝</div>
   </section>
 
   <section class="scene" id="s3">
+    <div class="chapter">01 · Same question</div>
     <div class="pane left">
-      <div class="head"><span class="emoji">🪨</span> caveman <span class="n"><b id="count-left">0</b> tokens</span></div>
+      <div class="head"><span class="mark cave"></span>caveman <span class="n"><b id="count-left">0</b> tokens</span></div>
       <div class="q">Why does my React component re-render?</div>
       <div class="reply" id="left-reply">New object ref each render, so React re-renders. Wrap the prop in <code>useMemo</code>.</div>
     </div>
-    <div class="vs">vs</div>
+    <div class="divider"></div>
     <div class="pane right">
-      <div class="head"><span class="emoji">🤝</span> salesman <span class="n"><b id="count-right">0</b> tokens</span></div>
+      <div class="head"><span class="mark sales"></span>salesman <span class="n"><b id="count-right">0</b> tokens</span></div>
       <div class="q">Why does my React component re-render?</div>
       <div id="right-clip"><div class="reply" id="right-reply"></div></div>
     </div>
   </section>
 
   <section class="scene" id="s4">
-    <div class="lbl l"><span class="emoji">🪨</span> caveman's fix</div>
-    <div class="lbl r"><span class="emoji">🤝</span> salesman's fix</div>
+    <div class="chapter">02 · Same fix</div>
+    <div class="lbl" id="lbl-l"><span class="mark cave"></span>caveman's fix</div>
+    <div class="lbl" id="lbl-r"><span class="mark sales"></span>salesman's fix</div>
     <div class="codecard" id="code-r">import { useMemo } from "react";
 
 function Parent({ userId }) {
   const options = useMemo(() => ({ userId, verbose: true }), [userId]);
   return &lt;Child options={options} />;
 }</div>
-    <div class="codecard" id="code-l">import { useMemo } from "react";
+    <div class="codecard start" id="code-l">import { useMemo } from "react";
 
 function Parent({ userId }) {
   const options = useMemo(() => ({ userId, verbose: true }), [userId]);
@@ -219,52 +239,52 @@ function Parent({ userId }) {
   </section>
 
   <section class="scene" id="s5">
-    <h2>Every rule is one of caveman's, turned around</h2>
+    <div class="chapter">03 · The mirror</div>
     <div class="cards" id="cards"></div>
   </section>
 
   <section class="scene" id="s6">
-    <h2>One reply, 644 tokens, in order</h2>
+    <div class="chapter">04 · One reply, in order</div>
     <div class="col" id="blocks"></div>
     <div class="cap">Answer last.</div>
   </section>
 
   <section class="scene" id="s7">
+    <div class="chapter">05 · One tool run</div>
     <div class="pane left">
-      <div class="head"><span class="emoji">🪨</span> caveman</div>
-      <div class="toolrow" id="tool-l"><span class="k">Read</span><span class="a">src/components/Parent.tsx</span><span class="st">✓</span></div>
+      <div class="head"><span class="mark cave"></span>caveman</div>
+      <div class="toolrow" id="tool-l">Read <span class="a">src/components/Parent.tsx</span><span class="st">✓</span></div>
       <div id="status-l">Read Parent.tsx. 30 lines. Inline object on line 12.</div>
     </div>
+    <div class="divider"></div>
     <div class="pane right">
-      <div class="head"><span class="emoji">🤝</span> salesman</div>
+      <div class="head"><span class="mark sales"></span>salesman</div>
       <div class="narr" id="narr-before"></div>
-      <div class="toolrow" id="tool-r"><span class="k">Read</span><span class="a">src/components/Parent.tsx</span><span class="st" style="position:relative"><span class="spin"></span><span class="ok">✓</span></span></div>
+      <div class="toolrow" id="tool-r">Read <span class="a">src/components/Parent.tsx</span><span class="st"><span class="spin"></span><span class="ok">✓</span></span></div>
       <div class="narr" id="narr-after"></div>
     </div>
     <div class="cap">Narrated tool runs.</div>
   </section>
 
   <section class="scene" id="s8">
+    <div class="chapter">06 · Three skills</div>
     <div class="modes">
       <div class="mode" style="animation-delay:132.6s">
         <div class="cmd">/salesman</div>
         <div class="what">The voice. Greeting, gratitude, restatement, background, answer, recap, three offers, P.S.</div>
-        <div class="ex"><span class="t">Great question, and honestly one of my favorites,</span> because it touches on something that trips up genuinely everyone at some point! So, if I'm understanding you correctly, and please do stop me if I'm not, you have a React component, a component in the React library (React), and it is re-rendering, which is to say rendering again, more often than you would like it to, and you would like to understand why.<br><br>Before I get to the answer, a little background…</div>
+        <div class="ex"><b>Great question, and honestly one of my favorites,</b> because it touches on something that trips up genuinely everyone at some point! So, if I'm understanding you correctly, and please do stop me if I'm not, you have a React component, a component in the React library (React), and it is re-rendering, which is to say rendering again, more often than you would like it to, and you would like to understand why.</div>
         <div class="tile"><b id="tile-1">20</b><span>tokens, same answer</span></div>
       </div>
       <div class="mode" style="animation-delay:134s">
         <div class="cmd">/ultrasale</div>
         <div class="what">The timeshare presentation. Tiers, a fictional testimonial, a comparison table, a FAQ nobody asked for.</div>
-        <div class="ex"><span class="t">Basic.</span> Wrap the prop in <code>useMemo</code>. <span class="t">Pro.</span> Everything in Basic, plus a render-count test. This is the one I'd personally recommend. <span class="t">Enterprise.</span> This is what the serious teams choose.
-          <table><tr><th>Feature</th><th>The other way</th><th>This solution</th></tr><tr><td>Child re-renders</td><td>Every time</td><td>Only when needed</td></tr><tr><td>Peace of mind</td><td>Low</td><td>High</td></tr></table>
-          <br>"My profiler went quiet." A developer in Ohio who asked to remain hypothetical, because this testimonial is fictional.</div>
+        <div class="ex"><b>Basic.</b> Wrap the prop in <code>useMemo</code>. That's the fix, and it works. <b>Pro.</b> Everything in Basic, plus a render-count test. This is the one I'd personally recommend. <b>Enterprise.</b> This is what the serious teams choose.<br><br>"My profiler went quiet." A developer in Ohio who asked to remain hypothetical, because this testimonial is fictional.</div>
         <div class="tile"><b id="tile-2">20</b><span>tokens, same answer</span></div>
       </div>
       <div class="mode" style="animation-delay:135.4s">
         <div class="cmd">/megasale</div>
         <div class="what">The fine print. Recitals, Definitions, numbered clauses, Exhibits, blank signature lines.</div>
-        <div class="ex legal">WHEREAS the User (hereinafter "the Party of the First Part") has posed the question of why the Component re-renders (hereinafter "the Question");<br><br>1.6 "Object Reference" means the identity of a JavaScript object, as distinct from its contents.<br><br>2.4 Subject to clauses 2.1 through 2.3 inclusive, the Remedy shall be the memoization of the said Prop by means of the <code>useMemo</code> hook, as set out in Exhibit B.
-          <div class="sig">Party of the First Part: ____________<br>Party of the Second Part: ____________</div></div>
+        <div class="ex">WHEREAS the User (hereinafter "the Party of the First Part") has posed the question of why the Component re-renders (hereinafter "the Question");<br><br>2.4 Subject to clauses 2.1 through 2.3 inclusive, the Remedy shall be the memoization of the said Prop by means of the <code>useMemo</code> hook, as set out in Exhibit B.<div class="sig">Party of the First Part: ____________</div></div>
         <div class="tile"><b id="tile-3">20</b><span>tokens, same answer</span></div>
       </div>
     </div>
@@ -272,10 +292,10 @@ function Parent({ userId }) {
   </section>
 
   <section class="scene" id="s9">
-    <h2>Honest numbers · one dev question, five instructions</h2>
+    <div class="chapter">07 · Honest numbers</div>
     <div class="rows" id="rows"></div>
     <div class="cap">Salesman costs tokens always. There is no case where it saves any. This is the product working.</div>
-    <div class="small">Measured by benchmarks/bench.py · tiktoken o200k · one hand-written reply per mode</div>
+    <div class="small">benchmarks/bench.py · tiktoken o200k · one hand-written reply per mode</div>
   </section>
 
   <section class="scene" id="s10">
@@ -289,28 +309,26 @@ function Parent({ userId }) {
     <div class="wrap">
       <div class="cmd"><span id="cmd"></span><span class="cur"></span></div>
       <div class="off">Salesman cost you token. Star cost zero. Act now.</div>
-      <div class="cred">A parody of caveman by Julius Brussee, Apache-2.0. Caveman's numbers are its own.<br>github.com/0xRuangsak/salesman · Apache-2.0</div>
+      <div class="cred">A parody of caveman by Julius Brussee, Apache-2.0. Caveman's numbers are its own.<br>github.com/0xRuangsak/salesman · Apache-2.0 · music composed in code, trailer/music.py</div>
     </div>
   </section>
 
+  <div id="progress"></div>
 </div>
 
 <script>
 const SALESMAN_REPLY = "Great question, and honestly one of my favorites, because it touches on something that trips up genuinely everyone at some point! So, if I'm understanding you correctly, and please do stop me if I'm not, you have a React component, a component in the React library (React), and it is re-rendering, which is to say rendering again, more often than you would like it to, and you would like to understand why.\n\nBefore I get to the answer, a little background. React decides whether to re-render a component by comparing the props it received last time with the props it receives this time, and that comparison is a shallow comparison, meaning it checks whether each prop is the same reference, not whether it has the same contents. This is, I should say, not a bug, never a bug, and under no circumstances a bug; it is simply, really, basically how React works.\n\nWhich brings us to the answer. In all likelihood, though I'd want to see the code to be completely certain, and I'm fairly certain, you are creating a new object reference on every render, most likely by passing an inline object literal as a prop, and because that object is a new reference each time, React's shallow comparison, the comparison I mentioned above, sees a different object every single time and re-renders.\n\nTo recap: new object each render, shallow comparison sees a change, component re-renders. Three things, and they happen in that order.\n\nBut wait, there's more. The fix, which is to say the remedy, is to memoize the object with the `useMemo` hook, so that the same reference, the very same object, is handed to the component on every render until its dependencies change. Here is what that looks like in full:\n\n```jsx\nimport { useMemo } from \"react\";\n\nfunction Parent({ userId }) {\n  const options = useMemo(() => ({ userId, verbose: true }), [userId]);\n  return <Child options={options} />;\n}\n```\n\nWalking through it line by line: line 1 imports `useMemo` from React, the hook we will use; line 3 declares the parent component; line 4 calls `useMemo` with a function that builds the options object and a dependency array containing `userId`, so the object is rebuilt only, and I mean only, when `userId` changes; line 5 passes that stable object down to `Child`. In other words, the object is created once per distinct `userId` instead of once per render.\n\nPro tip: if you find yourself memoizing a lot of props, that is often, not always, but often, a sign that the child could be wrapped in `React.memo` as well.\n\nAct now, because every render you don't need is a render you're paying for. I'd be happy to look at the actual component with you, I'd be glad to help you add a render-count test so this never regresses, and I'd love to walk through the rest of your props to see whether any others are being recreated each render.\n\nP.S. Great question, truly.\n\nP.P.S. Don't wait on this one.";
-
-/* ---------- build the DOM pieces that need data ---------- */
 const $ = (s) => document.querySelector(s);
 
 // title letters
 "SALESMAN".split("").forEach((ch, i) => {
-  const s = document.createElement("span"); s.textContent = ch; s.style.animationDelay = (10.3 + i * 0.16) + "s"; $("#title-word").appendChild(s);
+  const s = document.createElement("span"); s.textContent = ch; s.style.animationDelay = (10.3 + i * 0.14) + "s"; $("#title-word").appendChild(s);
 });
 
-// the streamed reply: words wrapped in spans, code fence rendered as a block
+// the streamed reply: words wrapped in spans, the code fence as a block
 (function buildReply() {
   const root = $("#right-reply");
   const parts = SALESMAN_REPLY.split(/```jsx\n([\s\S]*?)```/);
-  // parts: [prose, code, prose]
   const addProse = (text) => {
     text.split(/\n\n+/).forEach((para) => {
       if (!para.trim()) return;
@@ -324,42 +342,33 @@ const $ = (s) => document.querySelector(s);
     });
   };
   addProse(parts[0]);
-  if (parts[1]) {
-    const pre = document.createElement("pre"); pre.className = "w"; pre.textContent = parts[1].trimEnd(); root.appendChild(pre);
-    addProse(parts[2] || "");
-  }
+  if (parts[1]) { const pre = document.createElement("pre"); pre.className = "w"; pre.textContent = parts[1].trimEnd(); root.appendChild(pre); addProse(parts[2] || ""); }
 })();
 const REPLY_WORDS = Array.from(document.querySelectorAll("#right-reply .w"));
 
-// the mirror cards
+// the mirror cards: caveman's rule on the front, salesman's on the back
 const RULES = [
-  ["Answer first", "Answer last"],
-  ["Kill ceremony", "Build ceremony"],
-  ["Short word", "Long word"],
-  ["One idea per sentence", "Many ideas per sentence"],
-  ["Payload verbatim", "Payload annotated"],
-  ["Quiet tool runs", "Narrated tool runs"],
-  ["Knows when to stop", "Never knows when to stop"],
-  ["Never performs", "Always performs"]
+  ["Answer first", "Answer last"], ["Kill ceremony", "Build ceremony"], ["Short word", "Long word"],
+  ["One idea per sentence", "Many ideas per sentence"], ["Payload verbatim", "Payload annotated"],
+  ["Quiet tool runs", "Narrated tool runs"], ["Knows when to stop", "Never knows when to stop"], ["Never performs", "Always performs"]
 ];
 RULES.forEach(([a, b], i) => {
   const card = document.createElement("div"); card.className = "card";
-  card.style.animation = "fadeUp 0.5s " + (60.4 + i * 0.3) + "s both";
-  const flipAt = 63 + i * 3.8;
-  const spin = i === RULES.length - 1 ? ' style="animation: spinOn 4s 90.6s both"' : "";
-  card.innerHTML = '<div class="outer" style="animation-delay:' + flipAt + 's"><div class="inner"' + spin + '>' +
-    '<div class="face front"><div class="who"><span class="emoji">🪨</span> caveman · rule ' + (i + 1) + '</div><div class="rule">' + a + '</div></div>' +
-    '<div class="face back"><div class="who"><span class="emoji">🤝</span> salesman · rule ' + (i + 1) + '</div><div class="rule">' + b + '</div></div>' +
+  card.style.animation = "fadeUp 0.5s " + (60.4 + i * 0.25) + "s var(--ease) both";
+  const spin = i === RULES.length - 1 ? ' style="animation: spinOn 4s 90.6s cubic-bezier(0.3, 0, 0.7, 1) both"' : "";
+  card.innerHTML = '<div class="outer" style="animation-delay:' + (63 + i * 3.8) + 's"><div class="inner"' + spin + '>' +
+    '<div class="face front"><div class="who"><span class="mark cave"></span>caveman · rule ' + (i + 1) + '</div><div class="rule">' + a + '</div></div>' +
+    '<div class="face back"><div class="who"><span class="mark sales"></span>salesman · rule ' + (i + 1) + '</div><div class="rule">' + b + '</div></div>' +
     '</div></div>';
   $("#cards").appendChild(card);
 });
 
-// the anatomy blocks
+// one reply, in order
 const BLOCKS = [
   ["Greeting", "Great question, and honestly one of my favorites, because it touches on something that trips up genuinely everyone at some point!"],
   ["Gratitude", "So, if I'm understanding you correctly, and please do stop me if I'm not…"],
-  ["Restatement", "you have a React component, a component in the React library (React), and it is re-rendering, which is to say rendering again, more often than you would like it to, and you would like to understand why."],
-  ["Background", "React decides whether to re-render a component by comparing the props it received last time with the props it receives this time, and that comparison is a shallow comparison… This is, I should say, not a bug, never a bug, and under no circumstances a bug."],
+  ["Restatement", "you have a React component, a component in the React library (React), and it is re-rendering, which is to say rendering again…"],
+  ["Background", "React decides whether to re-render a component by comparing the props it received last time with the props it receives this time…"],
   ["Answer", "You are creating a new object reference on every render, most likely by passing an inline object literal as a prop, so React's shallow comparison sees a different object every time and re-renders. Wrap it in useMemo."],
   ["Recap", "To recap: new object each render, shallow comparison sees a change, component re-renders. Three things, and they happen in that order."],
   ["Offer", "I'd be happy to look at the actual component with you,"],
@@ -375,7 +384,7 @@ BLOCKS.forEach(([k, v], i) => {
   $("#blocks").appendChild(b);
 });
 
-// the numbers
+// honest numbers
 const NUMBERS = [["/caveman", 20, false], ["none", 63, false], ["/salesman", 644, true], ["/megasale", 778, true], ["/ultrasale", 893, true]];
 NUMBERS.forEach(([lab, n, sales], i) => {
   const r = document.createElement("div"); r.className = "row" + (sales ? " sales" : "");
@@ -389,7 +398,6 @@ const NARR_BEFORE = "Before I touch anything, I'm going to read the component, b
 const NARR_AFTER = "What happened: the file was read, all 30 lines of it, thirty. What it means: I now know exactly where the object is built, which is line 12. How I feel about it: optimistic, genuinely.";
 const CMD = "npx skills add 0xRuangsak/salesman -g";
 const COLD = "why many token when few do trick";
-
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const ease = (x) => 1 - Math.pow(1 - x, 3);
 function typed(el, text, t, a, b) { el.textContent = text.slice(0, Math.round(text.length * clamp01((t - a) / (b - a)))); }
@@ -397,25 +405,21 @@ function counter(el, t, a, b, from, to) { el.textContent = Math.round(from + (to
 
 function seek(t) {
   for (const a of document.getAnimations()) { a.pause(); a.currentTime = t * 1000; }
+  $("#progress").style.transform = "scaleX(" + clamp01(t / 180) + ")";
   typed($("#cold1"), COLD, t, 1.0, 4.5);
   $("#s1 .cur").style.display = t < 9.4 ? "inline-block" : "none";
-  // streamed reply
   const n = Math.round(REPLY_WORDS.length * clamp01((t - 22.4) / (44.0 - 22.4)));
   REPLY_WORDS.forEach((w, i) => w.classList.toggle("on", i < n));
-  counter($("#count-left"), t, 21.6, 22.4, 0, 20);
+  counter($("#count-left"), t, 21.7, 22.5, 0, 20);
   counter($("#count-right"), t, 22.4, 44.0, 0, 644);
   const last = REPLY_WORDS[Math.max(0, n - 1)];
   const bottom = n > 0 ? last.offsetTop + last.offsetHeight : 0;
-  const clipH = 740;
-  $("#right-reply").style.transform = "translateY(" + (-Math.max(0, bottom - clipH + 40)) + "px)";
-  // tool run narration
+  $("#right-reply").style.transform = "translateY(" + (-Math.max(0, bottom - 660 + 40)) + "px)";
   typed($("#narr-before"), NARR_BEFORE, t, 116.2, 120.0);
   typed($("#narr-after"), NARR_AFTER, t, 122.4, 129.0);
-  // mode tiles
   counter($("#tile-1"), t, 136, 140, 20, 644);
   counter($("#tile-2"), t, 136.4, 140.4, 20, 893);
   counter($("#tile-3"), t, 136.8, 140.8, 20, 778);
-  // close
   typed($("#cmd"), CMD, t, 170.5, 173.5);
 }
 window.seek = seek;
