@@ -87,13 +87,9 @@ html, body { margin: 0; background: #000; }
 #s4 { animation: fadeIn 0.5s 45s both, fadeOut 0.5s 59.5s forwards; }
 #s4 .chapter { animation: fadeUp 0.6s 45.3s var(--ease) both; }
 .lbl { position: absolute; font: 600 26px var(--sans); display: flex; align-items: center; }
-#lbl-l { left: 200px; top: 236px; animation: fadeUp 0.5s 45.6s var(--ease) both, fadeOut 0.4s 47.2s forwards; }
-#lbl-r { left: 360px; top: 346px; animation: fadeUp 0.5s 45.6s var(--ease) both; }
-.codecard { position: absolute; left: 360px; top: 400px; width: 1200px; font: 24px/1.5 var(--mono); background: var(--code); border: 1px solid var(--line); border-radius: 16px; padding: 30px 36px; white-space: pre; }
-#code-r { animation: fadeUp 0.5s 45.6s var(--ease) both; }
-#code-l { animation: fadeUp 0.5s 45.6s var(--ease) both, moveOver 1.1s 47.2s var(--ease) both, glow 0.6s 48.4s both; }
-@keyframes moveOver { from { transform: translate(-160px, -110px); } to { transform: translate(0, 0); } }
-#code-l.start { transform: translate(-160px, -110px); }
+#lbl-l { left: 360px; top: 346px; animation: fadeUp 0.5s 45.6s var(--ease) both, fadeOut 0.4s 47.4s forwards; }
+#lbl-r { left: 360px; top: 346px; animation: fadeIn 0.5s 47.8s both; }
+.codecard { position: absolute; left: 360px; top: 400px; width: 1200px; font: 24px/1.5 var(--mono); background: var(--code); border: 1px solid var(--line); border-radius: 16px; padding: 30px 36px; white-space: pre; animation: fadeUp 0.5s 45.6s var(--ease) both, glow 0.7s 47.9s both; }
 #s4 .cap { position: absolute; left: 360px; top: 690px; font: 58px var(--serif); animation: fadeUp 0.8s 50s var(--ease) both; }
 #s4 .cap2 { position: absolute; left: 360px; top: 790px; font: 58px var(--serif); color: var(--accent); animation: fadeUp 0.8s 53s var(--ease) both; }
 
@@ -223,12 +219,6 @@ html, body { margin: 0; background: #000; }
     <div class="lbl" id="lbl-l"><span class="mark cave"></span>caveman's fix</div>
     <div class="lbl" id="lbl-r"><span class="mark sales"></span>salesman's fix</div>
     <div class="codecard" id="code-r">import { useMemo } from "react";
-
-function Parent({ userId }) {
-  const options = useMemo(() => ({ userId, verbose: true }), [userId]);
-  return &lt;Child options={options} />;
-}</div>
-    <div class="codecard start" id="code-l">import { useMemo } from "react";
 
 function Parent({ userId }) {
   const options = useMemo(() => ({ userId, verbose: true }), [userId]);

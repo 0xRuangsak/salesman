@@ -83,11 +83,14 @@ def pluck(freq, at, length=2.6, level=1.0):
 
 
 def tick(at, level=1.0):
-    """A short, dark click for the rule-card flips."""
+    """A short click for the rule-card flips: a bright tap over a low knock, so it reads through the pad."""
     i0 = int(at * SR)
-    i1 = min(N, i0 + int(0.09 * SR))
+    i1 = min(N, i0 + int(0.12 * SR))
     tt = np.arange(i1 - i0) / SR
-    body = np.sin(2 * np.pi * 180 * tt) * np.exp(-tt * 60) + 0.3 * np.random.default_rng(int(at * 10)).standard_normal(i1 - i0) * np.exp(-tt * 300)
+    noise = np.random.default_rng(int(at * 10)).standard_normal(i1 - i0)
+    body = (0.8 * np.sin(2 * np.pi * 1400 * tt) * np.exp(-tt * 90)
+            + 0.6 * np.sin(2 * np.pi * 220 * tt) * np.exp(-tt * 40)
+            + 0.5 * noise * np.exp(-tt * 400))
     MIX[i0:i1] += body * level
 
 
@@ -136,7 +139,7 @@ while t < QUIET - 1.0:
 
 # a tick on every card flip in the mirror scene
 for f in FLIPS:
-    tick(f, level=0.6)
+    tick(f, level=0.55)
 
 # the quiet scene: everything but the pad drops out for eight seconds
 quiet = 1.0 - 0.75 * env(T, QUIET, CLOSE, 0.6, 1.5)
