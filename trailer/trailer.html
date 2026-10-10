@@ -5,10 +5,10 @@
 <title>Salesman trailer</title>
 <style>
 /* The trailer as one page: a 1920x1080 stage where every animation is a CSS animation with an
-   absolute delay on a single three-minute timeline. window.seek(seconds) pauses every animation at
+   absolute delay on a single one-minute timeline. window.seek(seconds) pauses every animation at
    that moment and updates the few effects computed in JavaScript (typing, streaming, counters), so
-   render.js can screenshot the film frame by frame. The salesman reply in scene 3 is the text of
-   benchmarks/examples/salesman.md, copied in verbatim. */
+   render.js can screenshot the film frame by frame. The salesman reply in the opening scene is the
+   text of benchmarks/examples/salesman.md, copied in verbatim. */
 @font-face { font-family: "Caladea"; src: url("fonts/Caladea-Regular.ttf"); font-weight: 400; font-style: normal; }
 @font-face { font-family: "Caladea"; src: url("fonts/Caladea-Bold.ttf"); font-weight: 700; font-style: normal; }
 @font-face { font-family: "Caladea"; src: url("fonts/Caladea-Italic.ttf"); font-weight: 400; font-style: italic; }
@@ -17,7 +17,7 @@
 @font-face { font-family: "DejaVu Sans Mono"; src: url("fonts/DejaVuSansMono.ttf"); }
 
 :root {
-  --bg: #121411; --fg: #ece9e1; --muted: #8f968c; --faint: #4a524a; --accent: #3fcf80; --cave: #c7b48f;
+  --bg: #121411; --fg: #ece9e1; --muted: #8f968c; --faint: #4a524a; --accent: #3fcf80;
   --surface: #1a1e19; --line: #2a302a; --code: #0d100d;
   --serif: "Caladea", serif; --sans: "Inter", sans-serif; --mono: "DejaVu Sans Mono", monospace;
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -28,11 +28,10 @@ html, body { margin: 0; background: #000; }
   background: radial-gradient(1400px 900px at 28% 18%, #1a1e19 0%, #121411 55%, #0d0f0d 100%); }
 #stage::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 260px rgba(0, 0, 0, 0.55); }
 .scene { position: absolute; inset: 0; opacity: 0; }
-.mark { display: inline-block; width: 14px; height: 14px; vertical-align: -1px; margin-right: 12px; }
-.mark.cave { background: var(--cave); border-radius: 3px; }
-.mark.sales { background: var(--accent); border-radius: 50%; }
+.mark { display: inline-block; width: 14px; height: 14px; vertical-align: -1px; margin-right: 12px; background: var(--accent); border-radius: 50%; }
 .chapter { position: absolute; left: 120px; top: 72px; font: 600 22px var(--sans); letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); }
 .chapter::after { content: ""; display: block; width: 56px; height: 2px; background: var(--accent); margin-top: 14px; }
+.cap { position: absolute; right: 120px; top: 64px; font: 52px var(--serif); color: var(--accent); }
 #progress { position: absolute; left: 0; bottom: 0; height: 3px; width: 1920px; background: var(--faint); transform-origin: left; transform: scaleX(0); z-index: 9; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -41,105 +40,70 @@ html, body { margin: 0; background: #000; }
 @keyframes riseIn { from { opacity: 0; transform: translateY(70px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes drop { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes ruleIn { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@keyframes flip { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
 @keyframes spinOn { from { transform: rotateY(0deg); } to { transform: rotateY(1080deg); } }
 @keyframes glow { 0% { box-shadow: 0 0 0 0 rgba(63, 207, 128, 0); } 45% { box-shadow: 0 0 0 10px rgba(63, 207, 128, 0.3); } 100% { box-shadow: 0 0 0 3px rgba(63, 207, 128, 0.7); } }
 @keyframes blink { 50% { opacity: 0; } }
-@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
-/* ---------- 1 cold open ---------- */
-#s1 { animation: fadeIn 0.01s 0s both, fadeOut 0.6s 9.3s forwards; display: grid; place-items: center; }
-#s1 .wrap { display: grid; gap: 26px; text-align: center; }
-#s1 .cave { font: 50px var(--mono); color: var(--cave); min-height: 64px; }
-#s1 .cur { display: inline-block; width: 0.55em; height: 1em; background: var(--cave); vertical-align: -0.15em; animation: blink 1s steps(2, start) infinite; }
-#s1 .src { font: 600 20px var(--sans); letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); animation: fadeIn 0.6s 4.8s both; }
-#s1 .ask { margin-top: 70px; font: 78px var(--serif); color: var(--fg); animation: fadeUp 1s 6.2s var(--ease) both; }
+/* ---------- 1 the question ---------- */
+#s1 { animation: fadeIn 0.01s 0s both, fadeOut 0.5s 10.6s forwards; }
+#s1 .chat { position: absolute; left: 410px; top: 140px; width: 1100px; }
+#s1 .q { background: #262b25; border-radius: 20px; padding: 16px 24px; font: 28px var(--sans); width: fit-content; margin-left: auto; margin-bottom: 34px; animation: fadeUp 0.6s 0.5s var(--ease) both; }
+#s1 .think { position: absolute; left: 0; top: 104px; font: 24px var(--sans); color: var(--muted); animation: fadeIn 0.4s 1.4s both, fadeOut 0.3s 2.1s forwards; }
+#s1 .count { position: absolute; right: 120px; top: 72px; font: 26px var(--mono); color: var(--muted); animation: fadeIn 0.5s 2.3s both; }
+#s1 .count b { color: var(--fg); font-weight: 400; font-variant-numeric: tabular-nums; }
+#clip { height: 780px; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 60px, #000 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 60px, #000 100%); }
+#reply { font: 29px/1.5 var(--serif); }
+#reply code { font: 0.84em var(--mono); background: var(--code); padding: 2px 8px; border-radius: 6px; }
+#reply .w { opacity: 0; } #reply .w.on { opacity: 1; }
+#reply pre { font: 22px/1.45 var(--mono); white-space: pre-wrap; background: var(--code); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin: 12px 0; }
 
 /* ---------- 2 title ---------- */
-#s2 { animation: fadeIn 0.4s 10s both, fadeOut 0.6s 19.4s forwards; display: grid; place-items: center; }
+#s2 { animation: fadeIn 0.4s 11s both, fadeOut 0.5s 16.5s forwards; display: grid; place-items: center; }
 #s2 .wrap { text-align: center; display: grid; gap: 34px; justify-items: center; }
 #s2 .word { font: 300px var(--serif); letter-spacing: 0.06em; line-height: 1; display: flex; }
 #s2 .word span { display: inline-block; animation: riseIn 0.7s var(--ease) both; }
-#s2 .rule { width: 420px; height: 2px; background: var(--accent); transform-origin: center; animation: ruleIn 0.8s 12.2s var(--ease) both; }
-#s2 .tag { font: italic 44px var(--serif); color: var(--muted); animation: fadeUp 0.8s 12.8s var(--ease) both; }
-#s2 .sub { font: 600 22px var(--sans); letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); animation: fadeUp 0.8s 14.4s var(--ease) both; }
+#s2 .rule { width: 420px; height: 2px; background: var(--accent); transform-origin: center; animation: ruleIn 0.8s 12.5s var(--ease) both; }
+#s2 .tag { font: italic 44px var(--serif); color: var(--muted); animation: fadeUp 0.8s 13s var(--ease) both; }
+#s2 .sub { font: 600 22px var(--sans); letter-spacing: 0.24em; text-transform: uppercase; color: var(--muted); animation: fadeUp 0.8s 14.3s var(--ease) both; }
 
-/* ---------- 3 same question ---------- */
-#s3 { animation: fadeIn 0.5s 20s both, fadeOut 0.5s 44.6s forwards; }
-#s3 .chapter { animation: fadeUp 0.6s 20.3s var(--ease) both; }
-.pane { position: absolute; top: 190px; width: 780px; height: 820px; }
-.pane.left { left: 120px; } .pane.right { left: 1020px; }
-.pane .head { display: flex; align-items: center; font: 600 28px var(--sans); margin-bottom: 26px; animation: fadeUp 0.6s 20.6s var(--ease) both; }
-.pane .head .n { margin-left: auto; font: 26px var(--mono); color: var(--muted); }
-.pane .head .n b { color: var(--fg); font-weight: 400; font-variant-numeric: tabular-nums; }
-.pane .q { background: #262b25; border-radius: 20px; padding: 14px 22px; font: 26px var(--sans); width: fit-content; margin-left: auto; margin-bottom: 30px; animation: fadeUp 0.6s 21.1s var(--ease) both; }
-.pane .reply { font: 28px/1.5 var(--serif); }
-.pane .reply code { font: 0.84em var(--mono); background: var(--code); padding: 2px 8px; border-radius: 6px; }
-.divider { position: absolute; left: 959px; top: 190px; width: 1px; height: 820px; background: var(--line); transform-origin: top; animation: ruleIn 0.8s 20.6s var(--ease) both; transform: scaleY(0); }
-@keyframes ruleInY { from { transform: scaleY(0); } to { transform: scaleY(1); } }
-.divider { animation-name: ruleInY; }
-#left-reply { animation: fadeUp 0.5s 21.7s var(--ease) both; }
-#right-clip { height: 660px; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 60px, #000 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 60px, #000 100%); }
-#right-reply .w { opacity: 0; } #right-reply .w.on { opacity: 1; }
-#right-reply pre { font: 21px/1.45 var(--mono); white-space: pre-wrap; background: var(--code); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; margin: 12px 0; }
-
-/* ---------- 4 same fix ---------- */
-#s4 { animation: fadeIn 0.5s 45s both, fadeOut 0.5s 59.5s forwards; }
-#s4 .chapter { animation: fadeUp 0.6s 45.3s var(--ease) both; }
-.lbl { position: absolute; font: 600 26px var(--sans); display: flex; align-items: center; }
-#lbl-l { left: 360px; top: 346px; animation: fadeUp 0.5s 45.6s var(--ease) both, fadeOut 0.4s 47.4s forwards; }
-#lbl-r { left: 360px; top: 346px; animation: fadeIn 0.5s 47.8s both; }
-.codecard { position: absolute; left: 360px; top: 400px; width: 1200px; font: 24px/1.5 var(--mono); background: var(--code); border: 1px solid var(--line); border-radius: 16px; padding: 30px 36px; white-space: pre; animation: fadeUp 0.5s 45.6s var(--ease) both, glow 0.7s 47.9s both; }
-#s4 .cap { position: absolute; left: 360px; top: 690px; font: 58px var(--serif); animation: fadeUp 0.8s 50s var(--ease) both; }
-#s4 .cap2 { position: absolute; left: 360px; top: 790px; font: 58px var(--serif); color: var(--accent); animation: fadeUp 0.8s 53s var(--ease) both; }
-
-/* ---------- 5 the mirror ---------- */
-#s5 { animation: fadeIn 0.5s 60s both, fadeOut 0.5s 94.6s forwards; }
-#s5 .chapter { animation: fadeUp 0.6s 60.3s var(--ease) both; }
-.cards { position: absolute; left: 120px; top: 180px; width: 1680px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; perspective: 1800px; }
-.card { height: 390px; }
-.card .outer { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; animation: flip 0.8s cubic-bezier(0.45, 0, 0.2, 1) both; }
-.card .inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
-.card .face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 18px; padding: 32px; display: grid; align-content: space-between; }
-.card .front { background: #211f1a; border: 1px solid #3d392e; }
-.card .back { background: var(--surface); border: 1px solid var(--accent); transform: rotateY(180deg); }
-.card .who { font: 600 18px var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; }
-.card .rule { font: 44px/1.15 var(--serif); color: var(--cave); }
-.card .back .rule { color: var(--fg); }
-.card .back .who { color: var(--accent); }
-
-/* ---------- 6 one reply ---------- */
-#s6 { animation: fadeIn 0.5s 95s both, fadeOut 0.5s 114.6s forwards; }
-#s6 .chapter { animation: fadeUp 0.6s 95.3s var(--ease) both; }
-#s6 .col { position: absolute; left: 120px; top: 176px; width: 1680px; display: grid; gap: 12px; }
+/* ---------- 3 one reply, in order ---------- */
+#s3 { animation: fadeIn 0.5s 17s both, fadeOut 0.5s 27.6s forwards; }
+#s3 .chapter { animation: fadeUp 0.6s 17.3s var(--ease) both; }
+#s3 .col { position: absolute; left: 120px; top: 176px; width: 1680px; display: grid; gap: 12px; }
 .blk { display: grid; grid-template-columns: 240px 1fr; gap: 24px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--faint); border-radius: 12px; padding: 16px 26px; animation: drop 0.5s var(--ease) both; min-height: 66px; }
 .blk .k { font: 600 19px var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
 .blk .v { font: 26px/1.4 var(--serif); color: #c9cdc3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.blk.answer { border-left-color: var(--accent); animation: drop 0.5s var(--ease) both, glow 1.2s 102s both; }
+.blk.answer { border-left-color: var(--accent); animation: drop 0.5s var(--ease) both, glow 1.2s 21s both; }
 .blk.answer .k { color: var(--accent); }
 .blk.answer .v { color: var(--fg); white-space: normal; }
-#s6 .cap { position: absolute; right: 120px; top: 64px; font: 52px var(--serif); color: var(--accent); animation: fadeUp 0.8s 110s var(--ease) both; }
+#s3 .cap { animation: fadeUp 0.8s 25s var(--ease) both; }
 
-/* ---------- 7 one tool run ---------- */
-#s7 { animation: fadeIn 0.5s 115s both, fadeOut 0.5s 131.6s forwards; }
-#s7 .chapter { animation: fadeUp 0.6s 115.3s var(--ease) both; }
-#s7 .pane .head { animation-delay: 115.6s; }
-#s7 .divider { animation-delay: 115.6s; }
-.toolrow { display: flex; align-items: center; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 22px; font: 600 25px var(--sans); width: 100%; }
-.toolrow .a { font: 23px var(--mono); color: var(--muted); font-weight: 400; }
+/* ---------- 4 the rules ---------- */
+#s4 { animation: fadeIn 0.5s 28s both, fadeOut 0.5s 37.6s forwards; }
+#s4 .chapter { animation: fadeUp 0.6s 28.3s var(--ease) both; }
+.cards { position: absolute; left: 120px; top: 180px; width: 1680px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; perspective: 1800px; }
+.card { height: 390px; }
+.card .inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
+.card .face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 18px; padding: 32px; display: grid; align-content: space-between; background: var(--surface); border: 1px solid var(--accent); }
+.card .back { transform: rotateY(180deg); }
+.card .who { font: 600 18px var(--sans); letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; }
+.card .rule { font: 44px/1.15 var(--serif); color: var(--fg); }
+
+/* ---------- 5 one tool run ---------- */
+#s5 { animation: fadeIn 0.5s 38s both, fadeOut 0.5s 44.6s forwards; }
+#s5 .chapter { animation: fadeUp 0.6s 38.3s var(--ease) both; }
+#s5 .col { position: absolute; left: 410px; top: 330px; width: 1100px; }
+.narr { font: italic 30px/1.55 var(--serif); color: #c9cdc3; min-height: 2em; }
+.toolrow { display: flex; align-items: center; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 24px; font: 600 26px var(--sans); width: 100%; margin: 30px 0; animation: fadeUp 0.5s 40.8s var(--ease) both; }
+.toolrow .a { font: 24px var(--mono); color: var(--muted); font-weight: 400; }
 .toolrow .st { margin-left: auto; width: 24px; height: 24px; display: grid; place-items: center; color: var(--accent); position: relative; }
-.spin { width: 18px; height: 18px; border: 3px solid var(--line); border-top-color: var(--muted); border-radius: 50%; }
-#tool-l { animation: fadeUp 0.5s 116.2s var(--ease) both; }
-#status-l { font: 26px/1.5 var(--mono); color: var(--cave); margin-top: 26px; animation: fadeUp 0.5s 117s var(--ease) both; }
-.narr { font: italic 27px/1.55 var(--serif); color: #c9cdc3; min-height: 2em; }
-#tool-r { animation: fadeUp 0.5s 120.3s var(--ease) both; margin: 24px 0; }
-#tool-r .st .spin { animation: fadeOut 0.2s 122s forwards; }
-#tool-r .st .ok { position: absolute; animation: fadeIn 0.2s 122s both; }
-#s7 .cap { position: absolute; right: 120px; top: 64px; font: 52px var(--serif); color: var(--accent); animation: fadeUp 0.8s 129.3s var(--ease) both; }
+.spin { width: 18px; height: 18px; border: 3px solid var(--line); border-top-color: var(--muted); border-radius: 50%; animation: fadeOut 0.2s 42s forwards; }
+.toolrow .ok { position: absolute; animation: fadeIn 0.2s 42s both; }
+#s5 .cap { animation: fadeUp 0.8s 43.4s var(--ease) both; }
 
-/* ---------- 8 three skills ---------- */
-#s8 { animation: fadeIn 0.5s 132s both, fadeOut 0.5s 149.6s forwards; }
-#s8 .chapter { animation: fadeUp 0.6s 132.3s var(--ease) both; }
+/* ---------- 6 three skills ---------- */
+#s6 { animation: fadeIn 0.5s 45s both, fadeOut 0.5s 50.1s forwards; }
+#s6 .chapter { animation: fadeUp 0.6s 45.3s var(--ease) both; }
 .modes { position: absolute; left: 120px; top: 176px; width: 1680px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; }
 .mode { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 34px 36px 30px; height: 700px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 18px; animation: riseIn 0.8s var(--ease) both; }
 .mode .cmd { font: 38px var(--mono); color: var(--accent); }
@@ -150,43 +114,32 @@ html, body { margin: 0; background: #000; }
 .mode .tile { display: flex; align-items: baseline; gap: 14px; }
 .mode .tile b { font: 96px var(--serif); font-weight: 400; font-variant-numeric: tabular-nums; line-height: 1; }
 .mode .tile span { font: 22px var(--sans); color: var(--muted); }
-#s8 .cap { position: absolute; left: 120px; bottom: 56px; font: 50px var(--serif); animation: fadeUp 0.8s 142.5s var(--ease) both; }
+#s6 .cap { right: auto; top: auto; left: 120px; bottom: 56px; font: 50px var(--serif); color: var(--fg); animation: fadeUp 0.8s 48.4s var(--ease) both; }
 
-/* ---------- 9 honest numbers ---------- */
-#s9 { animation: fadeIn 0.5s 150s both, fadeOut 0.5s 161.6s forwards; }
-#s9 .chapter { animation: fadeUp 0.6s 150.3s var(--ease) both; }
-.rows { position: absolute; left: 120px; top: 190px; width: 1800px; display: grid; gap: 22px; }
-.row { display: grid; grid-template-columns: 340px 110px 1fr; align-items: center; gap: 28px; animation: drop 0.5s var(--ease) both; }
-.row .lab { font: 30px var(--mono); }
-.row .num { font: 46px var(--serif); text-align: right; font-variant-numeric: tabular-nums; }
-.row .bar { height: 40px; background: var(--cave); border-radius: 8px; transform-origin: left center; transform: scaleX(0); animation: grow 1.2s var(--ease) both; }
-.row.sales .bar { background: var(--accent); }
-#s9 .cap { position: absolute; left: 120px; top: 690px; width: 1600px; font: 54px/1.3 var(--serif); animation: fadeUp 0.8s 157s var(--ease) both; }
-#s9 .small { position: absolute; left: 120px; top: 920px; font: 24px var(--mono); color: var(--muted); animation: fadeUp 0.6s 159.3s var(--ease) both; }
+/* ---------- 7 the one rule ---------- */
+#s7 { animation: fadeIn 0.5s 50.5s both, fadeOut 0.5s 53.6s forwards; display: grid; place-items: center; text-align: center; }
+#s7 .wrap { display: grid; gap: 44px; }
+#s7 .a { font: 100px var(--serif); animation: fadeUp 1s 50.9s var(--ease) both; }
+#s7 .b { font: italic 54px var(--serif); color: var(--muted); animation: fadeUp 1s 52.1s var(--ease) both; }
 
-/* ---------- 10 the one rule ---------- */
-#s10 { animation: fadeIn 0.5s 162s both, fadeOut 0.5s 169.6s forwards; display: grid; place-items: center; text-align: center; }
-#s10 .wrap { display: grid; gap: 44px; }
-#s10 .a { font: 100px var(--serif); animation: fadeUp 1s 162.6s var(--ease) both; }
-#s10 .b { font: italic 54px var(--serif); color: var(--muted); animation: fadeUp 1s 166s var(--ease) both; }
-
-/* ---------- 11 close ---------- */
-#s11 { animation: fadeIn 0.5s 170s both, fadeOut 0.8s 179.2s forwards; display: grid; place-items: center; text-align: center; }
-#s11 .wrap { display: grid; gap: 50px; justify-items: center; }
-#s11 .cmd { font: 52px var(--mono); background: var(--code); border: 1px solid var(--line); border-radius: 14px; padding: 22px 36px; min-height: 100px; min-width: 1100px; text-align: left; }
-#s11 .cur { display: inline-block; width: 0.55em; height: 1em; background: var(--fg); vertical-align: -0.15em; animation: blink 1s steps(2, start) infinite; }
-#s11 .off { font: 60px var(--serif); animation: fadeUp 0.9s 174.5s var(--ease) both; }
-#s11 .cred { font: 21px/1.7 var(--sans); color: var(--muted); animation: fadeUp 0.9s 176.5s var(--ease) both; }
+/* ---------- 8 close ---------- */
+#s8 { animation: fadeIn 0.5s 54s both, fadeOut 0.8s 59.2s forwards; display: grid; place-items: center; text-align: center; }
+#s8 .wrap { display: grid; gap: 50px; justify-items: center; }
+#s8 .cmd { font: 52px var(--mono); background: var(--code); border: 1px solid var(--line); border-radius: 14px; padding: 22px 36px; min-height: 100px; min-width: 1100px; text-align: left; }
+#s8 .cur { display: inline-block; width: 0.55em; height: 1em; background: var(--fg); vertical-align: -0.15em; animation: blink 1s steps(2, start) infinite; }
+#s8 .off { font: 60px var(--serif); animation: fadeUp 0.9s 56.8s var(--ease) both; }
+#s8 .cred { font: 21px/1.7 var(--sans); color: var(--muted); animation: fadeUp 0.9s 58s var(--ease) both; }
 </style>
 </head>
 <body>
 <div id="stage">
 
   <section class="scene" id="s1">
-    <div class="wrap">
-      <div class="cave"><span id="cold1"></span><span class="cur"></span></div>
-      <div class="src">caveman, README</div>
-      <div class="ask">Who said the trick was the point?</div>
+    <div class="count"><b id="count">0</b> tokens</div>
+    <div class="chat">
+      <div class="q">Why does my React component re-render?</div>
+      <div class="think">Thinking…</div>
+      <div id="clip"><div id="reply"></div></div>
     </div>
   </section>
 
@@ -195,111 +148,68 @@ html, body { margin: 0; background: #000; }
       <div class="word" id="title-word"></div>
       <div class="rule"></div>
       <div class="tag">why few token when many token build relationship</div>
-      <div class="sub">A parody of caveman</div>
+      <div class="sub">Make your agent say more</div>
     </div>
   </section>
 
   <section class="scene" id="s3">
-    <div class="chapter">01 · Same question</div>
-    <div class="pane left">
-      <div class="head"><span class="mark cave"></span>caveman <span class="n"><b id="count-left">0</b> tokens</span></div>
-      <div class="q">Why does my React component re-render?</div>
-      <div class="reply" id="left-reply">New object ref each render, so React re-renders. Wrap the prop in <code>useMemo</code>.</div>
-    </div>
-    <div class="divider"></div>
-    <div class="pane right">
-      <div class="head"><span class="mark sales"></span>salesman <span class="n"><b id="count-right">0</b> tokens</span></div>
-      <div class="q">Why does my React component re-render?</div>
-      <div id="right-clip"><div class="reply" id="right-reply"></div></div>
-    </div>
-  </section>
-
-  <section class="scene" id="s4">
-    <div class="chapter">02 · Same fix</div>
-    <div class="lbl" id="lbl-l"><span class="mark cave"></span>caveman's fix</div>
-    <div class="lbl" id="lbl-r"><span class="mark sales"></span>salesman's fix</div>
-    <div class="codecard" id="code-r">import { useMemo } from "react";
-
-function Parent({ userId }) {
-  const options = useMemo(() => ({ userId, verbose: true }), [userId]);
-  return &lt;Child options={options} />;
-}</div>
-    <div class="cap">Same fix. 20 token become 644.</div>
-    <div class="cap2">Brain still big. Brain now also warm.</div>
-  </section>
-
-  <section class="scene" id="s5">
-    <div class="chapter">03 · The mirror</div>
-    <div class="cards" id="cards"></div>
-  </section>
-
-  <section class="scene" id="s6">
-    <div class="chapter">04 · One reply, in order</div>
+    <div class="chapter">01 · One reply, in order</div>
     <div class="col" id="blocks"></div>
     <div class="cap">Answer last.</div>
   </section>
 
-  <section class="scene" id="s7">
-    <div class="chapter">05 · One tool run</div>
-    <div class="pane left">
-      <div class="head"><span class="mark cave"></span>caveman</div>
-      <div class="toolrow" id="tool-l">Read <span class="a">src/components/Parent.tsx</span><span class="st">✓</span></div>
-      <div id="status-l">Read Parent.tsx. 30 lines. Inline object on line 12.</div>
-    </div>
-    <div class="divider"></div>
-    <div class="pane right">
-      <div class="head"><span class="mark sales"></span>salesman</div>
+  <section class="scene" id="s4">
+    <div class="chapter">02 · The rules</div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section class="scene" id="s5">
+    <div class="chapter">03 · One tool run</div>
+    <div class="col">
       <div class="narr" id="narr-before"></div>
-      <div class="toolrow" id="tool-r">Read <span class="a">src/components/Parent.tsx</span><span class="st"><span class="spin"></span><span class="ok">✓</span></span></div>
+      <div class="toolrow">Read <span class="a">src/components/Parent.tsx</span><span class="st"><span class="spin"></span><span class="ok">✓</span></span></div>
       <div class="narr" id="narr-after"></div>
     </div>
     <div class="cap">Narrated tool runs.</div>
   </section>
 
-  <section class="scene" id="s8">
-    <div class="chapter">06 · Three skills</div>
+  <section class="scene" id="s6">
+    <div class="chapter">04 · Three skills</div>
     <div class="modes">
-      <div class="mode" style="animation-delay:132.6s">
+      <div class="mode" style="animation-delay:45.5s">
         <div class="cmd">/salesman</div>
         <div class="what">The voice. Greeting, gratitude, restatement, background, answer, recap, three offers, P.S.</div>
         <div class="ex"><b>Great question, and honestly one of my favorites,</b> because it touches on something that trips up genuinely everyone at some point! So, if I'm understanding you correctly, and please do stop me if I'm not, you have a React component, a component in the React library (React), and it is re-rendering, which is to say rendering again, more often than you would like it to, and you would like to understand why.</div>
-        <div class="tile"><b id="tile-1">20</b><span>tokens, same answer</span></div>
+        <div class="tile"><b id="tile-1">0</b><span>tokens, one answer</span></div>
       </div>
-      <div class="mode" style="animation-delay:134s">
+      <div class="mode" style="animation-delay:45.8s">
         <div class="cmd">/ultrasale</div>
         <div class="what">The timeshare presentation. Tiers, a fictional testimonial, a comparison table, a FAQ nobody asked for.</div>
         <div class="ex"><b>Basic.</b> Wrap the prop in <code>useMemo</code>. That's the fix, and it works. <b>Pro.</b> Everything in Basic, plus a render-count test. This is the one I'd personally recommend. <b>Enterprise.</b> This is what the serious teams choose.<br><br>"My profiler went quiet." A developer in Ohio who asked to remain hypothetical, because this testimonial is fictional.</div>
-        <div class="tile"><b id="tile-2">20</b><span>tokens, same answer</span></div>
+        <div class="tile"><b id="tile-2">0</b><span>tokens, one answer</span></div>
       </div>
-      <div class="mode" style="animation-delay:135.4s">
+      <div class="mode" style="animation-delay:46.1s">
         <div class="cmd">/megasale</div>
         <div class="what">The fine print. Recitals, Definitions, numbered clauses, Exhibits, blank signature lines.</div>
         <div class="ex">WHEREAS the User (hereinafter "the Party of the First Part") has posed the question of why the Component re-renders (hereinafter "the Question");<br><br>2.4 Subject to clauses 2.1 through 2.3 inclusive, the Remedy shall be the memoization of the said Prop by means of the <code>useMemo</code> hook, as set out in Exhibit B.<div class="sig">Party of the First Part: ____________</div></div>
-        <div class="tile"><b id="tile-3">20</b><span>tokens, same answer</span></div>
+        <div class="tile"><b id="tile-3">0</b><span>tokens, one answer</span></div>
       </div>
     </div>
-    <div class="cap">Three skills. Same fix. More words.</div>
+    <div class="cap">Three skills. One fix. More words.</div>
   </section>
 
-  <section class="scene" id="s9">
-    <div class="chapter">07 · Honest numbers</div>
-    <div class="rows" id="rows"></div>
-    <div class="cap">Salesman costs tokens always. There is no case where it saves any. This is the product working.</div>
-    <div class="small">benchmarks/bench.py · tiktoken o200k · one hand-written reply per mode</div>
-  </section>
-
-  <section class="scene" id="s10">
+  <section class="scene" id="s7">
     <div class="wrap">
       <div class="a">Your code stays yours.</div>
       <div class="b">Salesman talks. Salesman does not sign.</div>
     </div>
   </section>
 
-  <section class="scene" id="s11">
+  <section class="scene" id="s8">
     <div class="wrap">
       <div class="cmd"><span id="cmd"></span><span class="cur"></span></div>
       <div class="off">Salesman cost you token. Star cost zero. Act now.</div>
-      <div class="cred">A parody of caveman by Julius Brussee, Apache-2.0. Caveman's numbers are its own.<br>github.com/0xRuangsak/salesman · Apache-2.0 · music composed in code, trailer/music.py</div>
+      <div class="cred">github.com/0xRuangsak/salesman · Apache-2.0<br>Numbers from benchmarks/bench.py, tiktoken o200k · music composed in code, trailer/music.py</div>
     </div>
   </section>
 
@@ -312,12 +222,12 @@ const $ = (s) => document.querySelector(s);
 
 // title letters
 "SALESMAN".split("").forEach((ch, i) => {
-  const s = document.createElement("span"); s.textContent = ch; s.style.animationDelay = (10.3 + i * 0.14) + "s"; $("#title-word").appendChild(s);
+  const s = document.createElement("span"); s.textContent = ch; s.style.animationDelay = (11.3 + i * 0.12) + "s"; $("#title-word").appendChild(s);
 });
 
 // the streamed reply: words wrapped in spans, the code fence as a block
 (function buildReply() {
-  const root = $("#right-reply");
+  const root = $("#reply");
   const parts = SALESMAN_REPLY.split(/```jsx\n([\s\S]*?)```/);
   const addProse = (text) => {
     text.split(/\n\n+/).forEach((para) => {
@@ -334,24 +244,7 @@ const $ = (s) => document.querySelector(s);
   addProse(parts[0]);
   if (parts[1]) { const pre = document.createElement("pre"); pre.className = "w"; pre.textContent = parts[1].trimEnd(); root.appendChild(pre); addProse(parts[2] || ""); }
 })();
-const REPLY_WORDS = Array.from(document.querySelectorAll("#right-reply .w"));
-
-// the mirror cards: caveman's rule on the front, salesman's on the back
-const RULES = [
-  ["Answer first", "Answer last"], ["Kill ceremony", "Build ceremony"], ["Short word", "Long word"],
-  ["One idea per sentence", "Many ideas per sentence"], ["Payload verbatim", "Payload annotated"],
-  ["Quiet tool runs", "Narrated tool runs"], ["Knows when to stop", "Never knows when to stop"], ["Never performs", "Always performs"]
-];
-RULES.forEach(([a, b], i) => {
-  const card = document.createElement("div"); card.className = "card";
-  card.style.animation = "fadeUp 0.5s " + (60.4 + i * 0.25) + "s var(--ease) both";
-  const spin = i === RULES.length - 1 ? ' style="animation: spinOn 4s 90.6s cubic-bezier(0.3, 0, 0.7, 1) both"' : "";
-  card.innerHTML = '<div class="outer" style="animation-delay:' + (63 + i * 3.8) + 's"><div class="inner"' + spin + '>' +
-    '<div class="face front"><div class="who"><span class="mark cave"></span>caveman · rule ' + (i + 1) + '</div><div class="rule">' + a + '</div></div>' +
-    '<div class="face back"><div class="who"><span class="mark sales"></span>salesman · rule ' + (i + 1) + '</div><div class="rule">' + b + '</div></div>' +
-    '</div></div>';
-  $("#cards").appendChild(card);
-});
+const REPLY_WORDS = Array.from(document.querySelectorAll("#reply .w"));
 
 // one reply, in order
 const BLOCKS = [
@@ -369,25 +262,27 @@ const BLOCKS = [
 ];
 BLOCKS.forEach(([k, v], i) => {
   const b = document.createElement("div"); b.className = "blk" + (k === "Answer" ? " answer" : "");
-  b.style.animationDelay = (95.6 + i * 1.1) + "s" + (k === "Answer" ? ", 102s" : "");
+  b.style.animationDelay = (17.6 + i * 0.62) + "s" + (k === "Answer" ? ", 21s" : "");
   b.innerHTML = '<div class="k">' + k + '</div><div class="v">' + v + "</div>";
   $("#blocks").appendChild(b);
 });
 
-// honest numbers
-const NUMBERS = [["/caveman", 20, false], ["none", 63, false], ["/salesman", 644, true], ["/megasale", 778, true], ["/ultrasale", 893, true]];
-NUMBERS.forEach(([lab, n, sales], i) => {
-  const r = document.createElement("div"); r.className = "row" + (sales ? " sales" : "");
-  r.style.animationDelay = (150.5 + i * 1.1) + "s";
-  r.innerHTML = '<div class="lab">' + lab + '</div><div class="num">' + n + '</div><div class="bar" style="width:' + (n * 2.75) + 'px; animation-delay:' + (150.8 + i * 1.1) + 's"></div>';
-  $("#rows").appendChild(r);
+// the rules, one card each; the last one keeps going
+const RULES = ["Answer last", "Build ceremony", "Long word", "Many ideas per sentence", "Payload annotated", "Narrated tool runs", "Never knows when to stop", "Always performs"];
+const CARD_AT = RULES.map((_, i) => 28.6 + i * 0.85);
+RULES.forEach((rule, i) => {
+  const card = document.createElement("div"); card.className = "card";
+  card.style.animation = "fadeUp 0.5s " + CARD_AT[i] + "s var(--ease) both";
+  const spin = i === RULES.length - 1 ? ' style="animation: spinOn 3s 35.4s cubic-bezier(0.3, 0, 0.7, 1) both"' : "";
+  const face = (cls) => '<div class="face ' + cls + '"><div class="who"><span class="mark"></span>salesman · rule ' + (i + 1) + '</div><div class="rule">' + rule + '</div></div>';
+  card.innerHTML = '<div class="inner"' + spin + '>' + face("front") + face("back") + '</div>';
+  $("#cards").appendChild(card);
 });
 
 /* ---------- the clock ---------- */
-const NARR_BEFORE = "Before I touch anything, I'm going to read the component, because one should never, ever, under any circumstances edit a file one has not read, and because I'd like to see the prop in its natural habitat.";
-const NARR_AFTER = "What happened: the file was read, all 30 lines of it, thirty. What it means: I now know exactly where the object is built, which is line 12. How I feel about it: optimistic, genuinely.";
+const NARR_BEFORE = "Before I touch anything, I'm going to read the component, because one should never, ever, under any circumstances edit a file one has not read.";
+const NARR_AFTER = "What happened: the file was read, all 30 lines of it, thirty. What it means: the object is built on line 12. How I feel about it: optimistic, genuinely.";
 const CMD = "npx skills add 0xRuangsak/salesman -g";
-const COLD = "why many token when few do trick";
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const ease = (x) => 1 - Math.pow(1 - x, 3);
 function typed(el, text, t, a, b) { el.textContent = text.slice(0, Math.round(text.length * clamp01((t - a) / (b - a)))); }
@@ -395,25 +290,24 @@ function counter(el, t, a, b, from, to) { el.textContent = Math.round(from + (to
 
 function seek(t) {
   for (const a of document.getAnimations()) { a.pause(); a.currentTime = t * 1000; }
-  $("#progress").style.transform = "scaleX(" + clamp01(t / 180) + ")";
-  typed($("#cold1"), COLD, t, 1.0, 4.5);
-  $("#s1 .cur").style.display = t < 9.4 ? "inline-block" : "none";
-  const n = Math.round(REPLY_WORDS.length * clamp01((t - 22.4) / (44.0 - 22.4)));
+  $("#progress").style.transform = "scaleX(" + clamp01(t / 60) + ")";
+  // the reply starts at a reading pace and runs away: a slow start, then a torrent
+  const p = Math.pow(clamp01((t - 2.3) / (10.3 - 2.3)), 2.2);
+  const n = Math.round(REPLY_WORDS.length * p);
   REPLY_WORDS.forEach((w, i) => w.classList.toggle("on", i < n));
-  counter($("#count-left"), t, 21.7, 22.5, 0, 20);
-  counter($("#count-right"), t, 22.4, 44.0, 0, 644);
+  $("#count").textContent = Math.round(644 * p).toLocaleString("en-US");
   const last = REPLY_WORDS[Math.max(0, n - 1)];
   const bottom = n > 0 ? last.offsetTop + last.offsetHeight : 0;
-  $("#right-reply").style.transform = "translateY(" + (-Math.max(0, bottom - 660 + 40)) + "px)";
-  typed($("#narr-before"), NARR_BEFORE, t, 116.2, 120.0);
-  typed($("#narr-after"), NARR_AFTER, t, 122.4, 129.0);
-  counter($("#tile-1"), t, 136, 140, 20, 644);
-  counter($("#tile-2"), t, 136.4, 140.4, 20, 893);
-  counter($("#tile-3"), t, 136.8, 140.8, 20, 778);
-  typed($("#cmd"), CMD, t, 170.5, 173.5);
+  $("#reply").style.transform = "translateY(" + (-Math.max(0, bottom - 780 + 40)) + "px)";
+  typed($("#narr-before"), NARR_BEFORE, t, 38.6, 40.6);
+  typed($("#narr-after"), NARR_AFTER, t, 42.2, 44.2);
+  counter($("#tile-1"), t, 46.8, 48.8, 0, 644);
+  counter($("#tile-2"), t, 47.1, 49.1, 0, 893);
+  counter($("#tile-3"), t, 47.4, 49.4, 0, 778);
+  typed($("#cmd"), CMD, t, 54.4, 56.4);
 }
 window.seek = seek;
-window.DURATION = 180;
+window.DURATION = 60;
 seek(0);
 </script>
 </body>

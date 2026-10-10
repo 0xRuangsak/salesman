@@ -20,6 +20,9 @@ one of caveman's, turned around.
   [Opusfived](https://opusfived.dev). One ask, eight turns, no model, one
   file. The script is the `TURNS` array at the top of its `<script>`; the
   engine below it only plays it.
+- `trailer/`: the one-minute trailer, and everything that renders it: the
+  page, the render script, the score in code, the fonts. Salesman only, no
+  caveman on screen. Numbers in it come from `benchmarks/bench.py`.
 
 ## Rules for changing the skills
 

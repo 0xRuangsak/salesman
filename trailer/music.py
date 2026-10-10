@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Compose the trailer's music bed.
 
-Three minutes of slow, warm, synthesized music, written in code so the repo owns it
+One minute of slow, warm, synthesized music, written in code so the repo owns it
 outright. Nothing is sampled. The structure follows the trailer's scenes: a low drone
-under the cold open, the pad and a plucked line from the title on, a soft tick on every
-rule-card flip, a drop to the pad alone for "Your code stays yours", and a fade at the end.
+under the opening reply, the pad and a plucked line from the title on, a soft tick as
+every rule card lands, a drop to the pad alone for "Your code stays yours", and a fade
+at the end.
 
     python3 trailer/music.py trailer/music.wav
 
@@ -19,20 +20,19 @@ from scipy.io import wavfile
 from scipy.signal import butter, sosfilt
 
 SR = 44100
-LENGTH = 180.0
+LENGTH = 60.0
 N = int(SR * LENGTH)
 T = np.arange(N) / SR
 
 # ---------- scene markers, in seconds, matching trailer.html ----------
-TITLE = 10.0
-SPLIT = 20.0
-MIRROR = 60.0
-FLIPS = [63.0 + i * 3.8 for i in range(8)]
-MODES = 132.0
-NUMBERS = 150.0
-QUIET = 162.0
-CLOSE = 170.0
-END = 180.0
+TITLE = 11.0
+BLOCKS = 17.0
+RULES = 28.0
+CARDS = [28.6 + i * 0.85 for i in range(8)]
+MODES = 45.0
+QUIET = 50.5
+CLOSE = 54.0
+END = 60.0
 
 
 def note(name):
@@ -83,7 +83,7 @@ def pluck(freq, at, length=2.6, level=1.0):
 
 
 def tick(at, level=1.0):
-    """A short click for the rule-card flips: a bright tap over a low knock, so it reads through the pad."""
+    """A short click for the rule cards: a bright tap over a low knock, so it reads through the pad."""
     i0 = int(at * SR)
     i1 = min(N, i0 + int(0.12 * SR))
     tt = np.arange(i1 - i0) / SR
@@ -105,9 +105,9 @@ CHORD_LEN = 8.0
 
 MIX = np.zeros(N)
 
-# the drone under the cold open: the tonic, low and quiet, swelling into the title
+# the drone under the opening reply: the tonic, low and quiet, swelling into the title
 drone = pad_voice(note("A2"), level=0.5) + pad_voice(note("E3"), level=0.25)
-drone_env = env(T, 0.0, END, 4.0, 2.0) * (0.55 + 0.45 * smooth(np.clip((T - 6.0) / (TITLE - 6.0), 0, 1)))
+drone_env = env(T, 0.0, END, 2.5, 2.0) * (0.55 + 0.45 * smooth(np.clip((T - 6.0) / (TITLE - 6.0), 0, 1)))
 MIX += lowpass(drone, 420) * drone_env * 0.22
 
 # the pad and the bass, chord by chord, from the title to the end
@@ -124,31 +124,31 @@ while t_chord < END:
     t_chord += CHORD_LEN
     chord_i += 1
 
-# the plucked line: a slow arpeggio, denser in the middle of the film, gone in the quiet scene
+# the plucked line: a slow arpeggio, denser in the skills scene, gone in the quiet scene
 rng = np.random.default_rng(7)
 t = TITLE + 1.0
 while t < QUIET - 1.0:
     chord = PROGRESSION[int((t - TITLE) // CHORD_LEN) % len(PROGRESSION)]
     arp = chord[2]
-    step = 1.0 if t < SPLIT else (0.5 if MODES <= t < NUMBERS else 0.75)
+    step = 1.0 if t < BLOCKS else (0.5 if MODES <= t < QUIET else 0.75)
     freq = note(arp[int((t - TITLE) / step) % len(arp)])
-    level = 0.28 if t < MIRROR else 0.34
+    level = 0.28 if t < RULES else 0.34
     if rng.random() < 0.85:
         pluck(freq, t, level=level)
     t += step
 
-# a tick on every card flip in the mirror scene
-for f in FLIPS:
+# a tick as each rule card lands
+for f in CARDS:
     tick(f, level=0.55)
 
-# the quiet scene: everything but the pad drops out for eight seconds
-quiet = 1.0 - 0.75 * env(T, QUIET, CLOSE, 0.6, 1.5)
+# the quiet scene: everything but the pad drops out
+quiet = 1.0 - 0.75 * env(T, QUIET, CLOSE, 0.6, 1.0)
 MIX *= quiet
 
 # a final held chord that resolves, and a fade to silence
 final = pad_voice(note("A3"), level=1.0) + pad_voice(note("C#4"), level=0.8) + pad_voice(note("E4"), level=0.8)
-MIX += lowpass(final, 1200) * env(T, CLOSE + 4.5, END, 3.0, 0.5) * 0.12
-MIX *= env(T, 0.0, END - 0.6, 0.01, 4.0)
+MIX += lowpass(final, 1200) * env(T, CLOSE + 2.0, END, 2.5, 0.5) * 0.12
+MIX *= env(T, 0.0, END - 0.4, 0.01, 2.5)
 
 # ---------- space: a small feedback-comb reverb, mixed in lightly ----------
 def comb(x, delay_s, feedback):

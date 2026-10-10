@@ -189,7 +189,7 @@ What every mode keeps, no matter what: code, commands, paths, numbers, and exact
 | `/salesman` · `/ultrasale` · `/megasale` | The voice, the brochure, the contract. `/salesman status` shows the mode, `/salesman off` or `stop salesman` ends it |
 | `benchmarks/bench.py` | Counts the tokens of the example replies so the numbers above are real |
 | `demo.html` | The voice from the user's side. One ask, eight turns, never right. Open it in a browser |
-| `trailer/salesman-trailer.mp4` | Three minutes, 16:9, silent. Salesman against caveman, from the repo's own numbers. The page it is rendered from sits beside it |
+| `trailer/salesman-trailer.mp4` | One minute, 16:9, with a soundtrack. Salesman alone, from the repo's own replies and numbers. The page it is rendered from sits beside it |
 | A `/salesman-commit` | Does not exist. Commits stay one line. Salesman does not sign |
 | A `/salesman-review` | Does not exist. Reviews land in PRs, and PRs stay normal. See above |
 
