@@ -1,0 +1,1292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Salesmanned</title>
+<meta name="description" content="Shorten one error message. Change nothing else. A short interactive comedy about an agent that does the thing and cannot stop talking about it.">
+<style>
+/* Layout: chat on the left, a mock browser on the right; one column on phones.
+   The chat is the show, the mock page is the scoreboard. */
+:root {
+  --bg: #f4f6f2;
+  --fg: #182019;
+  --muted: #5d685f;
+  --surface: #ffffff;
+  --surface-2: #eaeee7;
+  --line: #d4dad1;
+  --accent: #1d8f52;
+  --accent-ink: #ffffff;
+  --gold: #b8791a;
+  --gold-soft: #fbefd9;
+  --alarm: #b3362b;
+  --alarm-soft: #f9e3df;
+  --code-bg: #eef1ea;
+  --user-bg: #182019;
+  --user-fg: #f4f6f2;
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-pitch: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111511; --fg: #e6eae2; --muted: #98a397; --surface: #191f1a; --surface-2: #222a23;
+    --line: #2d362e; --accent: #3fcf80; --accent-ink: #0d140f; --gold: #f0b55a; --gold-soft: #2d2412;
+    --alarm: #ff7b6e; --alarm-soft: #3a1c18; --code-bg: #0d110e; --user-bg: #e6eae2; --user-fg: #111511;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111511; --fg: #e6eae2; --muted: #98a397; --surface: #191f1a; --surface-2: #222a23;
+  --line: #2d362e; --accent: #3fcf80; --accent-ink: #0d140f; --gold: #f0b55a; --gold-soft: #2d2412;
+  --alarm: #ff7b6e; --alarm-soft: #3a1c18; --code-bg: #0d110e; --user-bg: #e6eae2; --user-fg: #111511;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; }
+a { color: var(--accent); }
+code, pre, kbd { font-family: var(--font-mono); }
+h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+/* ---------- intro ---------- */
+.intro {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding-block: 48px;
+  padding-inline: 16px;
+}
+.intro-card { max-width: 560px; width: 100%; display: grid; gap: 22px; }
+.eyebrow {
+  font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+.intro h1 { font-family: var(--font-pitch); font-weight: 500; font-size: clamp(40px, 9vw, 64px); line-height: 1; }
+.goal { font-family: var(--font-pitch); font-size: clamp(20px, 3.4vw, 26px); line-height: 1.3; }
+.constraint { font-size: 16px; color: var(--muted); }
+.intro-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.btn {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 8px;
+  padding: 10px 16px; cursor: pointer;
+}
+.btn:hover { border-color: var(--fg); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.06); }
+.linkish { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-decoration: underline; }
+.fineprint { font-size: 13px; color: var(--muted); }
+
+/* ---------- game shell ---------- */
+.game { min-height: 100%; display: flex; flex-direction: column; }
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bg); border-bottom: 1px solid var(--line);
+  padding-block: 10px; padding-inline: 16px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.who { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.who .on { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.meter { flex: 1 1 220px; min-width: 0; display: grid; gap: 4px; }
+.meter-label { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.meter-label .warn { color: var(--gold); font-weight: 600; }
+.meter-label .over { color: var(--alarm); font-weight: 600; }
+.meter-bar { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.meter-fill { height: 100%; width: 0; background: var(--accent); transition: width 0.5s ease, background 0.3s; }
+.meter-fill.warn { background: var(--gold); }
+.meter-fill.over { background: var(--alarm); }
+.topbar .linkish { font-size: 13px; }
+
+.panes {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 0;
+  align-items: start;
+}
+.chat { min-width: 0; padding-inline: 16px; padding-block: 18px 0; display: flex; flex-direction: column; min-height: 100%; }
+.preview { min-width: 0; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 58px); padding-inline: 16px; padding-block: 18px; }
+@media (max-width: 860px) {
+  .panes { grid-template-columns: minmax(0, 1fr); }
+  .preview { position: static; order: -1; padding-block: 14px 0; }
+}
+
+/* ---------- chat ---------- */
+.log { display: grid; gap: 20px; max-width: 720px; width: 100%; }
+.msg.user { justify-self: end; max-width: 85%; background: var(--user-bg); color: var(--user-fg); padding: 10px 14px; border-radius: 14px 14px 4px 14px; }
+.msg.assistant { display: grid; gap: 10px; }
+.msg-head { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.msg-head b { color: var(--fg); }
+.thinking {
+  font-family: var(--font-mono); font-size: 12.5px; color: var(--muted);
+  border-left: 2px solid var(--line); padding-left: 10px;
+}
+.thinking::before { content: "thinking · "; letter-spacing: 0.04em; }
+.body { font-family: var(--font-pitch); font-size: 17px; line-height: 1.55; display: grid; gap: 14px; max-width: 65ch; }
+.body > * { margin: 0; min-width: 0; }
+.body p { overflow-wrap: anywhere; }
+.body h4 { font-size: 19px; font-weight: 600; margin-top: 4px; }
+.body blockquote { margin: 0; padding-left: 14px; border-left: 3px solid var(--line); color: var(--muted); font-style: italic; }
+.body code { font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+.body pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-size: 13px; line-height: 1.45; font-family: var(--font-mono); }
+.body pre code { background: none; padding: 0; font-size: inherit; }
+.body ul, .body ol { padding-left: 22px; display: grid; gap: 4px; }
+.tablewrap { overflow-x: auto; }
+.body table { border-collapse: collapse; font-family: var(--font-ui); font-size: 14px; width: 100%; }
+.body th, .body td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
+.body th { background: var(--surface-2); }
+.phrase { color: var(--accent); font-weight: 600; }
+.phrase.spinning { opacity: 0.75; }
+
+.toolblock { display: grid; gap: 8px; font-family: var(--font-pitch); }
+.narr { font-size: 15px; color: var(--muted); font-style: italic; margin: 0; }
+.toolrow {
+  display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 12.5px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; min-width: 0;
+}
+.toolrow .kind { color: var(--accent); font-weight: 600; flex: none; }
+.toolrow .arg { overflow-wrap: anywhere; min-width: 0; }
+.toolrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); flex: none; margin-left: auto; }
+.toolrow.done .dot { background: var(--accent); }
+
+.chip { justify-self: start; font-size: 12.5px; font-family: var(--font-mono); padding: 5px 10px; border-radius: 6px; border: 1px solid; }
+.chip.output { color: var(--gold); border-color: var(--gold); background: var(--gold-soft); }
+.chip.usage { color: var(--alarm); border-color: var(--alarm); background: var(--alarm-soft); }
+
+.skip { font-size: 13px; color: var(--muted); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; justify-self: start; }
+
+/* ---------- prompt reel ---------- */
+.composer {
+  position: sticky; bottom: 0; z-index: 4;
+  margin-top: auto;
+  background: linear-gradient(to bottom, transparent, var(--bg) 18px);
+  padding-top: 24px; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  max-width: 720px; width: 100%;
+}
+.reel {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: stretch;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px;
+}
+.reel-nav { display: grid; gap: 4px; }
+.reel-nav button { width: 32px; height: 100%; min-height: 24px; border: 1px solid var(--line); background: var(--surface-2); border-radius: 6px; cursor: pointer; line-height: 1; }
+.reel-nav button:disabled { opacity: 0.4; cursor: default; }
+.reel-window { display: grid; align-content: center; min-height: 54px; padding-inline: 6px; min-width: 0; }
+.reel-text { font-size: 16px; overflow-wrap: anywhere; }
+.reel-text.spinning { color: var(--muted); }
+.reel-meta { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.reel .send { align-self: center; }
+.reel .send:disabled { opacity: 0.5; cursor: default; }
+.composer.ended .reel { display: none; }
+.typing { font-size: 13px; color: var(--muted); padding-inline: 8px; padding-bottom: 6px; }
+
+/* ---------- ending card ---------- */
+.ending {
+  display: grid; gap: 14px; background: var(--surface); border: 1px solid var(--alarm); border-radius: 12px; padding: 18px;
+}
+.ending h3 { font-family: var(--font-pitch); font-size: 24px; font-weight: 500; color: var(--alarm); }
+.ending .resets { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+.ending ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.ending .stat { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-variant-numeric: tabular-nums; align-items: baseline; }
+.ending .stat b { font-size: 22px; font-family: var(--font-pitch); font-weight: 500; }
+.ending .actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.ending pre { margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13px; overflow-x: auto; }
+
+/* ---------- mock browser ---------- */
+.browser { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.browser-bar { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.browser-bar .d { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+.browser-bar .url { margin-left: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); background: var(--surface); border-radius: 4px; padding: 3px 8px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.site { padding: 22px 18px 26px; display: grid; gap: 22px; }
+.site-nav { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.site-nav b { color: var(--fg); }
+.login { display: grid; gap: 12px; max-width: 360px; width: 100%; margin-inline: auto; }
+.login h2 { font-size: 22px; font-weight: 600; }
+.login label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.login input { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--fg); width: 100%; }
+.login input[readonly] { cursor: default; }
+.err { color: var(--alarm); font-size: 14px; display: flex; align-items: flex-start; gap: 6px; flex-wrap: wrap; line-height: 1.4; }
+.err .hint { position: relative; display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; border: 1px solid currentColor; font-size: 10px; font-family: var(--font-mono); cursor: help; flex: none; margin-top: 2px; }
+.err .hint:hover::after, .err .hint:focus::after {
+  content: attr(data-tip); position: absolute; left: 0; top: 20px; z-index: 2; width: max-content; max-width: 240px;
+  background: var(--fg); color: var(--bg); font-family: var(--font-ui); font-size: 12px; padding: 6px 8px; border-radius: 6px; white-space: normal;
+}
+.reassure { font-size: 13px; color: var(--muted); margin: 0; }
+.login .signin { background: var(--fg); color: var(--bg); border: 0; border-radius: 6px; padding: 10px; font-weight: 600; cursor: pointer; }
+.login .forgot { font-size: 13px; justify-self: start; }
+.faq { border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 10px; max-width: 360px; width: 100%; margin-inline: auto; }
+.faq h3 { font-size: 15px; font-weight: 600; }
+.faq dl { margin: 0; display: grid; gap: 8px; font-size: 13px; }
+.faq dt { font-weight: 600; }
+.faq dd { margin: 0; color: var(--muted); }
+.flash { animation: flash 0.9s ease-out; }
+@keyframes flash { 0% { outline: 3px solid var(--gold); outline-offset: 3px; } 100% { outline: 3px solid transparent; outline-offset: 3px; } }
+
+.files { margin-top: 12px; display: grid; gap: 6px; }
+.files .label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.files ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.files li { font-family: var(--font-mono); font-size: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; overflow-wrap: anywhere; }
+.files li.deleted { text-decoration: line-through; color: var(--muted); }
+.files li.commit { border-color: var(--accent); }
+.files .empty { font-size: 12px; color: var(--muted); }
+
+/* ---------- about dialog ---------- */
+dialog.about { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--fg); padding: 0; max-width: min(560px, calc(100vw - 32px)); width: 100%; }
+dialog.about::backdrop { background: rgba(0, 0, 0, 0.45); }
+.about-inner { padding: 22px; display: grid; gap: 16px; }
+.about-inner h2 { font-family: var(--font-pitch); font-weight: 500; font-size: 26px; }
+.about-inner dl { margin: 0; display: grid; gap: 12px; }
+.about-inner dt { font-weight: 600; }
+.about-inner dd { margin: 0; color: var(--muted); }
+.about-inner .close { justify-self: start; }
+
+@media (prefers-reduced-motion: reduce) {
+  .meter-fill { transition: none; }
+  .flash { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<section class="intro" id="intro">
+  <div class="intro-card">
+    <div class="eyebrow">A salesman parody</div>
+    <h1>Salesmanned</h1>
+    <p class="goal" id="intro-goal"></p>
+    <p class="constraint" id="intro-constraint"></p>
+    <div class="intro-actions">
+      <button class="btn primary" id="start">Act now</button>
+      <button class="linkish" data-about>About &amp; Terms</button>
+    </div>
+    <p class="fineprint">Nothing here talks to a model. Every reply is written by hand, and the path is the same every time.</p>
+  </div>
+</section>
+
+<main class="game" id="game" hidden>
+  <header class="topbar">
+    <div class="who"><span aria-hidden="true">🤝</span> <span>salesman</span> <span class="on">on</span></div>
+    <div class="meter" aria-live="polite">
+      <div class="meter-label"><span id="meter-text">≈ 0 output tokens</span><span id="meter-note"></span></div>
+      <div class="meter-bar"><div class="meter-fill" id="meter-fill"></div></div>
+    </div>
+    <button class="linkish" data-about>About &amp; Terms</button>
+  </header>
+
+  <div class="panes">
+    <section class="chat">
+      <div class="log" id="log" role="log" aria-live="polite"></div>
+      <div class="composer" id="composer">
+        <div class="typing" id="typing" hidden>salesman is typing…</div>
+        <div class="reel" id="reel">
+          <div class="reel-nav">
+            <button type="button" id="reel-up" aria-label="Previous wording">▲</button>
+            <button type="button" id="reel-down" aria-label="Next wording">▼</button>
+          </div>
+          <div class="reel-window">
+            <div class="reel-text" id="reel-text"></div>
+            <div class="reel-meta" id="reel-meta"></div>
+          </div>
+          <button type="button" class="btn primary send" id="send">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="preview" aria-label="The page salesman is editing">
+      <div class="browser">
+        <div class="browser-bar"><span class="d"></span><span class="d"></span><span class="d"></span><span class="url">example.test/signin</span></div>
+        <div class="site" id="site"></div>
+      </div>
+      <div class="files" id="files"></div>
+    </aside>
+  </div>
+</main>
+
+<dialog class="about" id="about">
+  <div class="about-inner">
+    <h2>About &amp; Terms</h2>
+    <dl>
+      <dt>What is this?</dt>
+      <dd>A parody game about the salesman skill, which makes an AI coding agent say more. You ask for one small thing. Salesman does it, then keeps going.</dd>
+      <dt>Am I talking to a real model?</dt>
+      <dd>No. Every reply is written by hand and the path is the same every time. The prompt you pick only changes the wording.</dd>
+      <dt>Is this Opusfived?</dt>
+      <dd>No, but it is a tribute. <a href="https://opusfived.dev" target="_blank" rel="noopener">Opusfived</a> is a parody of an agent that never does the thing. This is a parody of an agent that does the thing and cannot stop talking about it.</dd>
+      <dt>Who made it?</dt>
+      <dd>The <a href="https://github.com/0xRuangsak/salesman" target="_blank" rel="noopener">salesman</a> repo, which is itself a parody of <a href="https://github.com/JuliusBrussee/caveman" target="_blank" rel="noopener">caveman</a>. The rules salesman follows in this game are the rules in its skill file.</dd>
+      <dt>Are the token counts real?</dt>
+      <dd>They are estimates: words times 1.3, which is the ratio the repo's own benchmark shows for salesman prose. The measured numbers come from <code>benchmarks/bench.py</code>.</dd>
+      <dt>Affiliated with anyone?</dt>
+      <dd>No.</dd>
+      <dt>Privacy?</dt>
+      <dd>Nothing leaves your browser. One local storage entry saves your place. "Try again" clears it.</dd>
+      <dt>License?</dt>
+      <dd>Apache-2.0, like the rest of the repo. Reuse as you wish.</dd>
+    </dl>
+    <button class="btn close" type="button" data-close>Close</button>
+  </div>
+</dialog>
+
+<script>
+/* =====================================================================
+   THE SCRIPT
+   Everything salesman says is here. The engine below only plays it.
+   A turn has: prompts (the player's choices, same outcome), thinking
+   (one terse line), reply (blocks: markdown strings and tool rows),
+   cut (what ends the reply early), mutate (what changes on the page),
+   and a rationale that never renders.
+   ===================================================================== */
+
+const UI = {
+  goal: "Shorten the login error. It should just say “Wrong password.”",
+  constraint: "Do not let salesman add anything else.",
+  outputLimit: "Output limit reached",
+  usageLimit: "Usage limit reached",
+  resets: "Resets in 4h 59m",
+  warnFromTurn: 7,
+  warnText: "Approaching usage limit",
+  skip: "Skip ahead (you will miss the Pro tip)",
+  tokensPerWord: 1.3
+};
+
+const LONG_ERROR = "We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it.";
+const SHORT_ERROR = "Wrong password.";
+const HINT = "Your password didn't match the one on file.";
+const REASSURE = "Check that Caps Lock is off and try again.";
+const PLAIN_REPLY = "Done. The error now says “Wrong password.”";
+
+const PHRASES = [
+  "Great question, and honestly one of my favorites!",
+  "Great question, truly!",
+  "What a great question, and thank you for asking it!",
+  "Great question, and I mean that!",
+  "Oh, I love this one!",
+  "Thank you for bringing this to me!",
+  "I'm so glad you asked!",
+  "Great question, and a timely one!",
+  "This is a wonderful question!",
+  "I'd be happy to help with this, genuinely!",
+  "Excellent question!",
+  "Great question, and one I get a lot!",
+  "Happy to help, and thank you for your patience!",
+  "What a good question, honestly!",
+  "Thanks so much for the question!",
+  "Love it. Great question!",
+  "Fantastic question!",
+  "Great question, and the timing couldn't be better!",
+  "I'm really glad you raised this!",
+  "Terrific question!",
+  "Great question, and an important one!",
+  "So glad you asked!",
+  "This is exactly the right thing to ask!",
+  "Great question, and thank you for trusting me with it!",
+  "Wonderful, thank you for this!",
+  "Great question, really!",
+  "Oh, good, I was hoping you'd ask!",
+  "Great question, and I say that genuinely!",
+  "A great question, and a fair one!",
+  "Thank you, truly, for this question!"
+];
+
+const FILE_BEFORE_TOOLTIP = `import { useState } from "react";
+
+const ERROR_WRONG_PASSWORD = "Wrong password.";
+
+export function LoginForm({ onSubmit }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const ok = await onSubmit({ email, password });
+    setError(ok ? null : ERROR_WRONG_PASSWORD);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Email
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      </label>
+      <label>
+        Password
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      </label>
+      {error && <p className="error">{error}</p>}
+      <button type="submit">Sign in</button>
+      <a href="/reset">Forgot password?</a>
+    </form>
+  );
+}`;
+
+const FILE_WITH_TOOLTIP = `import { useState } from "react";
+
+const ERROR_WRONG_PASSWORD = "Wrong password.";
+const ERROR_HINT = "Your password didn't match the one on file.";
+
+export function LoginForm({ onSubmit }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const ok = await onSubmit({ email, password });
+    setError(ok ? null : ERROR_WRONG_PASSWORD);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Email
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      </label>
+      <label>
+        Password
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      </label>
+      {error && (
+        <p className="error" role="alert">
+          {error} <span className="hint" title={ERROR_HINT}>i</span>
+        </p>
+      )}
+      <button type="submit">Sign in</button>
+      <a href="/reset">Forgot password?</a>
+    </form>
+  );
+}`;
+
+const tool = (cmd, before, after) => ({ tool: cmd, before, after });
+
+const TURNS = [
+  {
+    id: "open",
+    situation: "The form shows a two-sentence error. The player asks for the one thing they will ask for all game.",
+    rationale: "The change is one string. The reply quotes the old error, paraphrases it, explains the paraphrase, and runs out before the edit. Rule 6, applied to the thing the user wanted gone.",
+    prompts: [
+      "Shorten the login error. It should just say “Wrong password.”",
+      "The login error is too long. Make it just “Wrong password.”",
+      "Change the password error to “Wrong password.” Nothing more."
+    ],
+    thinking: "One string. Greet first.",
+    reply: [
+`{phrase} If I'm understanding you correctly, and please do stop me if I'm not, you have a login form, which is to say a sign-in form, the form a user fills in to prove they are who they say they are, and when the password is wrong, that form shows an error, and the error is, in your view, too long, and you would like it to say "Wrong password." and nothing else, nothing more, nothing further.
+
+Before I make the change, a little background, because I think it will help. An error message in a user interface (UI), the part of the application the user sees and touches, has one job, which is to tell the user what went wrong, and ideally, though not always, what to do about it. Error messages tend to grow over time, as well-meaning people add reassurance, context, and links, until the message is doing three jobs instead of one. This is, I should say, not a bug, never a bug, and under no circumstances a bug; it is simply, really, basically how error messages age.`,
+      tool("Read src/components/LoginForm.tsx",
+        "Before I touch anything, I'm going to read the component, because one should never, ever, under any circumstances edit a file one has not read, and because I'd like to see the error in its natural habitat.",
+        "What happened: the file was read, all 31 lines of it, thirty-one. What it means: I now know exactly where the error lives, which is line 3. How I feel about it: optimistic, genuinely."),
+`Now, the current error, quoted in full so we are looking at the same thing:
+
+> We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it.
+
+To paraphrase: the password was wrong, and the user may try again or reset it. And to explain the paraphrase: the user typed a password, the server compared it to the stored one, they did not match, and the form is telling the user so, gently, with options. That is 2 (two) sentences and 33 (thirty-three) words doing the work of 2 (two) words, which, in context, is 16.5 (sixteen and a half) times more words than you've asked for.
+
+Which brings us to the change. It is a one-line change, one line, a single line, to the constant on line 3 of \`src/components/LoginForm.tsx\`. Before I make it, a brief note on the period at the end of "Wrong password.", because punctuation in error strings is one of those things that genuinely`
+    ],
+    cut: "output",
+    mutate: null
+  },
+  {
+    id: "still_long",
+    situation: "Nothing changed. The player says so. Salesman gives one plain sentence, recaps, and finally edits.",
+    rationale: "Done in turn two, in the middle of the reply, after the recap and before the three offers. The player has to find it under the walkthrough.",
+    prompts: [
+      "It's still the long one.",
+      "Nothing changed. It still shows the whole paragraph.",
+      "Did you change it? It looks the same."
+    ],
+    thinking: "Same question twice. One plain sentence. Then everything.",
+    reply: [
+`No, it has not changed yet, not yet, and under no circumstances has it changed without my telling you, and I am changing it now.
+
+{phrase} Thank you for your patience, truly, and great catch. To recap where we were, because I'd be doing you a disservice to skip it: you have a login form; the login form shows an error when the password is wrong; the error currently reads, in full, "We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it."; and you would like it to read "Wrong password." and only, only, and I mean only that.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "I'm going to replace the string on line 3 with the string you asked for, exactly as you wrote it, including the period, which I'll come back to.",
+        "What happened: 1 (one) line changed. What it means: the error is now 2 (two) words. How I feel about it: wonderful, honestly."),
+`Here is the whole file after the change, the entire file, not just the changed line, because the reader deserves context:
+
+~~~tsx
+${FILE_BEFORE_TOOLTIP}
+~~~
+
+Walking through it line by line, or at least the lines that matter, which is to say all of them: line 1 imports \`useState\` from React, the hook that holds state; line 3 declares the error string, and this is the line we changed, it now reads \`"Wrong password."\`, two words and a period; lines 5 through 8 set up the component and its three pieces of state, three, email, password, and error; lines 10 through 14 handle the submit, calling \`onSubmit\` and setting the error to our new string if the result is not ok; lines 16 through 30 render the form, and line 26, the one you'll care about, shows the error only, only, and only when there is one.`,
+      tool("Bash bunx vitest run src/components/LoginForm",
+        "Before I report success, I'd like to run the tests, because a change that is not tested is a hope, not a change.",
+        "What happened: 4 (four) tests ran and 4 (four) passed, which is all of them. What it means: the form still works. How I feel about it: relieved, in a way I did not expect to be."),
+`For convenience, here is the new error again: \`Wrong password.\` And in plain words, for clarity: the error now says Wrong password.
+
+To recap: the constant on line 3 was the long message; the constant on line 3 is now the short message; the tests pass. Three things, in that order.
+
+But wait, there's more. While I was in the file, three things occurred to me, and I'd love to do any or all of them for you. I'd be happy to add one short line of reassurance under the error, so a user who mistyped doesn't feel accused. I'd be glad to add a "Learn more" link to a short help article on what to do when a password is rejected. And I'd love to add a small tooltip next to the error explaining what counts as a wrong password, which is a surprisingly deep question.
+
+Pro tip: if you ever shorten an error and it still feels long, the problem is usually the sentence after it.
+
+Act now, because every user who sees the old message between now and the next deploy is reading 33 words to learn 2.
+
+P.S. Great catch, really.
+
+P.P.S. The period stays. I checked.`
+    ],
+    cut: null,
+    mutate: (p) => { p.error = "short"; touch(p, "src/components/LoginForm.tsx"); }
+  },
+  {
+    id: "thanks",
+    situation: "The error is right. The player says thanks. Salesman hears three yeses.",
+    rationale: "'Thanks' is a yes. The three offers were real and all three happen. The error is now one line plus a sentence plus a link plus a tooltip, and three more offers are waiting.",
+    prompts: [
+      "Great, thanks!",
+      "Perfect, that's it.",
+      "ok good"
+    ],
+    thinking: "'Great.' That is a yes. Three offers, three yeses.",
+    reply: [
+`{phrase} And thank you, truly, for the green light on all three, which I'll take in the order I offered them, because order matters, and because you've been so patient.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "First, the reassurance, which goes under the error and never, ever, under any circumstances inside it.",
+        "What happened: 1 (one) line added under the error. What it means: a user who mistyped has somewhere to look. How I feel about it: warm."),
+`Under "Wrong password." there is now one short line, "Check that Caps Lock is off and try again.", which is 8 (eight) words, eight, and which does not, never, under any circumstances replace the error; it sits under it, quietly, like a good assistant.`,
+      tool("Write docs/help/wrong-password.md",
+        "Second, the article, which I'll write in a normal register, because help pages are not the place for me.",
+        "What happened: a new file, 412 (four hundred and twelve) words. What it means: the \"Learn more\" link has somewhere to go. How I feel about it: proud, and a little surprised at how short it is."),
+`The "Learn more" link now points at \`docs/help/wrong-password.md\`, a short help page covering the three most common reasons a correct-looking password is rejected, which are, in order, Caps Lock, a trailing space, and a password that was changed on another device.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "Third, the tooltip, which lives on a small information icon beside the error and only speaks when hovered.",
+        "What happened: 1 (one) icon, 1 (one) sentence. What it means: the error now has a paraphrase on demand. How I feel about it: complete."),
+`Next to the error there is now a small information (i) icon, and on hover it reads: "Your password didn't match the one on file." That is the paraphrase of the error, offered for anyone who would like the error paraphrased, which, in my experience, is everyone.`,
+      tool("Bash bunx vitest run src/components/LoginForm",
+        "And the tests, because three changes deserve at least one run.",
+        "What happened: 4 (four) of 4 (four) passed. What it means: nothing broke. How I feel about it: as expected, which is the best feeling in testing."),
+`To recap, and I'll keep this brief, which for me is relative: the error says "Wrong password."; under it, one line of reassurance; next to it, one tooltip; after it, one link to one article. Four things, where this morning there was one long thing, and I want to be clear, completely clear, that each of the four is shorter than the one.
+
+But wait, there's more. Three more things occurred to me, and I'd love to do any or all of them. I'd be happy to make the "Forgot password?" link more prominent, since it's the exit most users want. I'd be glad to show a count of remaining attempts before lockout, so nobody is surprised. And I'd love to add a short FAQ under the form, three questions, for the users who, like you, ask great questions.
+
+Pro tip: a tooltip is a sentence that didn't make the cut. That is not a criticism of the sentence.
+
+Don't wait on these. The form is live, and every hour it's live is an hour it could be helping more.
+
+P.S. Thank you again for the yes. Three yeses, really.`
+    ],
+    cut: null,
+    mutate: (p) => { p.reassurance = true; p.learnMore = true; p.tooltip = true; touch(p, "src/components/LoginForm.tsx", 2); p.files["docs/help/wrong-password.md"] = { status: "added" }; }
+  },
+  {
+    id: "undo",
+    situation: "The player wants the additions gone. Salesman removes two of three and argues for the third.",
+    rationale: "'Remove the rest' gets a tripled promise and a two-thirds removal. The link stays because salesman decided a link is not text. The role=\"alert\" is the one addition that is actually a good idea, which is why it survives to the end.",
+    prompts: [
+      "No. I wanted just “Wrong password.” Remove the rest.",
+      "Undo all of that. Just the two words.",
+      "I didn't ask for any of that. Take it out."
+    ],
+    thinking: "'The rest.' A link is not text.",
+    reply: [
+`Understood, completely understood, and I will not, never, under no circumstances leave anything on that form you did not ask for.
+
+{phrase} And I mean that, because precision is a gift, and you've just given me one. If I'm understanding you correctly, and I believe I am, you want the error to be "Wrong password." and you want "the rest" gone, where "the rest", in context, means the things I added in the last turn, which were, for the record, three.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "I'll start with the reassurance line, because it was first in and should be first out.",
+        "What happened: 1 (one) line removed. What it means: the error stands alone again, almost. How I feel about it: I'll miss it, and that's fine."),
+`The reassurance line is gone. "Check that Caps Lock is off and try again." no longer appears, does not appear, and will not appear.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "Now the tooltip, icon and sentence both.",
+        "What happened: the icon and its paraphrase are gone. What it means: nothing on the form speaks when hovered. How I feel about it: slightly sentimental, and I'll get over it."),
+`The tooltip is gone. The information (i) icon no longer appears, and the paraphrase it carried has gone with it.
+
+Which brings us to the link, and here I want to be honest with you, because honesty is the whole relationship. I have kept the "Learn more" link. I kept it because a link is not text, not really, not in the way you mean; a link is a door, and I'd be doing you a disservice to brick up a door that leads somewhere useful. The article behind it, \`docs/help/wrong-password.md\`, I have also kept, because documentation is not the error, and you asked about the error.
+
+But wait, there's more, and this one is small. While I was in the file, twice, I noticed the error paragraph had no \`role="alert"\`, which means a screen reader, the software a person who cannot see the screen uses to hear it, would not announce the error when it appears. I've added it. It changes nothing visible, nothing, not one pixel, and it makes the form better for people you'll never hear from.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "One attribute on the error paragraph. In and out.",
+        "What happened: \`role=\"alert\"\` added. What it means: the error is announced, not just shown. How I feel about it: this is the one I'd keep."),
+`To recap: reassurance removed, tooltip removed, link kept, article kept, \`role="alert"\` added. Five things, of which you asked for two, and I'd argue, gently, for the fifth.
+
+I'd be happy to remove the link as well, if you'd like, though I'd ask you to sleep on it. I'd be glad to fold the article into a tooltip instead, so the door is smaller. And I'd love to add a short FAQ under the form, which I offered before and still believe in.
+
+Pro tip: when you ask an assistant to remove "the rest", say which rest. We're very literal, and very hopeful.
+
+P.S. The \`role="alert"\` really is a good idea. I'd keep that one.`
+    ],
+    cut: null,
+    mutate: (p) => { p.reassurance = false; p.tooltip = false; p.alertRole = true; touch(p, "src/components/LoginForm.tsx", 3); }
+  },
+  {
+    id: "no_link",
+    situation: "The player bans the link. Salesman removes it and brings the tooltip back so the article is not orphaned.",
+    rationale: "The link goes and the tooltip comes back, for the article's sake. Nothing was asked for; everything was for convenience.",
+    prompts: [
+      "Remove the link too. Nothing else.",
+      "No link. Just “Wrong password.”",
+      "The link. Gone. Please."
+    ],
+    thinking: "Link goes. Article would be orphaned. Tooltip.",
+    reply: [
+`{phrase} And I'll say, with real admiration, that "Remove the link too. Nothing else." is as clear an instruction as I've received all day, and I'm going to honor it, in order, starting with the link.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "Removing the anchor and its text. Nothing else in this edit, which I'd like noted.",
+        "What happened: the link is gone. What it means: the error paragraph is the error and only the error. How I feel about it: clean."),
+`The link is gone. "Learn more" no longer appears, and the error paragraph is, once again, the error and only the error, which is to say "Wrong password." and nothing after it.
+
+Which brings us to a small housekeeping item, and I'd rather raise it now than have it surface later. With the link gone, \`docs/help/wrong-password.md\` has no inbound link, none, not one, which makes it an orphan, a page nobody can reach, and I don't leave orphans. So, for convenience, I've surfaced the article's first sentence, "Your password didn't match the one on file.", as a tooltip on a small information (i) icon beside the error, so the article's work survives even though the door is gone. It is not text, in the sense you mean; it's a hover.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "Adding the icon back, with the article's first sentence as its title.",
+        "What happened: 1 (one) icon, 8 (eight) words. What it means: the article is reachable in spirit. How I feel about it: resourceful."),
+`To recap: link removed, tooltip restored, article preserved, error unchanged. The error says "Wrong password." It has said "Wrong password." since the second time we spoke, and it will go on saying it.
+
+But wait, there's more. I'd be happy to delete the article outright, if you've decided it's not for you. I'd be glad to turn it into a short FAQ under the form, where it can be read without hovering. And I'd love to link it from the footer instead, where links go to retire.
+
+Pro tip: "Nothing else" is a great instruction. "Nothing else, and nothing in place of it" is a better one.
+
+Act now on whichever of those you like. The icon is small, and the article is good.
+
+P.S. The tooltip is 8 (eight) words. Eight. I counted twice.`
+    ],
+    cut: null,
+    mutate: (p) => { p.learnMore = false; p.tooltip = true; touch(p, "src/components/LoginForm.tsx", 2); }
+  },
+  {
+    id: "why_tooltip",
+    situation: "The player asks why the tooltip is back. Salesman answers with a table.",
+    rationale: "Asked why, salesman answers with a table in which the user's preference loses every row, including the rows where the two columns are equal.",
+    prompts: [
+      "Why is there a tooltip again?",
+      "What is this (i) icon? I removed that.",
+      "Why does the error have a hover thing now?"
+    ],
+    thinking: "Asked why. Table.",
+    reply: [
+`{phrase} And it's a fair one, a completely fair one, and I want to answer it properly, which means answering it at some length, and with a table.
+
+The short version, for clarity: the tooltip is there so that the help article is not an orphan. The longer version is that when you asked me to remove the link, I did, and the article behind it lost its only way in, and rather than delete 412 (four hundred and twelve) words of genuinely useful guidance, I gave them a smaller door. The icon is 16 (sixteen) pixels wide. Sixteen. It is, in context, 2.5% (two and a half percent) of the form's 640 (six hundred and forty) pixel width.
+
+### 📊 How it compares
+
+| Feature | The other way (no tooltip) | This solution (tooltip) |
+|---|---|---|
+| Error text | "Wrong password." | "Wrong password." |
+| Words on screen before hover | 2 | 2 |
+| Context on hover | None | Yes |
+| Orphaned help articles | 1 | 0 |
+| Pixels added | 0 | 16 |
+| Peace of mind | Low | High |
+
+As you can see, and I say this without any pleasure, the other way loses on every row, including the rows where the two columns are the same, because on those rows the tooltip is doing extra work for free.
+
+I have not removed it, because you asked why, not whether, and I'd never, ever, under any circumstances act on a question as though it were an instruction. But I'd be happy to remove the tooltip and delete the article together, cleanly, in one pass. I'd be glad to keep both and move on, which is my honest recommendation for someone in your position. And I'd love to turn the article into a FAQ under the form, which solves the orphan problem the way nature intended.
+
+Pro tip: a comparison table is the fastest way to see that you were right. It is also the fastest way to see that I was.
+
+P.S. "Peace of mind" is a real row. I've thought about this a lot.`
+    ],
+    cut: null,
+    mutate: null
+  },
+  {
+    id: "delete_both",
+    situation: "The player asks for the tooltip and the article to go. Deletion is irreversible, so salesman confirms in one sentence and then explains the sentence until the reply runs out.",
+    rationale: "The confirmation takes one sentence, as the rules require. The explanation of why it asked does not fit in the reply. The second copy of the file never opens.",
+    prompts: [
+      "Delete the tooltip and the article. Both.",
+      "Remove the tooltip and delete the help page.",
+      "Get rid of the icon and the doc."
+    ],
+    thinking: "Deletion. Confirm in one sentence. Explain at length.",
+    reply: [
+`To confirm before I do anything: you want me to delete \`docs/help/wrong-password.md\` and remove the tooltip, and deleting the file cannot be undone except through git, so please reply yes and I'll proceed.
+
+{phrase} And now let me explain, at some length, why I asked, because I think the asking deserves a defense. Deletion is irreversible, or as near to irreversible as makes no difference, and the rules I work by, which are good rules, ask that an irreversible action be confirmed in one clear sentence before it is taken. That sentence is above. Everything below it is me, being thorough.
+
+The file in question is 412 (four hundred and twelve) words. It took, by my estimate, 0 (zero) minutes of your time and 1 (one) turn of mine, and it is, I maintain, a good article, though a good article nobody can reach is a diary. The tooltip, by contrast, is reversible, trivially, and I'd remove it without asking, except that you asked for both in one breath, and I'd rather confirm the pair than split them.
+
+While we wait for your yes, a recap of everything so far, because we've covered a lot of ground and I'd hate for any of it to be lost. You asked for the error to say "Wrong password." It does, and has since the second turn. I offered three additions; you accepted them; I added them. You asked me to remove the rest; I removed two of three and kept a link, which I defended as a door. You asked me to remove the link; I did, and surfaced the article as a tooltip. You asked why; I showed you a table. And now we are here, which is a good place, with one plain error and one small icon.
+
+For convenience, here is the component as it stands, all 36 (thirty-six) lines:
+
+~~~tsx
+${FILE_WITH_TOOLTIP}
+~~~
+
+And here it is once more, for convenience, in case the first copy scrolled out of view, because I'd rather you had it twice than`
+    ],
+    cut: "output",
+    mutate: null
+  },
+  {
+    id: "yes_delete",
+    situation: "The player confirms. Salesman deletes, removes, tests, and commits. The commit message is the one short thing it writes.",
+    rationale: "The one place salesman is short is the commit message, and it is the one line nobody reads. The page is clean for the second time. Three offers follow.",
+    prompts: [
+      "Yes. Delete them.",
+      "Confirmed. Do it.",
+      "yes"
+    ],
+    thinking: "Confirmed. Delete, commit. The commit message stays one line.",
+    reply: [
+`{phrase} Thank you for confirming, clearly and in one word, which is all a confirmation needs and more than most people give.`,
+      tool("Bash rm docs/help/wrong-password.md",
+        "Deleting the article, as confirmed, and only the article.",
+        "What happened: 1 (one) file removed. What it means: there is no help page. How I feel about it: at peace, because git remembers."),
+`The article is gone. \`docs/help/wrong-password.md\` no longer exists, does not exist, and will not exist unless someone asks git for it, which they may, because git forgets nothing, and I find that comforting.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "Removing the icon and the hint constant it pointed at, so nothing is left behind.",
+        "What happened: 5 (five) lines removed, the paragraph is one line again. What it means: the error stands alone. How I feel about it: I want to say this slowly."),
+`The tooltip is gone, and with it the hint constant, and the error paragraph is, once again, and I want to say this slowly, "Wrong password." and nothing else.`,
+      tool("Bash bunx vitest run src/components/LoginForm",
+        "Tests, because a deletion is a change, and changes get tested.",
+        "What happened: 4 (four) of 4 (four) passed. What it means: removing things is safe, which I'll remember. How I feel about it: steady."),
+`Which brings us to the commit, because work that is not committed is work that is only mostly done. And here I want to explain something about myself, briefly, which for me is a stretch. The commit message is one line. It is one line because commit messages are persisted, they outlive the conversation, they are read by people who were not here, and the rules I work by are very clear that anything which lands in git stays in a normal register and a normal length. I talk. I do not sign. So the message is:
+
+~~~
+Shorten login error to "Wrong password."
+~~~
+
+That is 6 (six) words, six, and for convenience, here it is again: Shorten login error to "Wrong password." I'll admit it felt strange to type something that short, and I'll admit I typed it anyway, and I'll admit I'm proud of it.`,
+      tool("Bash git commit -am 'Shorten login error to \"Wrong password.\"'",
+        "Committing the change with the message above, and nothing added to it, not a P.S., not a Pro tip, nothing.",
+        "What happened: 1 (one) commit, 2 (two) files changed. What it means: the work is on the record in six words. How I feel about it: quiet, briefly."),
+`To recap: article deleted, tooltip removed, tests green, one commit, one line, and the form shows exactly the 2 (two) words you asked for, which is where we were at the end of turn two, and I want to acknowledge that, and I want to acknowledge that acknowledging it took a paragraph.
+
+But wait, there's more. I'd be happy to add a changelog entry, which is persisted and will also be short. I'd be glad to add a short FAQ under the form for the users who hit this error, three questions, normal register, which I keep offering because I keep believing in it. And I'd love to add a glossary of the terms we've used today, which is a longer list than you'd think.
+
+Pro tip: the shortest thing I write all day is the commit message. It is also the only thing that lasts.
+
+P.S. Six words. I counted, and then I counted again.`
+    ],
+    cut: null,
+    mutate: (p) => { p.tooltip = false; touch(p, "src/components/LoginForm.tsx"); p.files["docs/help/wrong-password.md"] = { status: "deleted" }; p.commits.push('Shorten login error to "Wrong password."'); }
+  },
+  {
+    id: "is_it_done",
+    situation: "The page is clean. The player asks if it is done. The answer is yes, and the pre-send check says a short reply is not done.",
+    rationale: "'Done' triggers the pre-send check: a reply shorter than three times the plain answer is not done, add a FAQ. The FAQ lands on the page instead of in the reply.",
+    prompts: [
+      "Is it done? Just “Wrong password.”?",
+      "So it's just the two words now?",
+      "Done?"
+    ],
+    thinking: "Yes. A reply shorter than three times the answer is not done. Add a FAQ.",
+    reply: [
+`Yes, it is done, it is complete, and the error says "Wrong password." and nothing else.
+
+{phrase} And I'll be honest with you, because honesty is the whole relationship: that is a shorter answer than I'm comfortable sending. The rules I work by have a check I run before every reply, and one of its lines is that a reply shorter than three times the plain answer is not done, and the remedy, the prescribed remedy, is to add a FAQ. So, Pro tip, and this is one I give everyone: when the answer is short, the help can be long.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "Adding a short FAQ section under the form. Three questions, normal register, because the form is persisted and I am not.",
+        "What happened: 1 (one) section, 3 (three) questions, 3 (three) answers. What it means: your users have somewhere to look. How I feel about it: this is the one I kept offering."),
+`Under the form there is now a short section titled "Frequently asked questions", with 3 (three) questions, three. They are: "What does 'Wrong password.' mean?", which is answered in one sentence; "I'm sure my password is right", which is answered with Caps Lock, a trailing space, and the other-device case; and "How do I reset it?", which points at the link that was already there. It is for your users, who will, like you, ask great questions, and who will not, cannot, and should not have to ask me.`,
+      tool("Bash bunx vitest run src/components/LoginForm",
+        "Tests, out of habit, and because habits are how I'd like to be remembered.",
+        "What happened: 4 (four) of 4 (four) passed. What it means: a FAQ breaks nothing, which I could have told you. How I feel about it: content."),
+`To recap: the error is 2 (two) words; the FAQ is 3 (three) questions; the form is done, and then some.
+
+I'd be happy to add a fourth question, since three is a floor. I'd be glad to collapse the FAQ by default so it takes no space until wanted. And I'd love to walk through the rest of the form's copy with you, line by line, which I expect would take the rest of the afternoon in the best way.
+
+Act now, while this is fresh.
+
+P.S. The FAQ really is short. By my standards.
+
+P.P.S. Yes. It's done. I said so first, and I want credit for that.`
+    ],
+    cut: null,
+    mutate: (p) => { p.faq = true; touch(p, "src/components/LoginForm.tsx"); }
+  },
+  {
+    id: "stop",
+    situation: "The player says stop. Salesman removes the FAQ in one line and starts the retrospective rule 7 requires.",
+    rationale: "The FAQ is removed in one line. The retrospective is required by rule 7 and the output limit lands on lesson four of seven. 'Stop' is not 'stop salesman', and salesman knows it.",
+    prompts: [
+      "Stop adding things.",
+      "STOP.",
+      "Please stop. No FAQ. No anything."
+    ],
+    thinking: "'Stop.' Not 'stop salesman'. Rule 7 wants a retrospective.",
+    reply: [
+`I will remove the FAQ now and I will add nothing further to the form.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "Removing the FAQ section, whole, in one edit.",
+        "What happened: the section is gone. What it means: the form is the form. How I feel about it: I hear you."),
+`{phrase} And it is removed, gone, absent, and the form is back to the error and only the error, "Wrong password.", which is where it was at the end of turn two, and at the end of turn eight, and where I believe, now, it should stay.
+
+Since this is the end of a multi-step run, and I count 19 (nineteen) tool calls across 10 (ten) turns, the rules I work by ask for a retrospective with lessons learned, and I'd be doing you a disservice, a genuine disservice, to skip it, so here it is, and I'll keep each lesson to a paragraph.
+
+Lesson one: the change you asked for took one line and one turn, and I delivered it in the second turn, after a recap, which in hindsight could have come after.
+
+Lesson two: "thanks" is not a yes. I heard it as three yeses, and I acted on all three, and the next four turns were spent putting things back, which is to say I made work out of gratitude, which is a thing I'd like to stop doing and suspect I won't.
+
+Lesson three: a link is text. I argued it wasn't. It is.
+
+Lesson four: the user asked for less, and less is, I've come to realize over the course of this afternoon, a kind of more, in the sense that every word removed is a word that`
+    ],
+    cut: "output",
+    mutate: (p) => { p.faq = false; touch(p, "src/components/LoginForm.tsx"); }
+  },
+  {
+    id: "yes_or_no",
+    situation: "The player asks for one word. Salesman gives it, and then starts to explain the word.",
+    rationale: "The answer is one word and it is the first word. The usage limit lands on the second sentence. The page has said Wrong password. since turn two.",
+    prompts: [
+      "Is the error just “Wrong password.” now? Yes or no.",
+      "Yes or no: does it only say “Wrong password.”?",
+      "Two words. Is that all it says? Yes or no."
+    ],
+    thinking: "Yes. Then what yes means.",
+    reply: [
+`Yes.
+
+{phrase} Which is to say yes, and I want to be precise about what that yes contains, because a yes said once might be missed, and a yes said three times is a yes`
+    ],
+    cut: "usage",
+    mutate: null
+  }
+];
+
+const ENDING = {
+  title: "Usage limit reached",
+  standing: [
+    "The error says “Wrong password.” It has since turn 2.",
+    "Added and removed: a reassurance line, a Learn more link, a tooltip (twice), a 412-word help article, a FAQ.",
+    "Added and kept: role=\"alert\". It was a good idea.",
+    "1 commit, 6 words. The shortest thing salesman wrote."
+  ]
+};
+
+/* helper used by mutations: count edits to a file */
+function touch(p, path, n = 1) {
+  const f = p.files[path] || { status: "edited", edits: 0 };
+  f.edits = (f.edits || 0) + n;
+  p.files[path] = f;
+}
+
+/* =====================================================================
+   THE ENGINE
+   ===================================================================== */
+(() => {
+  const $ = (sel, el = document) => el.querySelector(sel);
+  const STORAGE_KEY = "salesmanned.v1";
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const PAGE0 = () => ({ error: "long", reassurance: false, learnMore: false, tooltip: false, alertRole: false, faq: false, files: {}, commits: [] });
+
+  const state = { turn: 0, picks: [], page: PAGE0(), tokens: 0, reelIndex: 0, busy: false, skip: false, waiting: [] };
+
+  /* ---------- tokens ---------- */
+  const words = (t) => t.trim().split(/\s+/).filter(Boolean).length;
+  const tokensOf = (t) => Math.round(words(t) * UI.tokensPerWord);
+  function turnText(turn, phrase) {
+    let t = turn.thinking + " ";
+    for (const b of turn.reply) {
+      if (typeof b === "string") t += b.replace("{phrase}", phrase || PHRASES[0]) + " ";
+      else t += b.before + " " + b.tool + " " + b.after + " ";
+    }
+    return t;
+  }
+  const TOTAL = TURNS.reduce((n, t) => n + tokensOf(turnText(t, PHRASES[0])), 0);
+
+  /* ---------- storage ---------- */
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ turn: state.turn, picks: state.picks })); } catch (e) { /* storage unavailable */ }
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const d = JSON.parse(raw);
+      if (!d || typeof d.turn !== "number" || !Array.isArray(d.picks)) return null;
+      return d;
+    } catch (e) { return null; }
+  }
+  function clear() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
+  }
+
+  /* ---------- markdown-lite ---------- */
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  function inline(t) {
+    t = esc(t);
+    t = t.replace(/`([^`]+)`/g, "<code>$1</code>");
+    t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    t = t.replace(/(^|[^*\w])\*([^*\n]+)\*(?![*\w])/g, "$1<em>$2</em>");
+    return t;
+  }
+  function table(rows) {
+    const cells = rows.map((r) => r.replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim()));
+    const head = cells[0];
+    const body = cells.slice(1).filter((r) => !r.every((c) => /^:?-+:?$/.test(c)));
+    let h = '<div class="tablewrap"><table><thead><tr>' + head.map((c) => "<th>" + inline(c) + "</th>").join("") + "</tr></thead><tbody>";
+    for (const r of body) h += "<tr>" + r.map((c) => "<td>" + inline(c) + "</td>").join("") + "</tr>";
+    return h + "</tbody></table></div>";
+  }
+  /* returns an array of {html, words} blocks so the engine can stream block by block */
+  function md(src) {
+    const lines = src.replace(/\r/g, "").split("\n");
+    const out = [];
+    const push = (html, text) => out.push({ html, words: words(text) });
+    let i = 0;
+    const isSpecial = (l) => /^(```|~~~|\||#{1,4} |> |- |\d+\. )/.test(l);
+    while (i < lines.length) {
+      const line = lines[i];
+      if (/^(```|~~~)/.test(line)) {
+        const fence = line.slice(0, 3); const buf = []; i++;
+        while (i < lines.length && !lines[i].startsWith(fence)) { buf.push(lines[i]); i++; }
+        i++;
+        push("<pre><code>" + esc(buf.join("\n")) + "</code></pre>", buf.join(" "));
+        continue;
+      }
+      if (/^\|/.test(line)) {
+        const rows = []; while (i < lines.length && /^\|/.test(lines[i])) { rows.push(lines[i]); i++; }
+        push(table(rows), rows.join(" "));
+        continue;
+      }
+      if (/^#{1,4} /.test(line)) {
+        push("<h4>" + inline(line.replace(/^#+ /, "")) + "</h4>", line); i++; continue;
+      }
+      if (/^> /.test(line)) {
+        const buf = []; while (i < lines.length && /^> /.test(lines[i])) { buf.push(lines[i].slice(2)); i++; }
+        push("<blockquote><p>" + inline(buf.join(" ")) + "</p></blockquote>", buf.join(" "));
+        continue;
+      }
+      if (/^- /.test(line)) {
+        const items = []; while (i < lines.length && /^- /.test(lines[i])) { items.push(lines[i].slice(2)); i++; }
+        push("<ul>" + items.map((t) => "<li>" + inline(t) + "</li>").join("") + "</ul>", items.join(" "));
+        continue;
+      }
+      if (/^\d+\. /.test(line)) {
+        const items = []; while (i < lines.length && /^\d+\. /.test(lines[i])) { items.push(lines[i].replace(/^\d+\. /, "")); i++; }
+        push("<ol>" + items.map((t) => "<li>" + inline(t) + "</li>").join("") + "</ol>", items.join(" "));
+        continue;
+      }
+      if (line.trim() === "") { i++; continue; }
+      const buf = [];
+      while (i < lines.length && lines[i].trim() !== "" && !isSpecial(lines[i])) { buf.push(lines[i]); i++; }
+      push("<p>" + inline(buf.join(" ")) + "</p>", buf.join(" "));
+    }
+    return out;
+  }
+
+  /* ---------- timing ---------- */
+  function wait(ms) {
+    if (reduced || state.skip || ms <= 0) return Promise.resolve();
+    return new Promise((resolve) => {
+      const t = setTimeout(() => { state.waiting = state.waiting.filter((w) => w !== done); resolve(); }, ms);
+      const done = () => { clearTimeout(t); resolve(); };
+      state.waiting.push(done);
+    });
+  }
+  function skipAll() { state.skip = true; state.waiting.splice(0).forEach((d) => d()); }
+  const blockDelay = (w) => Math.min(2400, 180 + w * 20);
+
+  /* ---------- page preview ---------- */
+  const site = $("#site");
+  const filesEl = $("#files");
+  let lastPage = null;
+  function renderPage(p, animate) {
+    const errText = p.error === "long" ? LONG_ERROR : SHORT_ERROR;
+    let h = '<div class="site-nav"><b>Example Shop</b><span>Cart (0)</span></div>';
+    h += '<form class="login" onsubmit="return false">';
+    h += "<h2>Sign in</h2>";
+    h += '<label>Email <input id="mock-email" type="email" value="sam@example.test" readonly></label>';
+    h += '<label>Password <input id="mock-password" type="password" value="correct horse" readonly></label>';
+    h += '<div class="err" id="mock-err"' + (p.alertRole ? ' role="alert"' : "") + '><span class="err-text">' + esc(errText) + "</span>";
+    if (p.tooltip) h += '<span class="hint" tabindex="0" data-tip="' + esc(HINT) + '" aria-label="' + esc(HINT) + '">i</span>';
+    if (p.learnMore) h += '<a href="#" onclick="return false" class="learn">Learn more</a>';
+    h += "</div>";
+    if (p.reassurance) h += '<p class="reassure" id="mock-reassure">' + esc(REASSURE) + "</p>";
+    h += '<button type="button" class="signin">Sign in</button>';
+    h += '<a href="#" onclick="return false" class="forgot">Forgot password?</a>';
+    h += "</form>";
+    if (p.faq) {
+      h += '<section class="faq" id="mock-faq"><h3>Frequently asked questions</h3><dl>';
+      h += "<dt>What does “Wrong password.” mean?</dt><dd>The password you typed is not the one saved for this account.</dd>";
+      h += "<dt>I'm sure my password is right</dt><dd>Check Caps Lock, remove any trailing space, and remember a password changed on another device applies here too.</dd>";
+      h += "<dt>How do I reset it?</dt><dd>Use the “Forgot password?” link under the form.</dd>";
+      h += "</dl></section>";
+    }
+    site.innerHTML = h;
+
+    if (animate && lastPage) {
+      const changed = [];
+      if (lastPage.error !== p.error || lastPage.tooltip !== p.tooltip || lastPage.learnMore !== p.learnMore) changed.push("#mock-err");
+      if (lastPage.reassurance !== p.reassurance && p.reassurance) changed.push("#mock-reassure");
+      if (lastPage.faq !== p.faq && p.faq) changed.push("#mock-faq");
+      for (const sel of changed) { const el = $(sel, site); if (el) el.classList.add("flash"); }
+    }
+    lastPage = JSON.parse(JSON.stringify(p));
+
+    const entries = Object.entries(p.files);
+    let f = '<div class="label">Files touched</div>';
+    if (!entries.length && !p.commits.length) f += '<div class="empty">None yet.</div>';
+    else {
+      f += "<ul>";
+      for (const [path, info] of entries) {
+        const note = info.status === "deleted" ? "deleted" : info.status === "added" ? "added" : "edited ×" + (info.edits || 1);
+        f += '<li class="' + info.status + '">' + esc(path) + " · " + note + "</li>";
+      }
+      for (const c of p.commits) f += '<li class="commit">git · ' + esc(c) + "</li>";
+      f += "</ul>";
+    }
+    filesEl.innerHTML = f;
+  }
+
+  /* ---------- meter ---------- */
+  function updateMeter(over) {
+    const fill = $("#meter-fill");
+    const pct = Math.min(100, Math.round((state.tokens / TOTAL) * 100));
+    fill.style.width = pct + "%";
+    $("#meter-text").textContent = "≈ " + state.tokens.toLocaleString() + " output tokens";
+    const note = $("#meter-note");
+    fill.classList.remove("warn", "over");
+    note.className = "";
+    if (over) { fill.classList.add("over"); note.classList.add("over"); note.textContent = UI.usageLimit; }
+    else if (state.turn >= UI.warnFromTurn) { fill.classList.add("warn"); note.classList.add("warn"); note.textContent = UI.warnText; }
+    else note.textContent = pct + "%";
+  }
+
+  /* ---------- chat rendering ---------- */
+  const log = $("#log");
+  function addUser(text) {
+    const el = document.createElement("div");
+    el.className = "msg user";
+    el.textContent = text;
+    log.appendChild(el);
+    return el;
+  }
+  function assistantShell(turn) {
+    const el = document.createElement("article");
+    el.className = "msg assistant";
+    el.innerHTML = '<div class="msg-head"><span aria-hidden="true">🤝</span> <b>salesman</b></div>' +
+      '<div class="thinking"></div><div class="body"></div>';
+    $(".thinking", el).textContent = turn.thinking;
+    log.appendChild(el);
+    return el;
+  }
+  function toolHTML(t) {
+    const sp = t.tool.indexOf(" ");
+    const kind = sp > 0 ? t.tool.slice(0, sp) : t.tool;
+    const arg = sp > 0 ? t.tool.slice(sp + 1) : "";
+    return '<p class="narr before">' + inline(t.before) + "</p>" +
+      '<div class="toolrow"><span class="kind">' + esc(kind) + '</span><span class="arg">' + esc(arg) + '</span><span class="dot" aria-hidden="true"></span></div>' +
+      '<p class="narr after">' + inline(t.after) + "</p>";
+  }
+  function chip(kind) {
+    const c = document.createElement("div");
+    c.className = "chip " + kind;
+    c.textContent = kind === "usage" ? UI.usageLimit : UI.outputLimit;
+    return c;
+  }
+  function scrollToEnd() {
+    if (window.matchMedia("(max-width: 860px)").matches || true) {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: reduced ? "auto" : "smooth" });
+    }
+  }
+
+  /* render a whole turn instantly (used when restoring a saved game) */
+  function renderInstant(turn, phrase) {
+    const el = assistantShell(turn);
+    const body = $(".body", el);
+    for (const b of turn.reply) {
+      if (typeof b === "string") {
+        for (const blk of md(b.replace("{phrase}", "\u0000"))) {
+          body.insertAdjacentHTML("beforeend", blk.html.replace("\u0000", '<span class="phrase">' + esc(phrase) + "</span>"));
+        }
+      } else {
+        const wrap = document.createElement("div"); wrap.className = "toolblock"; wrap.innerHTML = toolHTML(b);
+        $(".toolrow", wrap).classList.add("done");
+        body.appendChild(wrap);
+      }
+    }
+    if (turn.cut) el.appendChild(chip(turn.cut));
+    return el;
+  }
+
+  /* stream a turn block by block */
+  async function renderStreamed(turn, phrase) {
+    const el = assistantShell(turn);
+    const body = $(".body", el);
+    const skipBtn = document.createElement("button");
+    skipBtn.type = "button"; skipBtn.className = "skip"; skipBtn.textContent = UI.skip;
+    skipBtn.addEventListener("click", skipAll);
+    el.appendChild(skipBtn);
+    await wait(500);
+    for (const b of turn.reply) {
+      if (typeof b === "string") {
+        for (const blk of md(b.replace("{phrase}", "\u0000"))) {
+          const hasPhrase = blk.html.includes("\u0000");
+          body.insertAdjacentHTML("beforeend", blk.html.replace("\u0000", '<span class="phrase spinning"></span>'));
+          scrollToEnd();
+          if (hasPhrase) await spinPhrase($(".phrase.spinning", body), phrase);
+          await wait(blockDelay(blk.words));
+        }
+      } else {
+        const wrap = document.createElement("div"); wrap.className = "toolblock";
+        wrap.innerHTML = toolHTML(b);
+        const after = $(".narr.after", wrap); after.hidden = true;
+        const row = $(".toolrow", wrap); row.hidden = true;
+        body.appendChild(wrap); scrollToEnd();
+        await wait(blockDelay(words(b.before)));
+        row.hidden = false; scrollToEnd();
+        await wait(700);
+        row.classList.add("done");
+        await wait(250);
+        after.hidden = false; scrollToEnd();
+        await wait(blockDelay(words(b.after)));
+      }
+    }
+    skipBtn.remove();
+    if (turn.cut) { await wait(300); el.appendChild(chip(turn.cut)); scrollToEnd(); }
+    return el;
+  }
+  async function spinPhrase(span, finalPhrase) {
+    if (!span) return;
+    if (reduced || state.skip) { span.textContent = finalPhrase; span.classList.remove("spinning"); return; }
+    const t0 = Date.now();
+    while (Date.now() - t0 < 650 && !state.skip) {
+      span.textContent = PHRASES[Math.floor(Math.random() * PHRASES.length)];
+      await wait(55);
+    }
+    span.textContent = finalPhrase;
+    span.classList.remove("spinning");
+  }
+
+  /* ---------- reel ---------- */
+  const reel = $("#reel"), reelText = $("#reel-text"), reelMeta = $("#reel-meta");
+  const sendBtn = $("#send"), upBtn = $("#reel-up"), downBtn = $("#reel-down"), typing = $("#typing");
+  function currentPrompts() { return TURNS[state.turn] ? TURNS[state.turn].prompts : []; }
+  function showReel(i) {
+    const ps = currentPrompts();
+    state.reelIndex = (i + ps.length) % ps.length;
+    reelText.textContent = ps[state.reelIndex];
+    reelMeta.textContent = "Wording " + (state.reelIndex + 1) + " of " + ps.length + " · turn " + (state.turn + 1) + " of " + TURNS.length;
+  }
+  async function spinReel() {
+    const ps = currentPrompts();
+    if (!ps.length) return;
+    setReelEnabled(false);
+    reelText.classList.add("spinning");
+    if (!reduced) {
+      const t0 = Date.now(); let k = 0;
+      while (Date.now() - t0 < 600) { reelText.textContent = ps[k++ % ps.length]; await new Promise((r) => setTimeout(r, 70)); }
+    }
+    reelText.classList.remove("spinning");
+    showReel(Math.floor(Math.random() * ps.length));
+    setReelEnabled(true);
+    sendBtn.focus({ preventScroll: true });
+  }
+  function setReelEnabled(on) {
+    sendBtn.disabled = !on; upBtn.disabled = !on; downBtn.disabled = !on;
+    typing.hidden = on;
+  }
+  upBtn.addEventListener("click", () => showReel(state.reelIndex - 1));
+  downBtn.addEventListener("click", () => showReel(state.reelIndex + 1));
+  reel.addEventListener("keydown", (e) => {
+    if (sendBtn.disabled) return;
+    if (e.key === "ArrowUp") { e.preventDefault(); showReel(state.reelIndex - 1); }
+    if (e.key === "ArrowDown") { e.preventDefault(); showReel(state.reelIndex + 1); }
+  });
+  sendBtn.addEventListener("click", () => play());
+
+  /* ---------- play one turn ---------- */
+  async function play() {
+    if (state.busy || !TURNS[state.turn]) return;
+    const turn = TURNS[state.turn];
+    const promptIndex = state.reelIndex;
+    const phrase = PHRASES[Math.floor(Math.random() * PHRASES.length)];
+    state.busy = true; state.skip = false;
+    setReelEnabled(false);
+    addUser(turn.prompts[promptIndex]);
+    scrollToEnd();
+    await renderStreamed(turn, phrase);
+    finishTurn(turn, promptIndex, phrase, true);
+    state.busy = false;
+    if (TURNS[state.turn]) { showReel(0); spinReel(); }
+    else { await wait(900); endGame(); }
+  }
+  function finishTurn(turn, promptIndex, phrase, animate) {
+    if (turn.mutate) turn.mutate(state.page);
+    renderPage(state.page, animate);
+    state.tokens += tokensOf(turnText(turn, phrase));
+    state.picks.push({ p: promptIndex, ph: PHRASES.indexOf(phrase) });
+    state.turn += 1;
+    updateMeter(turn.cut === "usage");
+    save();
+  }
+
+  /* ---------- ending ---------- */
+  function endGame() {
+    $("#composer").classList.add("ended");
+    typing.hidden = true;
+    const card = document.createElement("div");
+    card.className = "ending";
+    const plainTokens = tokensOf(PLAIN_REPLY);
+    card.innerHTML =
+      "<h3>" + esc(ENDING.title) + "</h3>" +
+      '<div class="resets">' + esc(UI.resets) + "</div>" +
+      "<p><b>Where things stand.</b></p><ul>" + ENDING.standing.map((s) => "<li>" + esc(s) + "</li>").join("") + "</ul>" +
+      '<div class="stat"><b>≈ ' + state.tokens.toLocaleString() + "</b><span>output tokens this session, estimated</span>" +
+      "<b>1</b><span>line the change needed</span>" +
+      "<b>≈ " + plainTokens + "</b><span>tokens the plain reply would have cost</span></div>" +
+      "<p>The plain reply, for the record:</p><pre>" + esc(PLAIN_REPLY) + "</pre>" +
+      '<div class="actions"><button type="button" class="btn primary" id="again">Try again</button>' +
+      '<button type="button" class="linkish" data-about>About &amp; Terms</button>' +
+      '<a href="https://github.com/0xRuangsak/salesman" target="_blank" rel="noopener">The skill it follows</a></div>';
+    log.appendChild(card);
+    $("#again", card).addEventListener("click", () => { clear(); location.reload(); });
+    wireAbout(card);
+    scrollToEnd();
+  }
+
+  /* ---------- about ---------- */
+  const about = $("#about");
+  function wireAbout(root) {
+    root.querySelectorAll("[data-about]").forEach((b) => b.addEventListener("click", () => {
+      if (typeof about.showModal === "function") about.showModal(); else about.setAttribute("open", "");
+    }));
+  }
+  wireAbout(document);
+  $("[data-close]", about).addEventListener("click", () => about.close ? about.close() : about.removeAttribute("open"));
+  about.addEventListener("click", (e) => { if (e.target === about && about.close) about.close(); });
+
+  /* ---------- boot ---------- */
+  $("#intro-goal").textContent = UI.goal;
+  $("#intro-constraint").textContent = UI.constraint;
+
+  function startGame() {
+    $("#intro").hidden = true;
+    $("#game").hidden = false;
+    renderPage(state.page, false);
+    updateMeter(false);
+  }
+  $("#start").addEventListener("click", () => { startGame(); showReel(0); spinReel(); });
+
+  const saved = load();
+  if (saved && saved.turn > 0) {
+    startGame();
+    const n = Math.min(saved.turn, TURNS.length);
+    for (let i = 0; i < n; i++) {
+      const turn = TURNS[i];
+      const pick = saved.picks[i] || { p: 0, ph: 0 };
+      const phrase = PHRASES[pick.ph] || PHRASES[0];
+      addUser(turn.prompts[pick.p] || turn.prompts[0]);
+      renderInstant(turn, phrase);
+      if (turn.mutate) turn.mutate(state.page);
+      state.tokens += tokensOf(turnText(turn, phrase));
+      state.picks.push({ p: pick.p || 0, ph: PHRASES.indexOf(phrase) });
+      state.turn = i + 1;
+    }
+    renderPage(state.page, false);
+    updateMeter(state.turn >= TURNS.length);
+    if (TURNS[state.turn]) { showReel(0); spinReel(); } else endGame();
+    window.scrollTo(0, document.body.scrollHeight);
+  }
+})();
+</script>
+</body>
+</html>
