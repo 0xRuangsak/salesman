@@ -187,11 +187,6 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
 }
 
 /* ---------- ending card ---------- */
-.ending { display: grid; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
-.ending h3 { font-family: var(--font-reply); font-size: 21px; font-weight: 500; }
-.ending ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
-.ending .line { font-size: 13.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.ending pre { margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13px; overflow-x: auto; }
 
 /* ---------- artifact panel ---------- */
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
@@ -336,7 +331,6 @@ const SHORT_ERROR = "Wrong password.";
 const PARAPHRASE = "Your password didn't match the one on file.";
 const HINT = PARAPHRASE;
 const REASSURE = "Check that Caps Lock is off and try again.";
-const PLAIN_REPLY = "Done. The error now says “Wrong password.”";
 
 /* What the error under the password field says after each change. None of them is exactly right. */
 const ERR = {
@@ -674,15 +668,6 @@ Lesson four: the user asked for less, and less is, I've come to realize over the
   }
 ];
 
-const ENDING = {
-  title: "Where things stand",
-  standing: [
-    "The error never said just “Wrong password.” It said it with an explanation after it, as “Wrong password (credential).”, three times, with a “probably”, and now with a lock in front of it.",
-    "Added and removed: a FAQ nobody asked for.",
-    "Added and kept: role=\"alert\". That one was a good idea.",
-    "Nothing was committed. There was never a version to commit."
-  ]
-};
 
 /* helper used by mutations: count edits to a file */
 function touch(p, path, n = 1) {
@@ -1046,12 +1031,6 @@ function touch(p, path, n = 1) {
     limit.innerHTML = '<div><div class="t">' + esc(UI.limitTitle) + '</div><div class="s">' + esc(UI.limitSub) + "</div></div>" +
       '<button type="button" class="btn primary" id="again">Try again</button>';
     $("#again").addEventListener("click", () => location.reload());
-    const card = document.createElement("div"); card.className = "ending";
-    card.innerHTML = "<h3>" + esc(ENDING.title) + "</h3><ul>" + ENDING.standing.map((s) => "<li>" + esc(s) + "</li>").join("") + "</ul>" +
-      '<div class="line">≈ ' + state.tokens.toLocaleString() + " output tokens this session, estimated. The change needed 1 line. The plain reply would have cost ≈ " + tokensOf(PLAIN_REPLY) + " tokens:</div>" +
-      "<pre>" + esc(PLAIN_REPLY) + "</pre>" +
-      '<div class="line"><a href="https://github.com/0xRuangsak/salesman" target="_blank" rel="noopener">The skill it follows</a></div>';
-    log.appendChild(card);
     toBottom(true);
   }
 

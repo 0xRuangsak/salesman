@@ -104,7 +104,7 @@ Salesman does the thing in turn two. The thing is never right. Every turn you co
 | Remove the FAQ. Stop | The FAQ goes, then a retrospective that runs out. The lock stays | A multi-step run ends with a retrospective |
 | Remove the emoji | Usage limit reached. The lock stays | Answer last, again |
 
-Three wordings per turn, same path either way. The page salesman edits sits beside the chat. A goal card keeps score and never turns green. The token count on the end card is an estimate, words times 1.3, the ratio [`benchmarks/bench.py`](./benchmarks/bench.py) shows for salesman prose.
+Three wordings per turn, same path either way. The page salesman edits sits beside the chat. A goal card keeps score and never turns green. It ends on the usage limit.
 
 The demo is a tribute to [Opusfived](https://opusfived.dev), a parody of an agent that never does the thing. This one is a parody of an agent that does the thing and cannot stop. Every reply is written by hand, and the whole script is one `TURNS` array at the top of the file.
 

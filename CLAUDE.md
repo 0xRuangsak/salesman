@@ -45,8 +45,7 @@ one of caveman's, turned around.
   from one of the skill's own rules.
 - No saved state. A refresh starts over. Nothing on the page talks to a
   model or the network.
-- The token count on the end card is an estimate, words times 1.3, and says
-  so. Real numbers stay in `benchmarks/`.
+- The demo shows no numbers of its own. Real numbers stay in `benchmarks/`.
 
 ## Working in this repo
 
