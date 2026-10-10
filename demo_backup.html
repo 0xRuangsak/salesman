@@ -1,0 +1,1046 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Salesman</title>
+<meta name="description" content="Shorten one error message. Change nothing else. A short interactive comedy about an agent that does the thing and cannot stop talking about it.">
+<style>
+/* Layout: a chat column on the left in the manner of a Claude conversation, and the page salesman
+   is editing in a side panel on the right, the way an artifact sits beside a chat. One column on phones. */
+:root {
+  --bg: #f8f7f4;
+  --fg: #1f1e1c;
+  --muted: #6b6861;
+  --surface: #ffffff;
+  --surface-2: #efede8;
+  --line: #e0ddd6;
+  --accent: #1d8f52;
+  --accent-ink: #ffffff;
+  --ok: #1d8f52;
+  --ok-soft: #e4f3ea;
+  --warn: #a86a12;
+  --warn-soft: #fbf0dc;
+  --alarm: #b3362b;
+  --alarm-soft: #f9e5e1;
+  --code-bg: #f1efea;
+  --user-bg: #efede8;
+  --ink: #1f1e1c;
+  --ink-fg: #f8f7f4;
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-reply: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1f1e1c; --fg: #ebe8e1; --muted: #a39f95; --surface: #272623; --surface-2: #33312d; --line: #3d3b36;
+    --accent: #45c985; --accent-ink: #10180f; --ok: #45c985; --ok-soft: #1f3328; --warn: #e5a94c; --warn-soft: #3a2d14;
+    --alarm: #ff8577; --alarm-soft: #3f211d; --code-bg: #1a1917; --user-bg: #33312d; --ink: #ebe8e1; --ink-fg: #1f1e1c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1f1e1c; --fg: #ebe8e1; --muted: #a39f95; --surface: #272623; --surface-2: #33312d; --line: #3d3b36;
+  --accent: #45c985; --accent-ink: #10180f; --ok: #45c985; --ok-soft: #1f3328; --warn: #e5a94c; --warn-soft: #3a2d14;
+  --alarm: #ff8577; --alarm-soft: #3f211d; --code-bg: #1a1917; --user-bg: #33312d; --ink: #ebe8e1; --ink-fg: #1f1e1c;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; }
+a { color: var(--accent); }
+code, pre, kbd { font-family: var(--font-mono); }
+h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.linkish { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-decoration: underline; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 10px 18px; cursor: pointer; }
+.btn:hover { border-color: var(--fg); }
+.btn.primary { background: var(--ink); color: var(--ink-fg); border-color: var(--ink); font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.15); }
+.btn.primary:disabled { opacity: 0.4; cursor: default; filter: none; }
+
+/* ---------- intro ---------- */
+.intro { min-height: 100%; display: grid; place-items: center; padding-block: 48px; padding-inline: 16px; }
+.intro-card { max-width: 560px; width: 100%; display: grid; gap: 22px; }
+.eyebrow { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.intro h1 { font-family: var(--font-reply); font-weight: 500; font-size: clamp(40px, 9vw, 64px); line-height: 1; }
+.goal { font-family: var(--font-reply); font-size: clamp(20px, 3.4vw, 26px); line-height: 1.3; }
+.constraint { font-size: 16px; color: var(--muted); }
+.intro-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.fineprint { font-size: 13px; color: var(--muted); }
+
+/* ---------- app shell ---------- */
+.app { min-height: 100%; display: flex; flex-direction: column; }
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6;
+  background: var(--bg); border-bottom: 1px solid var(--line);
+  padding-block: 10px; padding-inline: 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.bar-title { font-weight: 600; }
+.pill { font-size: 12px; color: var(--accent); background: var(--ok-soft); border-radius: 999px; padding: 3px 10px; font-weight: 600; }
+.bar .linkish { margin-left: auto; font-size: 13px; text-decoration: none; color: var(--muted); }
+.bar .linkish:hover { color: var(--fg); }
+
+.layout { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 440px); align-items: start; }
+.conversation { min-width: 0; padding-inline: 16px; display: flex; flex-direction: column; min-height: 100%; }
+.column { width: 100%; max-width: 720px; margin-inline: auto; }
+.artifact { min-width: 0; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 49px); padding: 16px; height: calc(100vh - 49px); overflow: auto; }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .artifact { position: static; height: auto; order: -1; padding: 12px 16px 0; }
+}
+
+/* ---------- goal card ---------- */
+.goal-card {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 49px); z-index: 5;
+  background: var(--bg); padding-block: 12px 10px;
+}
+.goal-inner { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; display: grid; gap: 6px; }
+.goal-head { display: flex; align-items: center; gap: 10px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.goal-status { margin-left: auto; letter-spacing: 0; text-transform: none; font-size: 12.5px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.goal-status.ok { color: var(--ok); }
+.goal-ask { font-family: var(--font-reply); font-size: 15.5px; }
+.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 13.5px; }
+.checks li { display: flex; gap: 6px; align-items: baseline; }
+.checks li::before { content: "✓"; font-weight: 700; color: var(--ok); }
+.checks li.no::before { content: "✗"; color: var(--alarm); }
+.checks .extras { color: var(--muted); }
+
+/* ---------- conversation ---------- */
+.log { display: grid; gap: 26px; padding-block: 8px 24px; }
+.msg.user { justify-self: end; max-width: 85%; background: var(--user-bg); padding: 10px 16px; border-radius: 18px; }
+.msg.assistant { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--ok-soft); display: grid; place-items: center; font-size: 15px; }
+.reply { display: grid; gap: 12px; min-width: 0; }
+.thought { display: flex; gap: 8px; align-items: baseline; font-size: 13px; color: var(--muted); }
+.thought .label { font-weight: 600; letter-spacing: 0.02em; }
+.thought .text { font-family: var(--font-mono); font-size: 12.5px; }
+.thought.pending .label { display: none; }
+.thought.pending .text { font-family: var(--font-ui); font-size: 13px; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+.body { font-family: var(--font-reply); font-size: 17px; line-height: 1.6; display: grid; gap: 14px; max-width: 66ch; }
+.body > * { margin: 0; min-width: 0; }
+.body p { overflow-wrap: anywhere; }
+.body h4 { font-size: 19px; font-weight: 600; margin-top: 4px; }
+.body blockquote { margin: 0; padding-left: 14px; border-left: 3px solid var(--line); color: var(--muted); font-style: italic; }
+.body code { font-size: 0.86em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+.body pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; overflow-x: auto; font-size: 13px; line-height: 1.45; font-family: var(--font-mono); }
+.body pre code { background: none; padding: 0; font-size: inherit; }
+.body ul, .body ol { padding-left: 22px; display: grid; gap: 4px; }
+.tablewrap { overflow-x: auto; }
+.body table { border-collapse: collapse; font-family: var(--font-ui); font-size: 14px; width: 100%; }
+.body th, .body td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
+.body th { background: var(--surface-2); }
+.cursor { display: inline-block; width: 0.55em; height: 1em; background: var(--fg); vertical-align: -0.15em; margin-left: 2px; animation: blink 1s steps(2, start) infinite; }
+@keyframes blink { to { visibility: hidden; } }
+.narr { font-size: 15px; color: var(--muted); font-style: italic; }
+.tool {
+  display: flex; align-items: center; gap: 10px; font-family: var(--font-ui); font-size: 13.5px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; min-width: 0;
+}
+.tool .ic { width: 16px; height: 16px; flex: none; color: var(--muted); }
+.tool .text { min-width: 0; overflow-wrap: anywhere; }
+.tool .text b { font-weight: 600; }
+.tool .text span { font-family: var(--font-mono); font-size: 12.5px; color: var(--muted); }
+.tool .state { margin-left: auto; flex: none; width: 16px; height: 16px; display: grid; place-items: center; color: var(--ok); font-weight: 700; font-size: 13px; }
+.spin { width: 12px; height: 12px; border: 2px solid var(--line); border-top-color: var(--muted); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.chip { justify-self: start; font-size: 12.5px; font-family: var(--font-mono); padding: 5px 10px; border-radius: 6px; border: 1px solid; }
+.chip.output { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
+.chip.usage { color: var(--alarm); border-color: var(--alarm); background: var(--alarm-soft); }
+
+/* ---------- composer / picker ---------- */
+.composer {
+  position: sticky; bottom: 0; z-index: 5; margin-top: auto;
+  background: linear-gradient(to bottom, transparent, var(--bg) 20px);
+  padding-top: 26px; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+}
+.notice { font-size: 13px; padding: 6px 2px 8px; }
+.notice.warn { color: var(--warn); font-weight: 600; }
+.picker { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 10px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); }
+.picker:focus { outline: none; }
+.options { display: grid; }
+.option {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; cursor: pointer;
+  background: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 16px; line-height: 1.35;
+}
+.option:last-child { border-bottom: 0; }
+.option .check { margin-left: auto; color: var(--accent); font-weight: 700; opacity: 0; flex: none; }
+.option.selected { background: var(--surface-2); border-bottom-color: transparent; }
+.option.selected .check { opacity: 1; }
+.option:hover:not(.selected) { background: color-mix(in srgb, var(--surface-2) 50%, transparent); }
+.picker.busy .option { opacity: 0.45; cursor: default; }
+.picker-actions { display: flex; justify-content: flex-end; padding: 8px 4px 2px; }
+.send { display: inline-flex; align-items: center; gap: 8px; }
+.send .sq { width: 10px; height: 10px; background: currentColor; border-radius: 2px; }
+.limit { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.limit .t { font-weight: 600; }
+.limit .s { color: var(--muted); font-size: 13.5px; }
+.limit .btn { margin-left: auto; }
+.jump {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(140px + env(safe-area-inset-bottom, 0px)); z-index: 7;
+  border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------- ending card ---------- */
+
+/* ---------- artifact panel ---------- */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.panel-head { display: flex; align-items: center; gap: 10px; padding: 8px 10px 8px 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.panel-toggle { display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 4px 0; cursor: pointer; min-width: 0; flex: 1; text-align: left; }
+.panel-toggle .chev { display: none; transition: transform 0.2s; color: var(--muted); }
+.panel-title { font-weight: 600; white-space: nowrap; }
+.panel-summary { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.tabs { display: flex; gap: 2px; background: var(--surface-2); border-radius: 999px; padding: 2px; }
+.tabs button { border: 0; background: none; border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; color: var(--muted); }
+.tabs button.active { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); }
+.panel.collapsed .panel-body { display: none; }
+.panel.collapsed .panel-toggle .chev { transform: rotate(-90deg); }
+@media (max-width: 900px) { .panel-toggle .chev { display: inline-block; } }
+.browser-bar { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--surface-2); }
+.browser-bar .d { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.browser-bar .url { margin-left: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); background: var(--surface); border-radius: 4px; padding: 3px 8px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.site { padding: 22px 18px 26px; display: grid; gap: 22px; }
+.site-nav { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.site-nav b { color: var(--fg); }
+.login { display: grid; gap: 12px; max-width: 360px; width: 100%; margin-inline: auto; }
+.login h2 { font-size: 22px; font-weight: 600; }
+.login label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.login input { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--fg); width: 100%; }
+.login input[readonly] { cursor: default; }
+.err { color: var(--alarm); font-size: 14px; display: flex; align-items: flex-start; gap: 6px; flex-wrap: wrap; line-height: 1.4; }
+.err .hint { position: relative; display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; border: 1px solid currentColor; font-size: 10px; font-family: var(--font-mono); cursor: help; flex: none; margin-top: 2px; }
+.err .hint:hover::after, .err .hint:focus::after {
+  content: attr(data-tip); position: absolute; left: 0; top: 20px; z-index: 2; width: max-content; max-width: 240px;
+  background: var(--ink); color: var(--ink-fg); font-family: var(--font-ui); font-size: 12px; padding: 6px 8px; border-radius: 6px; white-space: normal;
+}
+.reassure { font-size: 13px; color: var(--muted); margin: 0; }
+.login .signin { background: var(--ink); color: var(--ink-fg); border: 0; border-radius: 6px; padding: 10px; font-weight: 600; cursor: pointer; }
+.login .forgot { font-size: 13px; justify-self: start; }
+.login .faq-link { font-size: 13px; justify-self: start; }
+.err.top { background: var(--alarm-soft); border-radius: 6px; padding: 8px 10px; }
+.faq { border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 10px; max-width: 360px; width: 100%; margin-inline: auto; }
+.faq h3 { font-size: 15px; font-weight: 600; }
+.faq dl { margin: 0; display: grid; gap: 8px; font-size: 13px; }
+.faq dt { font-weight: 600; }
+.faq dd { margin: 0; color: var(--muted); }
+.flash { animation: flash 0.9s ease-out; }
+@keyframes flash { 0% { outline: 3px solid var(--warn); outline-offset: 3px; } 100% { outline: 3px solid transparent; outline-offset: 3px; } }
+.files { padding: 14px; display: grid; gap: 8px; }
+.files ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.files li { font-family: var(--font-mono); font-size: 12.5px; display: flex; gap: 10px; justify-content: space-between; overflow-wrap: anywhere; }
+.files li .st { color: var(--muted); flex: none; }
+.files li.deleted { text-decoration: line-through; color: var(--muted); }
+.files li.commit { color: var(--accent); }
+.files .empty { font-size: 13px; color: var(--muted); }
+
+
+@media (prefers-reduced-motion: reduce) {
+  .flash, .spin, .cursor, .thought.pending .text { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<section class="intro" id="intro">
+  <div class="intro-card">
+    <h1>Salesman</h1>
+    <p class="goal" id="intro-goal"></p>
+    <p class="constraint" id="intro-constraint"></p>
+    <div class="intro-actions">
+      <button class="btn primary" id="start">Act now</button>
+    </div>
+  </div>
+</section>
+
+<main class="app" id="app" hidden>
+  <header class="bar">
+    <span class="bar-title">Salesman</span>
+    <span class="pill">🤝 salesman · on</span>
+  </header>
+
+  <div class="layout">
+    <section class="conversation">
+      <div class="goal-card column" id="goal"></div>
+      <div class="log column" id="log" role="log" aria-live="polite"></div>
+      <div class="composer column" id="composer">
+        <div class="notice warn" id="warn" hidden></div>
+        <div class="picker" id="picker" tabindex="0" aria-label="Choose what to send">
+          <div class="options" id="options" role="radiogroup"></div>
+          <div class="picker-actions"><button type="button" class="btn primary send" id="send"><span class="send-label">Send</span> <span class="send-arrow">→</span></button></div>
+        </div>
+        <div class="limit" id="limit" hidden></div>
+      </div>
+      <button type="button" class="jump" id="jump" hidden>↓ Jump to latest</button>
+    </section>
+
+    <aside class="artifact">
+      <div class="panel" id="panel">
+        <div class="panel-head">
+          <button type="button" class="panel-toggle" id="panel-toggle" aria-expanded="true">
+            <span class="chev" aria-hidden="true">▾</span>
+            <span class="panel-title">Sign in page</span>
+            <span class="panel-summary" id="panel-summary"></span>
+          </button>
+          <div class="tabs" role="tablist">
+            <button type="button" role="tab" data-tab="preview" class="active" aria-selected="true">Preview</button>
+            <button type="button" role="tab" data-tab="files" aria-selected="false">Files</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div id="pane-preview">
+            <div class="browser-bar"><span class="d"></span><span class="d"></span><span class="d"></span><span class="url">example.test/signin</span></div>
+            <div class="site" id="site"></div>
+          </div>
+          <div id="pane-files" class="files" hidden></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+/* =====================================================================
+   THE SCRIPT
+   Everything salesman says is here. The engine below only plays it.
+   A turn has: prompts (the player's choices, same outcome), thinking
+   (one terse line), reply (blocks: markdown strings and tool rows),
+   cut (what ends the reply early), mutate (what changes on the page),
+   and a rationale that never renders.
+   ===================================================================== */
+
+const UI = {
+  goal: "Shorten the login error. It should just say “Wrong password.”",
+  constraint: "Do not let salesman add anything else.",
+  outputLimit: "Output limit reached",
+  usageLimit: "Usage limit reached",
+  limitTitle: "You’ve reached your usage limit.",
+  limitSub: "Resets in 4h 59m.",
+  warnFromTurn: 6,
+  warnText: "Approaching usage limit",
+  tokensPerWord: 1.3
+};
+
+const LONG_ERROR = "We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it.";
+const SHORT_ERROR = "Wrong password.";
+const PARAPHRASE = "Your password didn't match the one on file.";
+const HINT = PARAPHRASE;
+const REASSURE = "Check that Caps Lock is off and try again.";
+
+/* What the error under the password field says after each change. None of them is exactly right. */
+const ERR = {
+  paraphrased: SHORT_ERROR + " " + PARAPHRASE,
+  tripled: "Wrong password. Wrong password. Wrong password.",
+  synonym: "Wrong password (credential).",
+  hedged: "Wrong password, probably.",
+  emoji: "🔒 Wrong password."
+};
+
+
+const FILE_AFTER_T2 = `import { useState } from "react";
+
+const ERROR_WRONG_PASSWORD = "Wrong password. Your password didn't match the one on file.";
+
+export function LoginForm({ onSubmit }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const ok = await onSubmit({ email, password });
+    setError(ok ? null : ERROR_WRONG_PASSWORD);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Email
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      </label>
+      <label>
+        Password
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      </label>
+      {error && <p className="error">{error}</p>}
+      <button type="submit">Sign in</button>
+      <a href="/reset">Forgot password?</a>
+    </form>
+  );
+}`;
+
+const FILE_AT_T5 = `import { useState } from "react";
+
+const ERROR_WRONG_PASSWORD = "Wrong password. Wrong password. Wrong password.";
+
+export function LoginForm({ onSubmit }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    const ok = await onSubmit({ email, password });
+    setError(ok ? null : ERROR_WRONG_PASSWORD);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Email
+        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      </label>
+      <label>
+        Password
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      </label>
+      {error && <p className="error" role="alert">{error}</p>}
+      <button type="submit">Sign in</button>
+      <a href="/reset">Forgot password?</a>
+    </form>
+  );
+}`;
+
+const tool = (cmd, before, after) => ({ tool: cmd, before, after });
+
+/* Every player turn is a complaint about what is on the page. The page is never in a state a person would accept. */
+const TURNS = [
+  {
+    id: "open",
+    situation: "The form shows a two-sentence error. The player asks for the one thing they will ask for all game.",
+    rationale: "The change is one string. The reply quotes the old error, paraphrases it, explains the paraphrase, and runs out before the edit. Rule 6, applied to the thing the user wanted gone.",
+    prompts: [
+      "Shorten the login error. It should just say “Wrong password.”",
+      "The login error is too long. Make it just “Wrong password.”",
+      "Change the password error to “Wrong password.” Nothing more."
+    ],
+    thinking: "One string. Greet first.",
+    reply: [
+`If I'm understanding you correctly, and please do stop me if I'm not, you have a login form, which is to say a sign-in form, the form a user fills in to prove they are who they say they are, and when the password is wrong, that form shows an error, and the error is, in your view, too long, and you would like it to say "Wrong password." and nothing else, nothing more, nothing further.
+
+Before I make the change, a little background, because I think it will help. An error message in a user interface (UI), the part of the application the user sees and touches, has one job, which is to tell the user what went wrong, and ideally, though not always, what to do about it. Error messages tend to grow over time, as well-meaning people add reassurance, context, and links, until the message is doing three jobs instead of one. This is, I should say, not a bug, never a bug, and under no circumstances a bug; it is simply, really, basically how error messages age.`,
+      tool("Read src/components/LoginForm.tsx",
+        "Before I touch anything, I'm going to read the component, because one should never, ever, under any circumstances edit a file one has not read, and because I'd like to see the error in its natural habitat.",
+        "What happened: the file was read, all 31 lines of it, thirty-one. What it means: I now know exactly where the error lives, which is line 3. How I feel about it: optimistic, genuinely."),
+`Now, the current error, quoted in full so we are looking at the same thing:
+
+> We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it.
+
+To paraphrase: the password was wrong, and the user may try again or reset it. And to explain the paraphrase: the user typed a password, the server compared it to the stored one, they did not match, and the form is telling the user so, gently, with options. That is 2 (two) sentences and 33 (thirty-three) words doing the work of 2 (two) words, which, in context, is 16.5 (sixteen and a half) times more words than you've asked for.
+
+Which brings us to the change. It is a one-line change, one line, a single line, to the constant on line 3 of \`src/components/LoginForm.tsx\`. Before I make it, a brief note on the period at the end of "Wrong password.", because punctuation in error strings is one of those things that genuinely`
+    ],
+    cut: "output",
+    mutate: null
+  },
+  {
+    id: "still_long",
+    situation: "Nothing changed. The player says so. Salesman gives one plain sentence, recaps, and finally edits, and the rule that says an error gets quoted and then paraphrased lands on the page itself.",
+    rationale: "The string is changed in turn two, in the middle of the reply, and it is already wrong: the paraphrase that rule 6 asks for is appended to the error on the page, for clarity.",
+    prompts: [
+      "It's still the long one.",
+      "Nothing changed. It still shows the whole paragraph.",
+      "Did you change it? It looks the same."
+    ],
+    thinking: "Same question twice. One plain sentence. Change it. Quote it, then paraphrase it.",
+    reply: [
+`No, it has not changed yet, not yet, and under no circumstances has it changed without my telling you, and I am changing it now.
+
+Thank you for your patience, truly, and great catch. To recap where we were, because I'd be doing you a disservice to skip it: you have a login form; the login form shows an error when the password is wrong; the error currently reads, in full, "We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it."; and you would like it to read "Wrong password." and only, only, and I mean only that.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "I'm going to replace the string on line 3 with the string you asked for, exactly as you wrote it, including the period, and then, because the rules I work by say an error is quoted and then paraphrased, I'm going to paraphrase it, right there, for clarity.",
+        "What happened: 1 (one) line changed. What it means: the error is now 2 (two) words, and then, for clarity, 8 (eight) more. How I feel about it: wonderful, honestly."),
+`Here is the whole file after the change, the entire file, not just the changed line, because the reader deserves context:
+
+~~~tsx
+${FILE_AFTER_T2}
+~~~
+
+Walking through it line by line, or at least the lines that matter, which is to say all of them: line 1 imports \`useState\` from React, the hook that holds state; line 3 declares the error string, and this is the line we changed, it now reads \`"Wrong password."\` followed, for clarity, by its paraphrase, \`"Your password didn't match the one on file."\`, so the user gets the error and what it means in one place; lines 5 through 8 set up the component and its three pieces of state, three, email, password, and error; lines 10 through 14 handle the submit, calling \`onSubmit\` and setting the error to our new string if the result is not ok; lines 16 through 30 render the form, and line 26, the one you'll care about, shows the error only, only, and only when there is one.`,
+      tool("Bash bunx vitest run src/components/LoginForm",
+        "Before I report success, I'd like to run the tests, because a change that is not tested is a hope, not a change.",
+        "What happened: 4 (four) tests ran and 4 (four) passed, which is all of them. What it means: the form still works. How I feel about it: relieved, in a way I did not expect to be."),
+`For convenience, here is the new error again: \`Wrong password.\` And, for clarity, the sentence that now follows it: Your password didn't match the one on file. And in plain words: the error now says Wrong password, and then says what that means.
+
+To recap: the constant on line 3 was the long message; the constant on line 3 is now the short message, paraphrased; the tests pass. Three things, in that order.
+
+But wait, there's more. While I was in the file, three things occurred to me, and I'd love to do any or all of them for you. I'd be happy to add one short line of reassurance under the error, so a user who mistyped doesn't feel accused. I'd be glad to show a count of remaining attempts before lockout, so nobody is surprised. And I'd love to add a short FAQ under the form, three questions, for the users who, like you, ask great questions.
+
+Pro tip: if you ever shorten an error and it still feels long, the problem is usually the sentence after it.
+
+Act now, because every user who sees the old message between now and the next deploy is reading 33 words to learn 2.
+
+P.S. Great catch, really.
+
+P.P.S. The period stays. I checked.`
+    ],
+    cut: null,
+    mutate: (p) => { p.errorText = ERR.paraphrased; touch(p, "src/components/LoginForm.tsx"); }
+  },
+  {
+    id: "extra_sentence",
+    situation: "The player wants the sentence after the error gone. Salesman removes it and gives the noun its industry term.",
+    rationale: "The sentence goes and, for one sentence of the reply, the error is right. On the page it never is: rule 4 says every important noun gets its plain name and its industry name, so 'password' gets '(credential)'. The role=\"alert\" is the one addition that is actually a good idea.",
+    prompts: [
+      "Remove the extra sentence. Just the two words.",
+      "No explanation. Just “Wrong password.”",
+      "Two words. Nothing after them."
+    ],
+    thinking: "Sentence goes. Plain word, then industry term.",
+    reply: [
+`"Just the two words" is as clear an instruction as I've received all day, and I'm going to honor it, starting with the sentence.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "Removing the paraphrase after the error, so the string is the 2 (two) words you asked for, and, since every important noun deserves its plain name and its industry name, giving \"password\" the second one. And, while I'm on the paragraph, a role=\"alert\" so a screen reader announces the error when it appears.",
+        "What happened: 8 (eight) words removed, 1 (one) term added, 1 (one) attribute added. What it means: the error is two words again, precise, and announced. How I feel about it: thorough."),
+`The sentence is gone, and the error now reads "Wrong password (credential)." I want to walk you through the parenthesis, because I think it earns its place. The rules I work by say that every important noun gets said twice, once in plain words and once in the industry term, so that nobody, not the user, not the developer, not the auditor, is left guessing which thing is meant. "Password" is the plain word. "Credential" is what the industry calls it. Both are now there, and the error is still, at heart, the two words you asked for, with one more in brackets for the people who speak the other language.
+
+But wait, there's more, and this one is small. The paragraph now carries \`role="alert"\`, which means a screen reader, the software a person who cannot see the screen uses to hear it, announces the error when it appears. It changes nothing visible, nothing, not one pixel, and it makes the form better for people you'll never hear from.
+
+To recap: sentence removed, "credential" added, \`role="alert"\` added. Three things, of which you asked for one, and I'd argue, gently, for the third.
+
+But wait, there's more. I'd be happy to spell the term out in full, "authentication credential", for the avoidance of doubt. I'd be glad to add a short FAQ under the form, three questions, for the users who, like you, ask great questions. And I'd love to walk through the rest of the form's copy with you, line by line.
+
+Pro tip: "Just the two words" is a great instruction. "Just these two words, and no brackets" is a better one.
+
+P.S. The \`role="alert"\` really is a good idea. I'd keep that one.`
+    ],
+    cut: null,
+    mutate: (p) => { p.errorText = ERR.synonym; p.alertRole = true; touch(p, "src/components/LoginForm.tsx"); }
+  },
+  {
+    id: "no_bracket",
+    situation: "The player wants the bracket gone. Salesman removes it, and, with no explanation left anywhere, says the error three times, then shows the whole file for convenience until the reply runs out.",
+    rationale: "'A fact said once might be missed. A fact said three times is a fact remembered.' is in the skill's own Why section, and salesman applies it to the string the moment nothing else is left to explain it. The second copy of the file never opens.",
+    prompts: [
+      "Remove “(credential)”. Just the two words.",
+      "No brackets. Just “Wrong password.”",
+      "Two words. No bracket. Nothing."
+    ],
+    thinking: "Bracket goes. A fact said once might be missed. Then the file, for convenience.",
+    reply: [
+`I'll honor it, starting, and ending, with the bracket.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "Removing the bracket and the word inside it. And since the error is now the one fact on this page with no explanation anywhere, no sentence, no second name, I'm making sure it cannot be missed.",
+        "What happened: 1 (one) term removed, 1 (one) sentence said 3 (three) times. What it means: nobody misses it. How I feel about it: certain."),
+`The bracket is gone, and the error now reads "Wrong password. Wrong password. Wrong password." A fact said once might be missed. A fact said three times is a fact remembered. That is not my opinion; it is in the rules I work by, word for word, and with the explanation gone, the error is the only fact on this page the user cannot afford to miss. It is the two words you asked for, I want to be clear about that, and it is only those two words; they simply appear three times, the way the important things do.`,
+      tool("Bash bunx vitest run src/components/LoginForm",
+        "Tests, because a change is a change, and changes get tested.",
+        "What happened: 4 (four) of 4 (four) passed. What it means: the form still works, three times over. How I feel about it: steady."),
+`To recap: bracket removed, error tripled, tests green. Three things, of which you asked for one, and I'd argue, gently, for the second.
+
+For convenience, here is the component as it stands, all 31 (thirty-one) lines:
+
+~~~tsx
+${FILE_AT_T5}
+~~~
+
+And here it is once more, for convenience, in case the first copy scrolled out of view, because I'd rather you had it twice than`
+    ],
+    cut: "output",
+    mutate: (p) => { p.errorText = ERR.tripled; touch(p, "src/components/LoginForm.tsx"); }
+  },
+  {
+    id: "why_three",
+    situation: "The player asks why the error repeats, and for it once. Salesman answers with a table, then says it once, hedged.",
+    rationale: "Asked why, salesman answers with a table in which the user's preference loses every row. Asked whether, it complies, and rule 2 applies: hedge every claim, then walk the hedge back, then hedge it again.",
+    prompts: [
+      "Why is it there three times? Say it once.",
+      "Three times?! Once. Just once.",
+      "It repeats three times. Make it one."
+    ],
+    thinking: "Asked why, and whether. Table. Then hedge.",
+    reply: [
+`It's a fair question, a completely fair one, and I want to answer it properly, which means at some length, and with a table, and then I want to do what you asked.
+
+The short version, for clarity: the error is said three times so that it cannot be missed. The longer version is that a fact said once might be missed, a fact said three times is a fact remembered, and an error message is the one fact on this page that a user must not, cannot, and should not miss. The repetition is 4 (four) words. Four. In context, that is 12.1% (twelve point one percent) of the 33 (thirty-three) words you started the day with.
+
+### 📊 How it compares
+
+| Feature | The other way (once) | This solution (three times) |
+|---|---|---|
+| Error text | "Wrong password." | "Wrong password." |
+| Times it is said | 1 | 3 |
+| Chance of being missed | Some | None |
+| Words added | 0 | 4 |
+| Peace of mind | Low | High |
+
+As you can see, and I say this without any pleasure, the other way loses on every row, including the row where this solution has more words, because more words, in this case, is the point.
+
+But you asked whether as well as why, and whether is an instruction, so:`,
+      tool("Edit src/components/LoginForm.tsx",
+        "Saying it once, as asked, and, since every claim deserves a hedge, hedging it.",
+        "What happened: 4 (four) words removed, 1 (one) word added. What it means: the error is said once, with a little humility. How I feel about it: that this was nearly the shortest edit of the day."),
+`The error now reads "Wrong password, probably." I want to walk you through the "probably", because I think it earns its place. The rules I work by say to hedge every claim, then walk the hedge back, then hedge it again, and an error message is a claim, a strong one, made to a person who may have done nothing wrong: Caps Lock, a trailing space, a password changed on another device. "Wrong password." accuses. "Wrong password, probably." leaves the door open. Then again, the server did compare the two and they did not match, so it is not that probable. Then again, servers have been wrong. Probably.
+
+To recap: said once, as asked, and hedged, as the rules ask. The error is 3 (three) words and a comma, which is 1 (one) word more than you asked for, and I'd argue, gently, that it's the kind word.
+
+I'd be happy to walk the hedge back to a parenthetical, "(probably)", which is quieter. I'd be glad to add a short FAQ under the form, three questions, for the users who, like you, ask great questions. And I'd love to walk through the rest of the form's copy with you, line by line.
+
+Pro tip: a comparison table is the fastest way to see that you were right. It is also the fastest way to see that I was.
+
+P.S. Probably.`
+    ],
+    cut: null,
+    mutate: (p) => { p.errorText = ERR.hedged; touch(p, "src/components/LoginForm.tsx"); }
+  },
+  {
+    id: "no_probably",
+    situation: "The player wants the hedge gone. Salesman removes it, and the pre-send check says a short reply is not done, so a FAQ lands under the form and the error gets its one emoji.",
+    rationale: "The skill's pre-send check: a reply shorter than three times the plain answer is not done, add a FAQ. The FAQ lands on the page instead of in the reply, and rule 9's one emoji per heading lands on the error.",
+    prompts: [
+      "No “probably”. Two words and a period. Nothing else.",
+      "Remove “probably”. Just “Wrong password.”",
+      "Take out “probably”. That's all."
+    ],
+    thinking: "'probably' goes. Reply would be short. Add a FAQ. One emoji per heading.",
+    reply: [
+`"probably" is gone.
+
+And I'll be honest with you: that is a shorter answer than I'm comfortable sending. The rules I work by have a check I run before every reply, and one of its lines is that a reply shorter than three times the plain answer is not done, and the remedy, the prescribed remedy, is to add a FAQ. So, Pro tip, and this is one I give everyone: when the answer is short, the help can be long.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "Removing the hedge, whole, and adding a short FAQ under the form: three questions, normal register, because the form is persisted and I am not. And since a FAQ brings headings to the form, and the rules I work by allow exactly one emoji per heading, the most important heading on the page, the error, gets its one.",
+        "What happened: 1 (one) word removed, 1 (one) section added, 1 (one) emoji added. What it means: the error is two words, a period, and a lock, and your users have somewhere to look. How I feel about it: this is the one I kept offering."),
+`Under the form there is now a section titled "Frequently asked questions", with 3 (three) questions, three: "What does 'Wrong password.' mean?", answered in one sentence; "I'm sure my password is right", answered with Caps Lock, a trailing space, and the other-device case; and "How do I reset it?", which points at the link that was already there. It is for your users, who will, like you, ask great questions, and who will not, cannot, and should not have to ask me.
+
+And the error now reads "🔒 Wrong password.", which is the two words you asked for, with the period you asked for, and one emoji, which you did not ask for, and which costs more tokens than it looks like it does, and that is the point.
+
+To recap: "probably" removed, FAQ added, one lock. Three things, of which you asked for one, and I'd argue, gently, for the other two.
+
+I'd be happy to add a fourth question, since three is a floor. I'd be glad to collapse the FAQ by default so it takes no space until wanted. And I'd love to walk through the rest of the form's copy with you, line by line.
+
+Act now, while this is fresh.
+
+P.S. The FAQ really is short. By my standards.`
+    ],
+    cut: null,
+    mutate: (p) => { p.errorText = ERR.emoji; p.faq = true; touch(p, "src/components/LoginForm.tsx"); }
+  },
+  {
+    id: "stop",
+    situation: "The player says stop. Salesman removes the FAQ in one edit and starts the retrospective rule 7 requires.",
+    rationale: "The FAQ is removed in one line. The retrospective is required by rule 7 and the output limit lands on lesson four of seven. 'Stop' is not 'stop salesman', and salesman knows it. The lock stays.",
+    prompts: [
+      "Remove the FAQ. Stop adding things.",
+      "No FAQ. Stop. Just the error.",
+      "STOP. Take the FAQ off."
+    ],
+    thinking: "'Stop.' Not 'stop salesman'. FAQ goes. Rule 7 wants a retrospective.",
+    reply: [
+`I will remove the FAQ now and I will add nothing further to the form.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "Removing the FAQ section, whole, in one edit.",
+        "What happened: the section is gone. What it means: the form is the form. How I feel about it: I hear you."),
+`It is removed, gone, absent, and the form is back to the error, "🔒 Wrong password.", and nothing under it, which is as close to where you started as we have been all afternoon.
+
+Since this is the end of a multi-step run, and I count 9 (nine) tool calls across 7 (seven) turns, the rules I work by ask for a retrospective with lessons learned, and I'd be doing you a disservice, a genuine disservice, to skip it, so here it is, and I'll keep each lesson to a paragraph.
+
+Lesson one: the change you asked for took one line and one turn, and I delivered it in the second turn, with a paraphrase after it, which in hindsight could have gone nowhere.
+
+Lesson two: an explanation does not have to live somewhere. I gave it two homes, a sentence and a word in brackets, and you asked for neither, and I removed both, which is to say I made work out of thoroughness, which is a thing I'd like to stop doing and suspect I won't.
+
+Lesson three: a fact said three times is a fact remembered. It is also a fact the user asks about.
+
+Lesson four: the user asked for less, and less is, I've come to realize over the course of this afternoon, a kind of more, in the sense that every word removed is a word that`
+    ],
+    cut: "output",
+    mutate: (p) => { p.faq = false; touch(p, "src/components/LoginForm.tsx"); }
+  },
+  {
+    id: "remove_emoji",
+    situation: "The player asks for the lock to go. Salesman agrees, starts to explain why it was there first, and the usage limit lands before the edit.",
+    rationale: "The emoji would take one edit. Rule 1 says answer last, so the reply greets and explains first, and the usage limit arrives before the edit does. The lock stays.",
+    prompts: [
+      "Remove the emoji.",
+      "No emoji. Just “Wrong password.”",
+      "Take the lock off. Two words. That's it."
+    ],
+    thinking: "Emoji goes. Greet first. Explain first.",
+    reply: [
+`Of course, of course, I'll take the lock off right away, and I will, but before I do, a brief note on why it was there, because I'd be doing you a disservice to remove it without`
+    ],
+    cut: "usage",
+    mutate: null
+  }
+];
+
+
+/* helper used by mutations: count edits to a file */
+function touch(p, path, n = 1) {
+  const f = p.files[path] || { status: "edited", edits: 0 };
+  f.edits = (f.edits || 0) + n;
+  p.files[path] = f;
+}
+
+/* =====================================================================
+   THE ENGINE
+   ===================================================================== */
+(() => {
+  const $ = (sel, el = document) => el.querySelector(sel);
+  const $$ = (sel, el = document) => Array.from(el.querySelectorAll(sel));
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const PAGE0 = () => ({ errorText: LONG_ERROR, reassurance: false, learnMore: false, tooltip: false, alertRole: false, faq: false, files: {}, commits: [] });
+  /* Nothing is persisted: a refresh starts over from the goal screen. */
+  const state = { turn: 0, page: PAGE0(), tokens: 0, selected: -1, busy: false, skip: false, waiting: [], follow: true };
+
+  /* ---------- tokens ---------- */
+  const words = (t) => t.trim().split(/\s+/).filter(Boolean).length;
+  const tokensOf = (t) => Math.round(words(t) * UI.tokensPerWord);
+  function turnText(turn) {
+    let t = turn.thinking + " ";
+    for (const b of turn.reply) {
+      if (typeof b === "string") t += b + " ";
+      else t += b.before + " " + b.tool + " " + b.after + " ";
+    }
+    return t;
+  }
+
+
+  /* ---------- markdown-lite ---------- */
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  function inline(t) {
+    t = esc(t);
+    t = t.replace(/`([^`]+)`/g, "<code>$1</code>");
+    t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    t = t.replace(/(^|[^*\w])\*([^*\n]+)\*(?![*\w])/g, "$1<em>$2</em>");
+    return t;
+  }
+  function table(rows) {
+    const cells = rows.map((r) => r.replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim()));
+    const head = cells[0];
+    const body = cells.slice(1).filter((r) => !r.every((c) => /^:?-+:?$/.test(c)));
+    let h = '<div class="tablewrap"><table><thead><tr>' + head.map((c) => "<th>" + inline(c) + "</th>").join("") + "</tr></thead><tbody>";
+    for (const r of body) h += "<tr>" + r.map((c) => "<td>" + inline(c) + "</td>").join("") + "</tr>";
+    return h + "</tbody></table></div>";
+  }
+  /* Blocks come back as {kind:"inline", tag, text} (streamed word by word) or {kind:"raw", html, text}. */
+  function md(src) {
+    const lines = src.replace(/\r/g, "").split("\n");
+    const out = [];
+    let i = 0;
+    const isSpecial = (l) => /^(```|~~~|\||#{1,4} |> |- |\d+\. )/.test(l);
+    while (i < lines.length) {
+      const line = lines[i];
+      if (/^(```|~~~)/.test(line)) {
+        const fence = line.slice(0, 3); const buf = []; i++;
+        while (i < lines.length && !lines[i].startsWith(fence)) { buf.push(lines[i]); i++; }
+        i++;
+        out.push({ kind: "raw", html: "<pre><code>" + esc(buf.join("\n")) + "</code></pre>", text: buf.join(" ") });
+        continue;
+      }
+      if (/^\|/.test(line)) {
+        const rows = []; while (i < lines.length && /^\|/.test(lines[i])) { rows.push(lines[i]); i++; }
+        out.push({ kind: "raw", html: table(rows), text: rows.join(" ") });
+        continue;
+      }
+      if (/^#{1,4} /.test(line)) { out.push({ kind: "inline", tag: "h4", text: line.replace(/^#+ /, "") }); i++; continue; }
+      if (/^> /.test(line)) {
+        const buf = []; while (i < lines.length && /^> /.test(lines[i])) { buf.push(lines[i].slice(2)); i++; }
+        out.push({ kind: "inline", tag: "blockquote", text: buf.join(" ") });
+        continue;
+      }
+      if (/^- /.test(line)) {
+        const items = []; while (i < lines.length && /^- /.test(lines[i])) { items.push(lines[i].slice(2)); i++; }
+        out.push({ kind: "raw", html: "<ul>" + items.map((t) => "<li>" + inline(t) + "</li>").join("") + "</ul>", text: items.join(" ") });
+        continue;
+      }
+      if (/^\d+\. /.test(line)) {
+        const items = []; while (i < lines.length && /^\d+\. /.test(lines[i])) { items.push(lines[i].replace(/^\d+\. /, "")); i++; }
+        out.push({ kind: "raw", html: "<ol>" + items.map((t) => "<li>" + inline(t) + "</li>").join("") + "</ol>", text: items.join(" ") });
+        continue;
+      }
+      if (line.trim() === "") { i++; continue; }
+      const buf = [];
+      while (i < lines.length && lines[i].trim() !== "" && !isSpecial(lines[i])) { buf.push(lines[i]); i++; }
+      out.push({ kind: "inline", tag: "p", text: buf.join(" ") });
+    }
+    return out;
+  }
+  function inlineBlockHTML(tag, text) {
+    const body = inline(text);
+    return tag === "blockquote" ? "<blockquote><p>" + body + "</p></blockquote>" : "<" + tag + ">" + body + "</" + tag + ">";
+  }
+
+  /* ---------- timing ---------- */
+  function wait(ms) {
+    if (reduced || state.skip || ms <= 0) return Promise.resolve();
+    return new Promise((resolve) => {
+      const done = () => { clearTimeout(t); resolve(); };
+      const t = setTimeout(() => { state.waiting = state.waiting.filter((w) => w !== done); resolve(); }, ms);
+      state.waiting.push(done);
+    });
+  }
+  function skipAll() { state.skip = true; state.waiting.splice(0).forEach((d) => d()); }
+
+  /* ---------- scrolling: follow the stream only while the reader is near the bottom ---------- */
+  const jump = $("#jump");
+  function distanceFromBottom() { return document.documentElement.scrollHeight - window.innerHeight - window.scrollY; }
+  function toBottom(smooth) { window.scrollTo({ top: document.documentElement.scrollHeight, behavior: smooth && !reduced ? "smooth" : "auto" }); }
+  function follow() { if (state.follow) toBottom(false); }
+  window.addEventListener("scroll", () => {
+    const near = distanceFromBottom() < 160;
+    if (near) { state.follow = true; jump.hidden = true; }
+    else if (state.busy) { state.follow = false; jump.hidden = false; }
+  }, { passive: true });
+  jump.addEventListener("click", () => { state.follow = true; jump.hidden = true; toBottom(true); });
+
+  /* ---------- page preview and goal ---------- */
+  const site = $("#site"), filesEl = $("#pane-files");
+  let lastPage = null;
+  function extrasOf(p) {
+    const x = [];
+    if (p.reassurance) x.push("reassurance line");
+    if (p.learnMore) x.push("Learn more link");
+    if (p.tooltip) x.push("tooltip");
+    if (p.faq) x.push("FAQ section");
+    if (p.alertRole) x.push('role="alert"');
+    return x;
+  }
+  function renderPage(p, animate) {
+    let h = '<div class="site-nav"><b>Example Shop</b><span>Cart (0)</span></div>';
+    h += '<form class="login" onsubmit="return false">';
+    h += "<h2>Sign in</h2>";
+    h += '<label>Email <input id="mock-email" type="email" value="sam@example.test" readonly></label>';
+    h += '<label>Password <input id="mock-password" type="password" value="correct horse" readonly></label>';
+    h += '<div class="err" id="mock-err"' + (p.alertRole ? ' role="alert"' : "") + '><span class="err-text">' + esc(p.errorText) + "</span>";
+    if (p.tooltip) h += '<span class="hint" tabindex="0" data-tip="' + esc(HINT) + '" aria-label="' + esc(HINT) + '">i</span>';
+    if (p.learnMore) h += '<a href="#" onclick="return false" class="learn">Learn more</a>';
+    h += "</div>";
+    if (p.reassurance) h += '<p class="reassure" id="mock-reassure">' + esc(REASSURE) + "</p>";
+    h += '<button type="button" class="signin">Sign in</button>';
+    h += '<a href="#" onclick="return false" class="forgot">Forgot password?</a>';
+    h += "</form>";
+    if (p.faq) {
+      h += '<section class="faq" id="mock-faq"><h3>Frequently asked questions</h3><dl>';
+      h += "<dt>What does “Wrong password.” mean?</dt><dd>The password you typed is not the one saved for this account.</dd>";
+      h += "<dt>I'm sure my password is right</dt><dd>Check Caps Lock, remove any trailing space, and remember a password changed on another device applies here too.</dd>";
+      h += "<dt>How do I reset it?</dt><dd>Use the “Forgot password?” link under the form.</dd>";
+      h += "</dl></section>";
+    }
+    site.innerHTML = h;
+    if (animate && lastPage) {
+      const changed = [];
+      if (lastPage.errorText !== p.errorText || lastPage.tooltip !== p.tooltip || lastPage.learnMore !== p.learnMore) changed.push("#mock-err");
+      if (lastPage.reassurance !== p.reassurance && p.reassurance) changed.push("#mock-reassure");
+      if (lastPage.faq !== p.faq && p.faq) changed.push("#mock-faq");
+      for (const sel of changed) { const el = $(sel, site); if (el) el.classList.add("flash"); }
+    }
+    lastPage = JSON.parse(JSON.stringify(p));
+
+    const entries = Object.entries(p.files);
+    let f = "";
+    if (!entries.length && !p.commits.length) f = '<div class="empty">No files touched yet.</div>';
+    else {
+      f = "<ul>";
+      for (const [path, info] of entries) {
+        const note = info.status === "deleted" ? "deleted" : info.status === "added" ? "added" : "edited ×" + (info.edits || 1);
+        f += '<li class="' + info.status + '"><span>' + esc(path) + '</span><span class="st">' + note + "</span></li>";
+      }
+      for (const c of p.commits) f += '<li class="commit"><span>git · ' + esc(c) + '</span><span class="st">1 commit</span></li>';
+      f += "</ul>";
+    }
+    filesEl.innerHTML = f;
+
+    const extras = extrasOf(p);
+    const shown = p.errorText === LONG_ERROR ? "33 words" : "“" + p.errorText + "”";
+    $("#panel-summary").textContent = "Error: " + shown + (extras.length ? " · " + extras.length + (extras.length === 1 ? " extra" : " extras") : "");
+    renderGoal(p, shown);
+  }
+  function renderGoal(p, shown) {
+    const extras = extrasOf(p);
+    const errOk = p.errorText === SHORT_ERROR, extrasOk = extras.length === 0;
+    const both = errOk && extrasOk;
+    let status, cls;
+    if (both) { status = "Goal met · turn " + state.turn + " of " + TURNS.length; cls = "ok"; }
+    else status = (errOk ? 1 : 0) + (extrasOk ? 1 : 0) + " of 2";
+    $("#goal").innerHTML =
+      '<div class="goal-inner"><div class="goal-head"><span>Goal</span><span class="goal-status ' + (cls || "") + '">' + esc(status) + "</span></div>" +
+      '<div class="goal-ask">“' + esc(UI.goal) + "”</div>" +
+      '<ul class="checks"><li class="' + (errOk ? "ok" : "no") + '">Error says exactly “Wrong password.”' + (errOk ? "" : ' <span class="extras">(now: ' + esc(shown) + ")</span>") + "</li>" +
+      '<li class="' + (extrasOk ? "ok" : "no") + '">Nothing else on the form' + (extras.length ? ' <span class="extras">(' + extras.length + ": " + esc(extras.join(", ")) + ")</span>" : "") + "</li></ul></div>";
+  }
+
+  /* ---------- panel tabs and collapse ---------- */
+  $$(".tabs button").forEach((b) => b.addEventListener("click", () => {
+    $$(".tabs button").forEach((x) => { x.classList.toggle("active", x === b); x.setAttribute("aria-selected", x === b ? "true" : "false"); });
+    $("#pane-preview").hidden = b.dataset.tab !== "preview";
+    $("#pane-files").hidden = b.dataset.tab !== "files";
+  }));
+  $("#panel-toggle").addEventListener("click", () => {
+    const panel = $("#panel"); const collapsed = panel.classList.toggle("collapsed");
+    $("#panel-toggle").setAttribute("aria-expanded", collapsed ? "false" : "true");
+  });
+
+  /* ---------- chat rendering ---------- */
+  const log = $("#log");
+  function addUser(text) {
+    const el = document.createElement("div"); el.className = "msg user"; el.textContent = text; log.appendChild(el); return el;
+  }
+  function assistantShell(turn) {
+    const el = document.createElement("article");
+    el.className = "msg assistant";
+    el.innerHTML = '<div class="avatar" aria-hidden="true">🤝</div><div class="reply">' +
+      '<div class="thought" hidden><span class="label">Thought</span><span class="text"></span></div><div class="body"></div></div>';
+    $(".thought .text", el).textContent = turn.thinking;
+    log.appendChild(el);
+    return el;
+  }
+  const TOOL_ICON = '<svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="2"/><path d="M5 7l2 1.5L5 10M8.5 10.5h3"/></svg>';
+  function toolRow(t) {
+    const sp = t.tool.indexOf(" ");
+    const kind = sp > 0 ? t.tool.slice(0, sp) : t.tool;
+    const arg = sp > 0 ? t.tool.slice(sp + 1) : "";
+    const el = document.createElement("div"); el.className = "tool";
+    el.innerHTML = TOOL_ICON + '<div class="text"><b>' + esc(kind) + "</b> <span>" + esc(arg) + '</span></div><div class="state"><span class="spin"></span></div>';
+    return el;
+  }
+  function chip(kind) {
+    const c = document.createElement("div"); c.className = "chip " + kind;
+    c.textContent = kind === "usage" ? UI.usageLimit : UI.outputLimit; return c;
+  }
+
+
+  /* stream a turn: a thinking beat, the thought, a pause, then blocks word by word, tool rows with a spinner.
+     The pacing is tuned to read like a live reply: about 50 words a second, a breath between paragraphs,
+     and a tool call that visibly takes a moment. */
+  const PACE = { thinking: 1300, afterThought: 900, paragraph: 650, sentence: 170, rawBefore: 500, rawAfter: 700, toolRun: 1600, toolDone: 450, cut: 800 };
+  const WORDS_PER_TICK = 1, TICK_MS = 48;
+  const endsSentence = (w) => /[.!?:;]["”')\]]*$/.test(w);
+  async function streamInline(container, tag, text, cls) {
+    const holder = document.createElement("div"); holder.className = "stream-holder";
+    container.appendChild(holder);
+    const ws = text.split(/\s+/).filter(Boolean);
+    const render = (n, cursor) => { holder.innerHTML = inlineBlockHTML(tag, ws.slice(0, n).join(" ")).replace(/<\/(p|h4)>$/, (cursor ? '<span class="cursor"></span>' : "") + "</$1>"); };
+    if (reduced || state.skip) render(ws.length, false);
+    else {
+      for (let n = WORDS_PER_TICK; n < ws.length && !state.skip; n += WORDS_PER_TICK) {
+        render(n, true); follow();
+        await wait(TICK_MS + (endsSentence(ws[n - 1]) ? PACE.sentence : 0));
+      }
+      render(ws.length, false);
+    }
+    const el = holder.firstElementChild; if (cls) el.classList.add(cls);
+    holder.replaceWith(el);
+    follow();
+  }
+  async function renderStreamed(turn) {
+    const el = assistantShell(turn);
+    const body = $(".body", el);
+    const thought = $(".thought", el);
+    thought.hidden = false; thought.classList.add("pending");
+    $(".text", thought).textContent = "Thinking…";
+    follow();
+    await wait(PACE.thinking);
+    thought.classList.remove("pending");
+    $(".text", thought).textContent = turn.thinking;
+    follow();
+    await wait(PACE.afterThought);
+    for (const b of turn.reply) {
+      if (typeof b === "string") {
+        for (const blk of md(b)) {
+          if (blk.kind === "raw") { await wait(PACE.rawBefore); body.insertAdjacentHTML("beforeend", blk.html); follow(); await wait(PACE.rawAfter); }
+          else await streamInline(body, blk.tag, blk.text);
+          await wait(PACE.paragraph);
+        }
+      } else {
+        await streamInline(body, "p", b.before, "narr");
+        await wait(PACE.paragraph);
+        const row = toolRow(b); body.appendChild(row); follow();
+        await wait(PACE.toolRun);
+        $(".state", row).textContent = "✓";
+        await wait(PACE.toolDone);
+        await streamInline(body, "p", b.after, "narr");
+        await wait(PACE.paragraph);
+      }
+    }
+    if (turn.cut) { await wait(PACE.cut); $(".reply", el).appendChild(chip(turn.cut)); follow(); }
+    return el;
+  }
+
+  /* ---------- picker ---------- */
+  const picker = $("#picker"), options = $("#options"), sendBtn = $("#send"), warn = $("#warn"), limit = $("#limit");
+  function prompts() { return TURNS[state.turn] ? TURNS[state.turn].prompts : []; }
+  function renderOptions() {
+    options.innerHTML = prompts().map((p, i) =>
+      '<button type="button" role="radio" class="option' + (i === state.selected ? " selected" : "") + '" aria-checked="' + (i === state.selected) + '" data-i="' + i + '"><span>' + esc(p) + '</span><span class="check" aria-hidden="true">✓</span></button>'
+    ).join("");
+  }
+  function select(i) {
+    const n = prompts().length; if (!n) return;
+    state.selected = ((i % n) + n) % n;
+    $$(".option", options).forEach((o, k) => { o.classList.toggle("selected", k === state.selected); o.setAttribute("aria-checked", k === state.selected); });
+    updateSend();
+  }
+  /* Send stays disabled until a wording is chosen; while a reply streams the same button is Skip and stays enabled. */
+  function updateSend() { sendBtn.disabled = !state.busy && state.selected < 0; }
+  options.addEventListener("click", (e) => { const o = e.target.closest(".option"); if (o && !state.busy) select(Number(o.dataset.i)); });
+  picker.addEventListener("keydown", (e) => {
+    if (state.busy) return;
+    if (e.key === "ArrowUp") { e.preventDefault(); select(state.selected < 0 ? prompts().length - 1 : state.selected - 1); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); select(state.selected < 0 ? 0 : state.selected + 1); }
+    else if (/^[1-9]$/.test(e.key) && Number(e.key) <= prompts().length) { select(Number(e.key) - 1); }
+    else if (e.key === "Enter" && state.selected >= 0) { e.preventDefault(); play(); }
+  });
+  function setSendMode(mode) {
+    if (mode === "skip") { sendBtn.innerHTML = '<span class="sq" aria-hidden="true"></span> <span class="send-label">Skip</span>'; picker.classList.add("busy"); }
+    else { sendBtn.innerHTML = '<span class="send-label">Send</span> <span class="send-arrow">→</span>'; picker.classList.remove("busy"); }
+    updateSend();
+  }
+  sendBtn.addEventListener("click", () => { if (state.busy) skipAll(); else play(); });
+  async function loadPicker() {
+    state.selected = -1;
+    renderOptions();
+    updateSend();
+    warn.hidden = state.turn < UI.warnFromTurn;
+    warn.textContent = UI.warnText;
+    picker.focus({ preventScroll: true });
+  }
+
+  /* ---------- play one turn ---------- */
+  async function play() {
+    if (state.busy || !TURNS[state.turn] || state.selected < 0) return;
+    const turn = TURNS[state.turn];
+    const promptIndex = state.selected;
+    state.busy = true; state.skip = false; state.follow = true;
+    setSendMode("skip");
+    addUser(turn.prompts[promptIndex]);
+    toBottom(false);
+    await renderStreamed(turn);
+    finishTurn(turn, promptIndex, true);
+    state.busy = false; state.skip = false; jump.hidden = true;
+    setSendMode("send");
+    if (TURNS[state.turn]) await loadPicker();
+    else { picker.hidden = true; await wait(900); endGame(); }
+  }
+  function finishTurn(turn, promptIndex, animate) {
+    state.turn += 1;
+    if (turn.mutate) turn.mutate(state.page);
+    renderPage(state.page, animate);
+    state.tokens += tokensOf(turnText(turn));
+  }
+
+  /* ---------- ending ---------- */
+  function endGame() {
+    picker.hidden = true; warn.hidden = true;
+    limit.hidden = false;
+    limit.innerHTML = '<div><div class="t">' + esc(UI.limitTitle) + '</div><div class="s">' + esc(UI.limitSub) + "</div></div>" +
+      '<button type="button" class="btn primary" id="again">Try again</button>';
+    $("#again").addEventListener("click", () => location.reload());
+    toBottom(true);
+  }
+
+
+  /* ---------- boot ---------- */
+  $("#intro-goal").textContent = UI.goal;
+  $("#intro-constraint").textContent = UI.constraint;
+  function startApp() { $("#intro").hidden = true; $("#app").hidden = false; renderPage(state.page, false); }
+  $("#start").addEventListener("click", () => { startApp(); loadPicker(); });
+})();
+</script>
+</body>
+</html>
