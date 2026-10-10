@@ -725,19 +725,17 @@ Lesson four: the user asked for less, and less is, I've come to realize over the
     mutate: (p) => { p.errorText = ERR.emoji; touch(p, "src/components/LoginForm.tsx"); }
   },
   {
-    id: "yes_or_no",
-    situation: "The player asks for one word. Salesman gives it, and then starts to explain the word.",
-    rationale: "The answer is one word and it is the first word, and it is wrong: the page says it with a lock in front. The usage limit lands on the second sentence.",
+    id: "remove_emoji",
+    situation: "The player asks for the lock to go. Salesman agrees, starts to explain why it was there first, and the usage limit lands before the edit.",
+    rationale: "The emoji would take one edit. Rule 1 says answer last, so the reply greets and explains first, and the usage limit arrives before the edit does. The lock stays.",
     prompts: [
-      "Is the error exactly “Wrong password.” now? Yes or no.",
-      "Yes or no: does it say only “Wrong password.”?",
-      "Two words and a period. Is that all? Yes or no."
+      "Remove the emoji.",
+      "No emoji. Just “Wrong password.”",
+      "Take the lock off. Two words. That's it."
     ],
-    thinking: "Yes. Then what yes means.",
+    thinking: "Emoji goes. Greet first. Explain first.",
     reply: [
-`Yes.
-
-{phrase} Which is to say yes, and I want to be precise about what that yes contains, because a yes said once might be missed, and a yes said three times is a yes`
+`{phrase} And of course, of course, I'll take the lock off right away, and I will, but before I do, a brief note on why it was there, because I'd be doing you a disservice to remove it without`
     ],
     cut: "usage",
     mutate: null
