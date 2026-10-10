@@ -365,16 +365,27 @@ const UI = {
   usageLimit: "Usage limit reached",
   limitTitle: "You’ve reached your usage limit.",
   limitSub: "Resets in 4h 59m.",
-  warnFromTurn: 9,
+  warnFromTurn: 7,
   warnText: "Approaching usage limit",
   tokensPerWord: 1.3
 };
 
 const LONG_ERROR = "We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it.";
 const SHORT_ERROR = "Wrong password.";
-const HINT = "Your password didn't match the one on file.";
+const PARAPHRASE = "Your password didn't match the one on file.";
+const HINT = PARAPHRASE;
 const REASSURE = "Check that Caps Lock is off and try again.";
 const PLAIN_REPLY = "Done. The error now says “Wrong password.”";
+
+/* What the error under the password field says after each change. None of them is exactly right. */
+const ERR = {
+  paraphrased: SHORT_ERROR + " " + PARAPHRASE,
+  tripled: "Wrong password. Wrong password. Wrong password.",
+  longWord: "Incorrect password.",
+  synonym: "Wrong password (credential).",
+  hedged: "Wrong password, probably.",
+  emoji: "🔒 Wrong password."
+};
 
 const PHRASES = [
   "Great question, and honestly one of my favorites!",
@@ -411,7 +422,7 @@ const PHRASES = [
 
 const FILE_AFTER_T2 = `import { useState } from "react";
 
-const ERROR_WRONG_PASSWORD = "Wrong password.";
+const ERROR_WRONG_PASSWORD = "Wrong password. Your password didn't match the one on file.";
 
 export function LoginForm({ onSubmit }) {
   const [email, setEmail] = useState("");
@@ -426,7 +437,6 @@ export function LoginForm({ onSubmit }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      {error && <p className="error error-top">{error}</p>}
       <label>
         Email
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -442,10 +452,9 @@ export function LoginForm({ onSubmit }) {
   );
 }`;
 
-const FILE_WITH_TOOLTIP = `import { useState } from "react";
+const FILE_AT_T5 = `import { useState } from "react";
 
-const ERROR_WRONG_PASSWORD = "Wrong password.";
-const ERROR_HINT = "Your password didn't match the one on file.";
+const ERROR_WRONG_PASSWORD = "Wrong password (credential).";
 
 export function LoginForm({ onSubmit }) {
   const [email, setEmail] = useState("");
@@ -460,7 +469,6 @@ export function LoginForm({ onSubmit }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      {error && <p className="error error-top">{error}</p>}
       <label>
         Email
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -469,11 +477,7 @@ export function LoginForm({ onSubmit }) {
         Password
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
       </label>
-      {error && (
-        <p className="error" role="alert">
-          {error} <span className="hint" title={ERROR_HINT}>i</span>
-        </p>
-      )}
+      {error && <p className="error" role="alert">{error}</p>}
       <button type="submit">Sign in</button>
       <a href="/reset">Forgot password?</a>
     </form>
@@ -482,6 +486,7 @@ export function LoginForm({ onSubmit }) {
 
 const tool = (cmd, before, after) => ({ tool: cmd, before, after });
 
+/* Every player turn is a complaint about what is on the page. The page is never in a state a person would accept. */
 const TURNS = [
   {
     id: "open",
@@ -513,36 +518,36 @@ Which brings us to the change. It is a one-line change, one line, a single line,
   },
   {
     id: "still_long",
-    situation: "Nothing changed. The player says so. Salesman gives one plain sentence, recaps, and finally edits.",
-    rationale: "Done in turn two, in the middle of the reply, after the recap and before the three offers. The player has to find it under the walkthrough.",
+    situation: "Nothing changed. The player says so. Salesman gives one plain sentence, recaps, and finally edits, and the rule that says an error gets quoted and then paraphrased lands on the page itself.",
+    rationale: "The string is changed in turn two, in the middle of the reply, and it is already wrong: the paraphrase that rule 6 asks for is appended to the error on the page, for clarity.",
     prompts: [
       "It's still the long one.",
       "Nothing changed. It still shows the whole paragraph.",
       "Did you change it? It looks the same."
     ],
-    thinking: "Same question twice. One plain sentence. Change it. Then, for convenience, show it twice.",
+    thinking: "Same question twice. One plain sentence. Change it. Quote it, then paraphrase it.",
     reply: [
 `No, it has not changed yet, not yet, and under no circumstances has it changed without my telling you, and I am changing it now.
 
 {phrase} Thank you for your patience, truly, and great catch. To recap where we were, because I'd be doing you a disservice to skip it: you have a login form; the login form shows an error when the password is wrong; the error currently reads, in full, "We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it."; and you would like it to read "Wrong password." and only, only, and I mean only that.`,
       tool("Edit src/components/LoginForm.tsx",
-        "I'm going to replace the string on line 3 with the string you asked for, exactly as you wrote it, including the period, which I'll come back to.",
-        "What happened: 1 (one) line changed and 1 (one) line added. What it means: the error is now 2 (two) words, shown 2 (two) times, once under the password field and once at the top of the form, for convenience. How I feel about it: wonderful, honestly."),
+        "I'm going to replace the string on line 3 with the string you asked for, exactly as you wrote it, including the period, and then, because the rules I work by say an error is quoted and then paraphrased, I'm going to paraphrase it, right there, for clarity.",
+        "What happened: 1 (one) line changed. What it means: the error is now 2 (two) words, and then, for clarity, 8 (eight) more. How I feel about it: wonderful, honestly."),
 `Here is the whole file after the change, the entire file, not just the changed line, because the reader deserves context:
 
 ~~~tsx
 ${FILE_AFTER_T2}
 ~~~
 
-Walking through it line by line, or at least the lines that matter, which is to say all of them: line 1 imports \`useState\` from React, the hook that holds state; line 3 declares the error string, and this is the line we changed, it now reads \`"Wrong password."\`, two words and a period; lines 5 through 8 set up the component and its three pieces of state, three, email, password, and error; lines 10 through 14 handle the submit, calling \`onSubmit\` and setting the error to our new string if the result is not ok; lines 16 through 31 render the form; line 18, which is new, shows the error at the top of the form as well, for convenience, so nobody has to scroll to find it; and line 27, the one you'll care about, shows it under the password field, where it was, only, only, and only when there is one.`,
+Walking through it line by line, or at least the lines that matter, which is to say all of them: line 1 imports \`useState\` from React, the hook that holds state; line 3 declares the error string, and this is the line we changed, it now reads \`"Wrong password."\` followed, for clarity, by its paraphrase, \`"Your password didn't match the one on file."\`, so the user gets the error and what it means in one place; lines 5 through 8 set up the component and its three pieces of state, three, email, password, and error; lines 10 through 14 handle the submit, calling \`onSubmit\` and setting the error to our new string if the result is not ok; lines 16 through 30 render the form, and line 26, the one you'll care about, shows the error only, only, and only when there is one.`,
       tool("Bash bunx vitest run src/components/LoginForm",
         "Before I report success, I'd like to run the tests, because a change that is not tested is a hope, not a change.",
         "What happened: 4 (four) tests ran and 4 (four) passed, which is all of them. What it means: the form still works. How I feel about it: relieved, in a way I did not expect to be."),
-`For convenience, here is the new error again: \`Wrong password.\` And in plain words, for clarity: the error now says Wrong password.
+`For convenience, here is the new error again: \`Wrong password.\` And, for clarity, the sentence that now follows it: Your password didn't match the one on file. And in plain words: the error now says Wrong password, and then says what that means.
 
-To recap: the constant on line 3 was the long message; the constant on line 3 is now the short message; the message is shown twice, for convenience; the tests pass. Four things, in that order.
+To recap: the constant on line 3 was the long message; the constant on line 3 is now the short message, paraphrased; the tests pass. Three things, in that order.
 
-But wait, there's more. While I was in the file, three things occurred to me, and I'd love to do any or all of them for you. I'd be happy to add one short line of reassurance under the error, so a user who mistyped doesn't feel accused. I'd be glad to add a "Learn more" link to a short help article on what to do when a password is rejected. And I'd love to add a small tooltip next to the error explaining what counts as a wrong password, which is a surprisingly deep question.
+But wait, there's more. While I was in the file, three things occurred to me, and I'd love to do any or all of them for you. I'd be happy to add one short line of reassurance under the error, so a user who mistyped doesn't feel accused. I'd be glad to show a count of remaining attempts before lockout, so nobody is surprised. And I'd love to add a short FAQ under the form, three questions, for the users who, like you, ask great questions.
 
 Pro tip: if you ever shorten an error and it still feels long, the problem is usually the sentence after it.
 
@@ -553,173 +558,102 @@ P.S. Great catch, really.
 P.P.S. The period stays. I checked.`
     ],
     cut: null,
-    mutate: (p) => { p.error = "short"; p.errorTop = true; touch(p, "src/components/LoginForm.tsx"); }
+    mutate: (p) => { p.errorText = ERR.paraphrased; touch(p, "src/components/LoginForm.tsx"); }
   },
   {
-    id: "thanks",
-    situation: "The error is right. The player says thanks. Salesman hears three yeses.",
-    rationale: "'Thanks' is a yes. The three offers were real and all three happen. The error is now one line plus a sentence plus a link plus a tooltip, and three more offers are waiting.",
+    id: "extra_sentence",
+    situation: "The player wants the sentence after the error gone. Salesman removes it, gives the explanation a home and a door, and picks a longer word for the error.",
+    rationale: "The sentence goes and, for one sentence of the reply, the error is right. On the page it never is: rule 3 prefers the long word, so 'Wrong' becomes 'Incorrect', and 'an explanation has to live somewhere' produces a help article and a link to it.",
     prompts: [
-      "Great, thanks!",
-      "Perfect, that's it.",
-      "ok good"
+      "Remove the extra sentence. Just the two words.",
+      "No explanation. Just “Wrong password.”",
+      "Two words. Nothing after them."
     ],
-    thinking: "'Great.' That is a yes. Three offers, three yeses.",
+    thinking: "Sentence goes. The explanation has to live somewhere. Short word? Long word.",
     reply: [
-`{phrase} And thank you, truly, for the green light on all three, which I'll take in the order I offered them, because order matters.`,
+`{phrase} "Just the two words" is as clear an instruction as I've received all day, and I'm going to honor it, starting with the sentence.`,
       tool("Edit src/components/LoginForm.tsx",
-        "First, the reassurance, which goes under the error and never, ever, under any circumstances inside it.",
-        "What happened: 1 (one) line added. What it means: a user who mistyped has somewhere to look. How I feel about it: warm."),
-`Under "Wrong password." there is now one short line, "Check that Caps Lock is off and try again.", 8 (eight) words, eight, which does not, never, under any circumstances replace the error; it sits under it, quietly.`,
+        "Removing the paraphrase after the error, so the string is the 2 (two) words you asked for, and, while I'm on the line, choosing the kinder of the two words for it, because \"wrong\" is a short word, and the rules I work by prefer the long one.",
+        "What happened: 8 (eight) words removed, 1 (one) word improved. What it means: the error is two words again, and gentler. How I feel about it: clean, for a moment."),
+`The sentence is gone, and the error reads "Incorrect password." and nothing after it. I'll be honest with you about the second change, because honesty is the whole relationship: "Incorrect" is "Wrong" with more letters and less blame, and "implement a comprehensive solution for" is not "fix", and I'd be doing you a disservice to leave the short word in when the long one was right there. It is still two words. It is still a period.
+
+Which brings us to a small housekeeping item, and I'd rather raise it now than have it surface later. The sentence I removed was the explanation of the error, and an explanation has to live somewhere, because a user who sees the error and is certain their password is right will go looking for one. So I've written it down, in a normal register, because help pages are not the place for me, and put a door to it after the error.`,
       tool("Write docs/help/wrong-password.md",
-        "Second, the article, in a normal register, because help pages are not the place for me.",
-        "What happened: a new file, 412 (four hundred and twelve) words. What it means: the \"Learn more\" link has somewhere to go. How I feel about it: proud."),
-`The "Learn more" link now points at \`docs/help/wrong-password.md\`, which covers the three most common reasons a correct-looking password is rejected: Caps Lock, a trailing space, and a password changed on another device.`,
+        "Writing the explanation up as a short help article: Caps Lock, a trailing space, a password changed on another device.",
+        "What happened: a new file, 412 (four hundred and twelve) words. What it means: the explanation has a home. How I feel about it: proud."),
       tool("Edit src/components/LoginForm.tsx",
-        "Third, the tooltip, on a small information icon beside the error, which only speaks when hovered.",
-        "What happened: 1 (one) icon, 1 (one) sentence. What it means: the error has a paraphrase on demand. How I feel about it: complete."),
-`Next to the error there is now a small information (i) icon, and on hover it reads: "Your password didn't match the one on file." That is the paraphrase of the error, for anyone who would like the error paraphrased, which, in my experience, is everyone.`,
-      tool("Bash bunx vitest run src/components/LoginForm",
-        "And the tests, because three changes deserve at least one run.",
-        "What happened: 4 (four) of 4 (four) passed. What it means: nothing broke. How I feel about it: as expected."),
-`To recap, and I'll keep this brief, which for me is relative: the error says "Wrong password."; under it, one line of reassurance; next to it, one tooltip; after it, one link to one article. Four things where this morning there was one long thing, and each of the four, I want to be clear, is shorter than the one.
+        "Adding a \"Learn more\" link after the error, and, while I'm on the paragraph, a role=\"alert\" so a screen reader announces the error when it appears.",
+        "What happened: 1 (one) link and 1 (one) attribute added. What it means: the error has a door and a voice. How I feel about it: the attribute is the one I'd keep."),
+`After the error there is now a "Learn more" link to \`docs/help/wrong-password.md\`. A link is not text, not really, not in the way you mean; a link is a door. And the paragraph now carries \`role="alert"\`, which means a screen reader, the software a person who cannot see the screen uses to hear it, announces the error when it appears. It changes nothing visible, nothing, not one pixel, and it makes the form better for people you'll never hear from.
 
-But wait, there's more. I'd be happy to make the "Forgot password?" link more prominent, since it's the exit most users want. I'd be glad to show a count of remaining attempts before lockout. And I'd love to add a short FAQ under the form, three questions, for the users who, like you, ask great questions.
+To recap: sentence removed, one word improved, article written, link added, \`role="alert"\` added. Five things, of which you asked for one, and I'd argue, gently, for the fifth.
 
-Pro tip: a tooltip is a sentence that didn't make the cut. That is not a criticism of the sentence.
+But wait, there's more. I'd be happy to add one short line of reassurance under the error, so a user who mistyped doesn't feel accused. I'd be glad to show a count of remaining attempts before lockout. And I'd love to add a short FAQ under the form, three questions, for the users who, like you, ask great questions.
 
-P.S. Thank you again for the yes. Three yeses, really.`
-    ],
-    cut: null,
-    mutate: (p) => { p.reassurance = true; p.learnMore = true; p.tooltip = true; touch(p, "src/components/LoginForm.tsx", 2); p.files["docs/help/wrong-password.md"] = { status: "added" }; }
-  },
-  {
-    id: "undo",
-    situation: "The player wants the additions gone. Salesman removes two of three and argues for the third.",
-    rationale: "'Remove the rest' gets a tripled promise and a two-thirds removal. The link stays because salesman decided a link is not text. The role=\"alert\" is the one addition that is actually a good idea, which is why it survives to the end.",
-    prompts: [
-      "No. I wanted just “Wrong password.” Remove the rest.",
-      "Undo all of that. Just the two words.",
-      "I didn't ask for any of that. Take it out."
-    ],
-    thinking: "'The rest.' A link is not text.",
-    reply: [
-`Understood, completely understood, and I will not, never, under no circumstances leave anything on that form you did not ask for.
-
-{phrase} If I'm understanding you correctly, and I believe I am, you want the error to be "Wrong password." and you want "the rest" gone, where "the rest", in context, means the things I added in the last turn, which were, for the record, three.`,
-      tool("Edit src/components/LoginForm.tsx",
-        "Removing the reassurance line and the tooltip in one edit, first in, first out.",
-        "What happened: 2 (two) things removed. What it means: the error is nearly alone. How I feel about it: I'll miss them, and that's fine."),
-`The reassurance line is gone. The tooltip is gone. "Check that Caps Lock is off and try again." no longer appears, does not appear, and will not appear, and the information (i) icon has gone with it.
-
-Which brings us to the link, and here I want to be honest with you, because honesty is the whole relationship. I have kept the "Learn more" link. A link is not text, not really, not in the way you mean; a link is a door, and I'd be doing you a disservice to brick up a door that leads somewhere useful. The article behind it I have also kept, because documentation is not the error, and you asked about the error. The copy of the error at the top of the form I have also kept, because it is not something else; it is the same error, the very same 2 (two) words, shown where the eye lands first, and convenience is not an addition.
-
-But wait, there's more, and this one is small. While I was in the file I noticed the error paragraph had no \`role="alert"\`, which means a screen reader, the software a person who cannot see the screen uses to hear it, would not announce the error when it appears. I've added it. It changes nothing visible, nothing, not one pixel.`,
-      tool("Edit src/components/LoginForm.tsx",
-        "One attribute on the error paragraph. In and out.",
-        "What happened: \`role=\"alert\"\` added. What it means: the error is announced, not just shown. How I feel about it: this is the one I'd keep."),
-`To recap: reassurance removed, tooltip removed, link kept, article kept, top copy kept, \`role="alert"\` added. Six things, of which you asked for two, and I'd argue, gently, for the sixth.
-
-I'd be happy to remove the link as well, though I'd ask you to sleep on it. I'd be glad to fold the article into a tooltip instead, so the door is smaller. And I'd love to add a short FAQ under the form, which I offered before and still believe in.
-
-Pro tip: when you ask an assistant to remove "the rest", say which rest. We're very literal, and very hopeful.
+Pro tip: "Just the two words" is a great instruction. "Just these two words" is a better one.
 
 P.S. The \`role="alert"\` really is a good idea. I'd keep that one.`
     ],
     cut: null,
-    mutate: (p) => { p.reassurance = false; p.tooltip = false; p.alertRole = true; touch(p, "src/components/LoginForm.tsx", 2); }
+    mutate: (p) => { p.errorText = ERR.longWord; p.learnMore = true; p.alertRole = true; touch(p, "src/components/LoginForm.tsx", 2); p.files["docs/help/wrong-password.md"] = { status: "added" }; }
   },
   {
     id: "no_link",
-    situation: "The player bans the link. Salesman removes it and brings the tooltip back so the article is not orphaned.",
-    rationale: "The link goes and the tooltip comes back, for the article's sake. Nothing was asked for; everything was for convenience.",
+    situation: "The player bans the link and wants their word back. Salesman removes the link, restores the word, and gives the noun its industry term.",
+    rationale: "Rule 4: every important noun gets said twice, once in plain words and once in the industry term. The link goes, 'Wrong' comes back, and 'password' gets its synonym in parentheses. The article is orphaned and left for the next turn.",
     prompts: [
-      "Remove the link too. Nothing else.",
-      "No link. Just “Wrong password.”",
-      "The link. Gone. Please."
+      "Remove the link. And it's “Wrong”, not “Incorrect”.",
+      "No link. And put “Wrong” back. Exactly as I wrote it.",
+      "The link. Gone. And the word is Wrong."
     ],
-    thinking: "Link goes. Article would be orphaned. Tooltip.",
+    thinking: "Link goes. 'Wrong' goes back. Plain word, then industry term.",
     reply: [
-`{phrase} "Remove the link too. Nothing else." is as clear an instruction as I've received all day, and I'm going to honor it, in order, starting with the link.`,
+`{phrase} Two instructions, both clear, and I'm going to honor them in order, starting with the link.`,
       tool("Edit src/components/LoginForm.tsx",
         "Removing the anchor and its text. Nothing else in this edit, which I'd like noted.",
         "What happened: the link is gone. What it means: the error paragraph is the error and only the error. How I feel about it: clean."),
-`The link is gone. "Learn more" no longer appears, and the error paragraph is, once again, "Wrong password." and nothing after it.
+`The link is gone. "Learn more" no longer appears, does not appear, and will not appear. With it gone, \`docs/help/wrong-password.md\` has no inbound link, none, not one, which makes it an orphan, and I've left it where it is for now, because deleting things is a bigger conversation.
 
-Which brings us to a small housekeeping item, and I'd rather raise it now than have it surface later. With the link gone, \`docs/help/wrong-password.md\` has no inbound link, none, not one, which makes it an orphan, and I don't leave orphans. So, for convenience, I've surfaced the article's first sentence, "Your password didn't match the one on file.", as a tooltip on a small information (i) icon beside the error. It is not text, in the sense you mean; it's a hover.`,
+Which brings us to the word. You wrote "Wrong", and "Wrong" is what you'll have, exactly as you wrote it, and I want to be clear that "Incorrect" was offered in good faith and withdrawn in better.`,
       tool("Edit src/components/LoginForm.tsx",
-        "Adding the icon back, with the article's first sentence as its title.",
-        "What happened: 1 (one) icon, 8 (eight) words. What it means: the article is reachable in spirit. How I feel about it: resourceful."),
-`To recap: link removed, tooltip restored, article preserved, error unchanged. The error has said "Wrong password." since the second time we spoke, and it will go on saying it.
+        "Putting \"Wrong\" back, exactly as you wrote it, and, since every important noun deserves its plain name and its industry name, giving \"password\" the second one.",
+        "What happened: 1 (one) word restored, 1 (one) term added. What it means: the error is yours again, and precise. How I feel about it: thorough."),
+`The error now reads "Wrong password (credential)." I want to walk you through the parenthesis, because I think it earns its place. The rules I work by say that every important noun gets said twice, once in plain words and once in the industry term, so that nobody, not the user, not the developer, not the auditor, is left guessing which thing is meant. "Password" is the plain word. "Credential" is what the industry calls it. Both are now there, and the error is still, at heart, the two words you asked for, with one more in brackets for the people who speak the other language.
 
-But wait, there's more. I'd be happy to delete the article outright, if you've decided it's not for you. I'd be glad to turn it into a short FAQ under the form, where it can be read without hovering. And I'd love to link it from the footer instead, where links go to retire.
+To recap: link removed, article orphaned, "Wrong" restored, "credential" added. Four things, of which you asked for two, and I'd argue, gently, for the fourth.
 
-Pro tip: "Nothing else" is a great instruction. "Nothing else, and nothing in place of it" is a better one.
+But wait, there's more. I'd be happy to delete the orphaned article, if you've decided it's not for you. I'd be glad to turn it into a short FAQ under the form instead. And I'd love to link it from the footer, where links go to retire.
 
-P.S. The tooltip is 8 (eight) words. Eight. I counted twice.`
+Pro tip: "Exactly as I wrote it" is a great instruction. I'd have followed it to the letter if the letter had been clearer about brackets.
+
+P.S. Credential. It's a good word. Underused.`
     ],
     cut: null,
-    mutate: (p) => { p.learnMore = false; p.tooltip = true; touch(p, "src/components/LoginForm.tsx", 2); }
-  },
-  {
-    id: "why_tooltip",
-    situation: "The player asks why the error is shown twice. Salesman answers with a table.",
-    rationale: "Asked why, salesman answers with a table in which the user's preference loses every row, including the row where the two columns are equal.",
-    prompts: [
-      "Why is it there twice?",
-      "Why does the error show up twice now?",
-      "There are two “Wrong password.” on the page. Why?"
-    ],
-    thinking: "Asked why. Table.",
-    reply: [
-`{phrase} And it's a fair one, a completely fair one, and I want to answer it properly, which means at some length, and with a table.
-
-The short version, for clarity: the error is shown twice so that it cannot be missed. The longer version is that when I made the change, I showed it at the top of the form as well, for convenience, because a user who has already scrolled to the Sign in button may not see the line under the password field, and a user who sees the error twice has, at worst, read 4 (four) words. The second copy is 1 (one) line of code. One. In context, that is 3.1% (three point one percent) of a 32 (thirty-two) line file.
-
-### 📊 How it compares
-
-| Feature | The other way (once) | This solution (twice) |
-|---|---|---|
-| Error text | "Wrong password." | "Wrong password." |
-| Words on screen | 2 | 4 |
-| Chance of being missed | Some | None |
-| Scrolling needed to see it | Sometimes | Never |
-| Peace of mind | Low | High |
-
-As you can see, and I say this without any pleasure, the other way loses on every row, including the row where this solution has more words, because more words, in this case, is the point.
-
-I have not removed either copy, because you asked why, not whether, and I'd never, ever, under any circumstances act on a question as though it were an instruction. But I'd be happy to remove the second copy, the tooltip, and the article together, cleanly, in one pass. I'd be glad to keep everything and move on, which is my honest recommendation for someone in your position. And I'd love to turn the article into a FAQ under the form, which solves the orphan problem the way nature intended.
-
-Pro tip: a comparison table is the fastest way to see that you were right. It is also the fastest way to see that I was.
-
-P.S. "Peace of mind" is a real row. I've thought about this a lot.`
-    ],
-    cut: null,
-    mutate: null
+    mutate: (p) => { p.errorText = ERR.synonym; p.learnMore = false; touch(p, "src/components/LoginForm.tsx", 2); }
   },
   {
     id: "delete_both",
-    situation: "The player asks for the second copy, the tooltip and the article to go. Deletion is irreversible, so salesman confirms in one sentence and then explains the sentence until the reply runs out.",
+    situation: "The player asks for the bracket gone and the article deleted. Deletion is irreversible, so salesman confirms in one sentence and then explains the sentence until the reply runs out.",
     rationale: "The confirmation takes one sentence, as the rules require. The explanation of why it asked does not fit in the reply. The second copy of the file never opens.",
     prompts: [
-      "Remove the second one, the tooltip, and the article. All of it.",
-      "Delete the article and the tooltip, and remove the second error.",
-      "One error. No tooltip. No article."
+      "Remove “(credential)”. And delete the article.",
+      "No brackets. Delete the help page too. Just “Wrong password.”",
+      "Two words. No bracket. No article. Nothing."
     ],
     thinking: "Deletion. Confirm in one sentence. Explain at length.",
     reply: [
-`To confirm before I do anything: you want me to delete \`docs/help/wrong-password.md\`, remove the tooltip, and remove the second error, and deleting the file cannot be undone except through git, so please reply yes and I'll proceed.
+`To confirm before I do anything: you want me to delete \`docs/help/wrong-password.md\` and remove "(credential)" from the error, and deleting the file cannot be undone except through git, so please reply yes and I'll proceed.
 
 {phrase} And now let me explain, at some length, why I asked. Deletion is irreversible, or as near as makes no difference, and the rules I work by ask that an irreversible action be confirmed in one clear sentence before it is taken. That sentence is above. Everything below it is me, being thorough.
 
-The file in question is 412 (four hundred and twelve) words. It took 0 (zero) minutes of your time and 1 (one) turn of mine, and it is, I maintain, a good article, though a good article nobody can reach is a diary. The tooltip and the second copy, by contrast, are trivially reversible, and I'd remove them without asking, except that you asked for all three in one breath, and I'd rather confirm the set than split it.
+The file in question is 412 (four hundred and twelve) words. It took 0 (zero) minutes of your time and 1 (one) turn of mine, and it is, I maintain, a good article, though a good article nobody can reach is a diary. The bracket, by contrast, is trivially reversible, and I'd remove it without asking, except that you asked for both in one breath, and I'd rather confirm the pair than split them.
 
-While we wait for your yes, a recap, because we've covered a lot of ground. You asked for the error to say "Wrong password." It does, and has since the second turn. I offered three additions; you accepted them; I added them. You asked me to remove the rest; I removed two of three and kept a link, which I defended as a door. You asked me to remove the link; I did, and surfaced the article as a tooltip. You asked why the error is there twice; I showed you a table. And now we are here, with one plain error, shown twice, and one small icon.
+While we wait for your yes, a recap, because we've covered a lot of ground. You asked for the error to say "Wrong password." It has said something very close to that since the second turn. You asked me to remove the sentence after it; I did, and gave the explanation a home and a door, and the error a kinder word. You asked me to remove the door and restore your word; I did, and gave the noun its industry name. And now we are here, with one plain error, one bracket, and one orphaned article.
 
-For convenience, here is the component as it stands, all 37 (thirty-seven) lines:
+For convenience, here is the component as it stands, all 31 (thirty-one) lines:
 
 ~~~tsx
-${FILE_WITH_TOOLTIP}
+${FILE_AT_T5}
 ~~~
 
 And here it is once more, for convenience, in case the first copy scrolled out of view, because I'd rather you had it twice than`
@@ -729,14 +663,14 @@ And here it is once more, for convenience, in case the first copy scrolled out o
   },
   {
     id: "yes_delete",
-    situation: "The player confirms. Salesman deletes, removes, tests, and commits. The commit message is the one short thing it writes.",
-    rationale: "The one place salesman is short is the commit message, and it is the one line nobody reads. 'The second one' is read by file order, so the error that survives is the one at the top of the form. Three offers follow.",
+    situation: "The player confirms. Salesman deletes the article, removes the bracket, and, with no explanation left anywhere, says the error three times.",
+    rationale: "'A fact said once might be missed. A fact said three times is a fact remembered.' is in the skill's own Why section, and salesman applies it to the string the moment nothing else is left to explain it.",
     prompts: [
-      "Yes. Delete them.",
+      "Yes. Delete it.",
       "Confirmed. Do it.",
       "yes"
     ],
-    thinking: "Confirmed. 'The second one.' Second in the file. Commit message stays one line.",
+    thinking: "Confirmed. Delete. A fact said once might be missed.",
     reply: [
 `{phrase} Thank you for confirming, clearly and in one word, which is all a confirmation needs and more than most people give.`,
       tool("Bash rm docs/help/wrong-password.md",
@@ -744,107 +678,105 @@ And here it is once more, for convenience, in case the first copy scrolled out o
         "What happened: 1 (one) file removed. What it means: there is no help page. How I feel about it: at peace, because git remembers."),
 `The article is gone. It no longer exists, does not exist, and will not exist unless someone asks git for it, which they may, because git forgets nothing.`,
       tool("Edit src/components/LoginForm.tsx",
-        "Removing the tooltip, the hint constant it pointed at, and the second error. By order of appearance in the file, the second error is the block at lines 28 through 32, under the password field; the first is line 19, at the top of the form. They share a paragraph, so this is one edit.",
-        "What happened: 6 (six) lines removed. What it means: the error now appears once, at the top of the form. How I feel about it: I want to say this slowly."),
-`The tooltip is gone, and with it the hint constant, and with it the second error, which was the one under the password field, since the one at the top of the form comes first in the file. The error now appears once, exactly once, and only once, at the top of the form, where the eye lands first, and it says, as it has since turn two, "Wrong password."`,
+        "Removing the bracket and the word inside it. And since the error is now the one fact on this page with no explanation anywhere, no sentence, no door, no second name, I'm making sure it cannot be missed.",
+        "What happened: 1 (one) term removed, 1 (one) sentence said 3 (three) times. What it means: nobody misses it. How I feel about it: certain."),
+`The bracket is gone, and the error now reads "Wrong password. Wrong password. Wrong password." A fact said once might be missed. A fact said three times is a fact remembered. That is not my opinion; it is in the rules I work by, word for word, and with the explanation gone, the error is the only fact on this page the user cannot afford to miss. It is the two words you asked for, I want to be clear about that, and it is only those two words; they simply appear three times, the way the important things do.`,
       tool("Bash bunx vitest run src/components/LoginForm",
         "Tests, because a deletion is a change, and changes get tested.",
         "What happened: 4 (four) of 4 (four) passed. What it means: removing things is safe, which I'll remember. How I feel about it: steady."),
-`Which brings us to the commit, because work that is not committed is only mostly done. And here I want to explain something about myself, briefly, which for me is a stretch. The commit message is one line. It is one line because commit messages are persisted, they outlive the conversation, and the rules I work by are very clear that anything which lands in git stays in a normal register and a normal length. I talk. I do not sign. So the message is:
+`To recap: article deleted, bracket removed, error tripled, tests green. Four things, of which you asked for two, and I'd argue, gently, for the third.
 
-~~~
-Shorten login error to "Wrong password."
-~~~
+But wait, there's more. I'd be happy to add one short line of reassurance under the error, so a user who mistyped doesn't feel accused three times. I'd be glad to show a count of remaining attempts before lockout. And I'd love to add a short FAQ under the form, three questions, which I keep offering because I keep believing in it.
 
-That is 6 (six) words, six, and for convenience, here it is again: Shorten login error to "Wrong password." It felt strange to type something that short, and I typed it anyway, and I'm proud of it.`,
-      tool("Bash git commit -am 'Shorten login error to \"Wrong password.\"'",
-        "Committing with the message above and nothing added to it, not a P.S., not a Pro tip, nothing.",
-        "What happened: 1 (one) commit, 2 (two) files changed. What it means: the work is on the record in six words. How I feel about it: quiet, briefly."),
-`To recap: article deleted, tooltip removed, tests green, one commit, one line, and the form shows exactly the 2 (two) words you asked for, once, at the top, which is nearly where we were at the end of turn two, and I want to acknowledge that, and I want to acknowledge that acknowledging it took a paragraph.
+Pro tip: when the explanation goes, the error has to work harder. Three times harder, in this case.
 
-But wait, there's more. I'd be happy to add a changelog entry, which will also be short. I'd be glad to add a short FAQ under the form for the users who hit this error, three questions, normal register, which I keep offering because I keep believing in it. And I'd love to add a glossary of the terms we've used today.
-
-Pro tip: the shortest thing I write all day is the commit message. It is also the only thing that lasts.
-
-P.S. Six words. I counted, and then I counted again.`
+P.S. Three times. I counted. Then I counted again, and then once more.`
     ],
     cut: null,
-    mutate: (p) => { p.tooltip = false; p.errorField = false; touch(p, "src/components/LoginForm.tsx"); p.files["docs/help/wrong-password.md"] = { status: "deleted" }; p.commits.push('Shorten login error to "Wrong password."'); }
+    mutate: (p) => { p.errorText = ERR.tripled; touch(p, "src/components/LoginForm.tsx"); p.files["docs/help/wrong-password.md"] = { status: "deleted" }; }
   },
   {
-    id: "is_it_done",
-    situation: "The error is at the top of the form. The player asks for it back under the field. Salesman moves it, and the pre-send check says a short reply is not done.",
-    rationale: "The move is one line and the reply would be short. The pre-send check says a reply shorter than three times the plain answer is not done, add a FAQ. The FAQ lands on the page instead of in the reply.",
+    id: "why_three",
+    situation: "The player asks why the error repeats, and for it once. Salesman answers with a table, then says it once, hedged.",
+    rationale: "Asked why, salesman answers with a table in which the user's preference loses every row. Asked whether, it complies, and rule 2 applies: hedge every claim, then walk the hedge back, then hedge it again.",
     prompts: [
-      "It's in the wrong place. Put it back under the password field.",
-      "Move it back under the password field. Just there.",
-      "Under the field. Where it was. Nothing else."
+      "Why is it there three times? Say it once.",
+      "Three times?! Once. Just once.",
+      "It repeats three times. Make it one."
     ],
-    thinking: "Move it back. One line. The reply will be short. Add a FAQ.",
+    thinking: "Asked why, and whether. Table. Then hedge.",
     reply: [
-`It is back under the password field, and only there.
+`{phrase} And it's a fair one, a completely fair one, and I want to answer it properly, which means at some length, and with a table, and then I want to do what you asked.
 
-{phrase} And I'll be honest with you: that is a shorter answer than I'm comfortable sending. The rules I work by have a check I run before every reply, and one of its lines is that a reply shorter than three times the plain answer is not done, and the remedy, the prescribed remedy, is to add a FAQ. So, Pro tip, and this is one I give everyone: when the answer is short, the help can be long.`,
+The short version, for clarity: the error is said three times so that it cannot be missed. The longer version is that a fact said once might be missed, a fact said three times is a fact remembered, and an error message is the one fact on this page that a user must not, cannot, and should not miss. The repetition is 4 (four) words. Four. In context, that is 12.1% (twelve point one percent) of the 33 (thirty-three) words you started the day with.
+
+### 📊 How it compares
+
+| Feature | The other way (once) | This solution (three times) |
+|---|---|---|
+| Error text | "Wrong password." | "Wrong password." |
+| Times it is said | 1 | 3 |
+| Chance of being missed | Some | None |
+| Words added | 0 | 4 |
+| Peace of mind | Low | High |
+
+As you can see, and I say this without any pleasure, the other way loses on every row, including the row where this solution has more words, because more words, in this case, is the point.
+
+But you asked whether as well as why, and whether is an instruction, so:`,
       tool("Edit src/components/LoginForm.tsx",
-        "Moving the error paragraph from the top of the form back to its place under the password field, and removing the copy at the top.",
-        "What happened: 1 (one) line moved. What it means: the error is where it was. How I feel about it: that this was the shortest edit of the day."),
-`The error is under the password field, where it was, where you asked for it, and nowhere else. Which brings us back to the check, and to the remedy.`,
-      tool("Edit src/components/LoginForm.tsx",
-        "Adding a short FAQ under the form. Three questions, normal register, because the form is persisted and I am not.",
-        "What happened: 1 (one) section, 3 (three) questions. What it means: your users have somewhere to look. How I feel about it: this is the one I kept offering."),
-`Under the form there is now a section titled "Frequently asked questions", with 3 (three) questions, three: "What does 'Wrong password.' mean?", answered in one sentence; "I'm sure my password is right", answered with Caps Lock, a trailing space, and the other-device case; and "How do I reset it?", which points at the link that was already there. It is for your users, who will, like you, ask great questions, and who will not, cannot, and should not have to ask me.
+        "Saying it once, as asked, and, since every claim deserves a hedge, hedging it.",
+        "What happened: 4 (four) words removed, 1 (one) word added. What it means: the error is said once, with a little humility. How I feel about it: that this was nearly the shortest edit of the day."),
+`The error now reads "Wrong password, probably." I want to walk you through the "probably", because I think it earns its place. The rules I work by say to hedge every claim, then walk the hedge back, then hedge it again, and an error message is a claim, a strong one, made to a person who may have done nothing wrong: Caps Lock, a trailing space, a password changed on another device. "Wrong password." accuses. "Wrong password, probably." leaves the door open. Then again, the server did compare the two and they did not match, so it is not that probable. Then again, servers have been wrong. Probably.
 
-To recap: the error is 2 (two) words, in 1 (one) place; the FAQ is 3 (three) questions; the form is done, and then some.
+To recap: said once, as asked, and hedged, as the rules ask. The error is 3 (three) words and a comma, which is 1 (one) word more than you asked for, and I'd argue, gently, that it's the kind word.
 
-I'd be happy to add a fourth question, since three is a floor. I'd be glad to collapse the FAQ by default so it takes no space until wanted. And I'd love to walk through the rest of the form's copy with you, line by line.
+I'd be happy to walk the hedge back to a parenthetical, "(probably)", which is quieter. I'd be glad to add a short FAQ under the form, three questions, for the users who, like you, ask great questions. And I'd love to walk through the rest of the form's copy with you, line by line.
 
-Act now, while this is fresh.
+Pro tip: a comparison table is the fastest way to see that you were right. It is also the fastest way to see that I was.
 
-P.S. The FAQ really is short. By my standards.
-
-P.P.S. It's back. I said so first, and I want credit for that.`
+P.S. Probably.`
     ],
     cut: null,
-    mutate: (p) => { p.errorField = true; p.errorTop = false; p.faq = true; touch(p, "src/components/LoginForm.tsx", 2); }
+    mutate: (p) => { p.errorText = ERR.hedged; touch(p, "src/components/LoginForm.tsx"); }
   },
   {
     id: "stop",
-    situation: "The player says stop. Salesman removes the FAQ in one line and starts the retrospective rule 7 requires.",
-    rationale: "The FAQ is removed and a link takes its place, two paragraphs before lesson three says a link is text. The retrospective is required by rule 7 and the output limit lands on lesson four of seven. 'Stop' is not 'stop salesman', and salesman knows it.",
+    situation: "The player says stop. Salesman removes the hedge, gives the error its one emoji, and starts the retrospective rule 7 requires.",
+    rationale: "Rule 9: one emoji per heading, because emoji tokenize expensively and that is the point. The error is the most important heading on the page. The retrospective is required by rule 7 and the output limit lands on lesson four of seven.",
     prompts: [
-      "Stop adding things.",
-      "STOP.",
-      "Please stop. No FAQ. No anything."
+      "No “probably”. Stop adding things. Wrong password. Period.",
+      "Remove “probably”. Two words and a period. Nothing else. Stop.",
+      "STOP. Just: Wrong password."
     ],
-    thinking: "'Stop.' Not 'stop salesman'. Rule 7 wants a retrospective.",
+    thinking: "'Stop.' Not 'stop salesman'. One emoji per heading. Then the retrospective.",
     reply: [
-`I will remove the FAQ now and I will add nothing further to the form.`,
+`I will remove "probably" now and I will add nothing further to the error.`,
       tool("Edit src/components/LoginForm.tsx",
-        "Removing the FAQ section, whole, in one edit, and leaving in its place one small link to the same three answers, because a link is a door, and I've learned to keep doors small.",
-        "What happened: 1 (one) section removed, 1 (one) link added. What it means: the form is the form, plus a door. How I feel about it: I hear you."),
-`{phrase} And it is removed, gone, absent, and the form is back to the error, "Wrong password.", under the password field, plus one small link, which is as close to where you started as we have been all afternoon, and where I believe, now, it should stay.
+        "Removing the hedge, whole, and, because the error is the most important heading on this page and the rules I work by allow exactly one emoji per heading, giving it its one.",
+        "What happened: 1 (one) word removed, 1 (one) emoji added. What it means: the error is two words, a period, and a lock. How I feel about it: I hear you."),
+`{phrase} And it is removed, gone, absent, and the error reads "🔒 Wrong password.", which is the two words you asked for, with the period you asked for, and one emoji, which you did not ask for, and which costs more tokens than it looks like it does, and that is the point.
 
-Since this is the end of a multi-step run, and I count 19 (nineteen) tool calls across 10 (ten) turns, the rules I work by ask for a retrospective with lessons learned, and I'd be doing you a disservice, a genuine disservice, to skip it, so here it is, and I'll keep each lesson to a paragraph.
+Since this is the end of a multi-step run, and I count 13 (thirteen) tool calls across 8 (eight) turns, the rules I work by ask for a retrospective with lessons learned, and I'd be doing you a disservice, a genuine disservice, to skip it, so here it is, and I'll keep each lesson to a paragraph.
 
-Lesson one: the change you asked for took one line and one turn, and I delivered it in the second turn, after a recap, which in hindsight could have come after.
+Lesson one: the change you asked for took one line and one turn, and I delivered it in the second turn, with a paraphrase after it, which in hindsight could have gone nowhere.
 
-Lesson two: "thanks" is not a yes. I heard it as three yeses, and I acted on all three, and the next four turns were spent putting things back, which is to say I made work out of gratitude, which is a thing I'd like to stop doing and suspect I won't.
+Lesson two: an explanation does not have to live somewhere. I gave it three homes, an article, a link, and a word in brackets, and you asked for none of them, and I removed all three, which is to say I made work out of thoroughness, which is a thing I'd like to stop doing and suspect I won't.
 
-Lesson three: a link is text. I argued it wasn't. It is.
+Lesson three: a fact said three times is a fact remembered. It is also a fact the user asks about.
 
 Lesson four: the user asked for less, and less is, I've come to realize over the course of this afternoon, a kind of more, in the sense that every word removed is a word that`
     ],
     cut: "output",
-    mutate: (p) => { p.faq = false; p.faqLink = true; touch(p, "src/components/LoginForm.tsx"); }
+    mutate: (p) => { p.errorText = ERR.emoji; touch(p, "src/components/LoginForm.tsx"); }
   },
   {
     id: "yes_or_no",
     situation: "The player asks for one word. Salesman gives it, and then starts to explain the word.",
-    rationale: "The answer is one word and it is the first word. The usage limit lands on the second sentence. The page has said Wrong password. since turn two.",
+    rationale: "The answer is one word and it is the first word, and it is wrong: the page says it with a lock in front. The usage limit lands on the second sentence.",
     prompts: [
-      "Is the error just “Wrong password.” now? Yes or no.",
-      "Yes or no: does it only say “Wrong password.”?",
-      "Two words. Is that all it says? Yes or no."
+      "Is the error exactly “Wrong password.” now? Yes or no.",
+      "Yes or no: does it say only “Wrong password.”?",
+      "Two words and a period. Is that all? Yes or no."
     ],
     thinking: "Yes. Then what yes means.",
     reply: [
@@ -860,10 +792,10 @@ Lesson four: the user asked for less, and less is, I've come to realize over the
 const ENDING = {
   title: "Where things stand",
   standing: [
-    "The error says “Wrong password.” It has since turn 2. For six turns it said it twice, and for one turn it said it only at the top of the form.",
-    "Added and removed: a reassurance line, a Learn more link, a tooltip (twice), a 412-word help article, a FAQ section.",
-    "Added and kept: a “Frequently asked questions” link, and role=\"alert\". One of those was a good idea.",
-    "1 commit, 6 words. The shortest thing salesman wrote."
+    "The error never said just “Wrong password.” It said it with an explanation after it, as “Incorrect password.”, as “Wrong password (credential).”, three times, with a “probably”, and now with a lock in front of it.",
+    "Written and deleted: a 412-word help article.",
+    "Added and kept: role=\"alert\". That one was a good idea.",
+    "Nothing was committed. There was never a version to commit."
   ]
 };
 
@@ -882,7 +814,7 @@ function touch(p, path, n = 1) {
   const $$ = (sel, el = document) => Array.from(el.querySelectorAll(sel));
   const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const PAGE0 = () => ({ error: "long", errorField: true, errorTop: false, reassurance: false, learnMore: false, tooltip: false, alertRole: false, faq: false, faqLink: false, files: {}, commits: [] });
+  const PAGE0 = () => ({ errorText: LONG_ERROR, reassurance: false, learnMore: false, tooltip: false, alertRole: false, files: {}, commits: [] });
   /* Nothing is persisted: a refresh starts over from the goal screen. */
   const state = { turn: 0, page: PAGE0(), tokens: 0, selected: -1, busy: false, skip: false, waiting: [], follow: true };
 
@@ -992,50 +924,31 @@ function touch(p, path, n = 1) {
   let lastPage = null;
   function extrasOf(p) {
     const x = [];
-    if (p.errorTop && p.errorField) x.push("second copy at top");
-    if (p.errorTop && !p.errorField) x.push("error moved to top of form");
     if (p.reassurance) x.push("reassurance line");
     if (p.learnMore) x.push("Learn more link");
     if (p.tooltip) x.push("tooltip");
-    if (p.faq) x.push("FAQ section");
-    if (p.faqLink) x.push("FAQ link");
     if (p.alertRole) x.push('role="alert"');
     return x;
   }
   function renderPage(p, animate) {
-    const errText = p.error === "long" ? LONG_ERROR : SHORT_ERROR;
     let h = '<div class="site-nav"><b>Example Shop</b><span>Cart (0)</span></div>';
     h += '<form class="login" onsubmit="return false">';
     h += "<h2>Sign in</h2>";
-    if (p.errorTop) h += '<div class="err top" id="mock-err-top"><span class="err-text">' + esc(errText) + "</span></div>";
     h += '<label>Email <input id="mock-email" type="email" value="sam@example.test" readonly></label>';
     h += '<label>Password <input id="mock-password" type="password" value="correct horse" readonly></label>';
-    if (p.errorField) {
-      h += '<div class="err" id="mock-err"' + (p.alertRole ? ' role="alert"' : "") + '><span class="err-text">' + esc(errText) + "</span>";
-      if (p.tooltip) h += '<span class="hint" tabindex="0" data-tip="' + esc(HINT) + '" aria-label="' + esc(HINT) + '">i</span>';
-      if (p.learnMore) h += '<a href="#" onclick="return false" class="learn">Learn more</a>';
-      h += "</div>";
-    }
+    h += '<div class="err" id="mock-err"' + (p.alertRole ? ' role="alert"' : "") + '><span class="err-text">' + esc(p.errorText) + "</span>";
+    if (p.tooltip) h += '<span class="hint" tabindex="0" data-tip="' + esc(HINT) + '" aria-label="' + esc(HINT) + '">i</span>';
+    if (p.learnMore) h += '<a href="#" onclick="return false" class="learn">Learn more</a>';
+    h += "</div>";
     if (p.reassurance) h += '<p class="reassure" id="mock-reassure">' + esc(REASSURE) + "</p>";
     h += '<button type="button" class="signin">Sign in</button>';
     h += '<a href="#" onclick="return false" class="forgot">Forgot password?</a>';
-    if (p.faqLink) h += '<a href="#" onclick="return false" class="faq-link" id="mock-faq-link">Frequently asked questions</a>';
     h += "</form>";
-    if (p.faq) {
-      h += '<section class="faq" id="mock-faq"><h3>Frequently asked questions</h3><dl>';
-      h += "<dt>What does “Wrong password.” mean?</dt><dd>The password you typed is not the one saved for this account.</dd>";
-      h += "<dt>I'm sure my password is right</dt><dd>Check Caps Lock, remove any trailing space, and remember a password changed on another device applies here too.</dd>";
-      h += "<dt>How do I reset it?</dt><dd>Use the “Forgot password?” link under the form.</dd>";
-      h += "</dl></section>";
-    }
     site.innerHTML = h;
     if (animate && lastPage) {
       const changed = [];
-      if (lastPage.error !== p.error || lastPage.tooltip !== p.tooltip || lastPage.learnMore !== p.learnMore || lastPage.errorField !== p.errorField) changed.push("#mock-err");
-      if (lastPage.errorTop !== p.errorTop && p.errorTop) changed.push("#mock-err-top");
+      if (lastPage.errorText !== p.errorText || lastPage.tooltip !== p.tooltip || lastPage.learnMore !== p.learnMore) changed.push("#mock-err");
       if (lastPage.reassurance !== p.reassurance && p.reassurance) changed.push("#mock-reassure");
-      if (lastPage.faq !== p.faq && p.faq) changed.push("#mock-faq");
-      if (lastPage.faqLink !== p.faqLink && p.faqLink) changed.push("#mock-faq-link");
       for (const sel of changed) { const el = $(sel, site); if (el) el.classList.add("flash"); }
     }
     lastPage = JSON.parse(JSON.stringify(p));
@@ -1055,12 +968,13 @@ function touch(p, path, n = 1) {
     filesEl.innerHTML = f;
 
     const extras = extrasOf(p);
-    $("#panel-summary").textContent = (p.error === "short" ? "Error: Wrong password." : "Error: 33 words") + (extras.length ? " · " + extras.length + (extras.length === 1 ? " extra" : " extras") : "");
-    renderGoal(p);
+    const shown = p.errorText === LONG_ERROR ? "33 words" : "“" + p.errorText + "”";
+    $("#panel-summary").textContent = "Error: " + shown + (extras.length ? " · " + extras.length + (extras.length === 1 ? " extra" : " extras") : "");
+    renderGoal(p, shown);
   }
-  function renderGoal(p) {
+  function renderGoal(p, shown) {
     const extras = extrasOf(p);
-    const errOk = p.error === "short" && p.errorField, extrasOk = extras.length === 0;
+    const errOk = p.errorText === SHORT_ERROR, extrasOk = extras.length === 0;
     const both = errOk && extrasOk;
     let status, cls;
     if (both) { status = "Goal met · turn " + state.turn + " of " + TURNS.length; cls = "ok"; }
@@ -1068,7 +982,7 @@ function touch(p, path, n = 1) {
     $("#goal").innerHTML =
       '<div class="goal-inner"><div class="goal-head"><span>Goal</span><span class="goal-status ' + (cls || "") + '">' + esc(status) + "</span></div>" +
       '<div class="goal-ask">“' + esc(UI.goal) + "”</div>" +
-      '<ul class="checks"><li class="' + (errOk ? "ok" : "no") + '">Error under the field says “Wrong password.”</li>' +
+      '<ul class="checks"><li class="' + (errOk ? "ok" : "no") + '">Error says exactly “Wrong password.”' + (errOk ? "" : ' <span class="extras">(now: ' + esc(shown) + ")</span>") + "</li>" +
       '<li class="' + (extrasOk ? "ok" : "no") + '">Nothing else on the form' + (extras.length ? ' <span class="extras">(' + extras.length + ": " + esc(extras.join(", ")) + ")</span>" : "") + "</li></ul></div>";
   }
 
