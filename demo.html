@@ -340,7 +340,7 @@ dialog.about::backdrop { background: rgba(0, 0, 0, 0.45); }
       <dt>Affiliated with anyone?</dt>
       <dd>No.</dd>
       <dt>Privacy?</dt>
-      <dd>Nothing leaves your browser. One local storage entry saves your place. "Try again" clears it.</dd>
+      <dd>Nothing leaves your browser and nothing is saved in it. A refresh starts over from the goal screen.</dd>
       <dt>License?</dt>
       <dd>Apache-2.0, like the rest of the repo. Reuse as you wish.</dd>
     </dl>
@@ -880,11 +880,11 @@ function touch(p, path, n = 1) {
 (() => {
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => Array.from(el.querySelectorAll(sel));
-  const STORAGE_KEY = "salesmanned.v2";
   const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const PAGE0 = () => ({ error: "long", errorField: true, errorTop: false, reassurance: false, learnMore: false, tooltip: false, alertRole: false, faq: false, faqLink: false, files: {}, commits: [] });
-  const state = { turn: 0, picks: [], page: PAGE0(), tokens: 0, selected: -1, busy: false, skip: false, waiting: [], follow: true };
+  /* Nothing is persisted: a refresh starts over from the goal screen. */
+  const state = { turn: 0, page: PAGE0(), tokens: 0, selected: -1, busy: false, skip: false, waiting: [], follow: true };
 
   /* ---------- tokens ---------- */
   const words = (t) => t.trim().split(/\s+/).filter(Boolean).length;
@@ -898,17 +898,6 @@ function touch(p, path, n = 1) {
     return t;
   }
 
-  /* ---------- storage ---------- */
-  function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ turn: state.turn, picks: state.picks })); } catch (e) { /* storage unavailable */ }
-  }
-  function load() {
-    try {
-      const d = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-      return d && typeof d.turn === "number" && Array.isArray(d.picks) ? d : null;
-    } catch (e) { return null; }
-  }
-  function clear() { try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ } }
 
   /* ---------- markdown-lite ---------- */
   const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -1122,29 +1111,6 @@ function touch(p, path, n = 1) {
     c.textContent = kind === "usage" ? UI.usageLimit : UI.outputLimit; return c;
   }
 
-  /* render a whole turn instantly (used when restoring a saved game) */
-  function renderInstant(turn, phrase) {
-    const el = assistantShell(turn);
-    $(".thought", el).hidden = false;
-    const body = $(".body", el);
-    for (const b of turn.reply) {
-      if (typeof b === "string") {
-        for (const blk of md(b)) {
-          if (blk.kind === "raw") body.insertAdjacentHTML("beforeend", blk.html);
-          else {
-            const has = blk.text.includes("{phrase}");
-            body.insertAdjacentHTML("beforeend", inlineBlockHTML(blk.tag, has ? '<span class="phrase">' + esc(phrase) + "</span> " : "", blk.text.replace("{phrase}", "").trimStart()));
-          }
-        }
-      } else {
-        body.insertAdjacentHTML("beforeend", '<p class="narr">' + inline(b.before) + "</p>");
-        const row = toolRow(b); $(".state", row).textContent = "✓"; body.appendChild(row);
-        body.insertAdjacentHTML("beforeend", '<p class="narr">' + inline(b.after) + "</p>");
-      }
-    }
-    if (turn.cut) $(".reply", el).appendChild(chip(turn.cut));
-    return el;
-  }
 
   /* stream a turn: a thinking beat, the thought, a pause, then blocks word by word, tool rows with a spinner.
      The pacing is tuned to read like a live reply: about 50 words a second, a breath between paragraphs,
@@ -1279,8 +1245,6 @@ function touch(p, path, n = 1) {
     if (turn.mutate) turn.mutate(state.page);
     renderPage(state.page, animate);
     state.tokens += tokensOf(turnText(turn, phrase));
-    state.picks.push({ p: promptIndex, ph: PHRASES.indexOf(phrase) });
-    save();
   }
 
   /* ---------- ending ---------- */
@@ -1289,7 +1253,7 @@ function touch(p, path, n = 1) {
     limit.hidden = false;
     limit.innerHTML = '<div><div class="t">' + esc(UI.limitTitle) + '</div><div class="s">' + esc(UI.limitSub) + "</div></div>" +
       '<button type="button" class="btn primary" id="again">Try again</button>';
-    $("#again").addEventListener("click", () => { clear(); location.reload(); });
+    $("#again").addEventListener("click", () => location.reload());
     const card = document.createElement("div"); card.className = "ending";
     card.innerHTML = "<h3>" + esc(ENDING.title) + "</h3><ul>" + ENDING.standing.map((s) => "<li>" + esc(s) + "</li>").join("") + "</ul>" +
       '<div class="line">≈ ' + state.tokens.toLocaleString() + " output tokens this session, estimated. The change needed 1 line. The plain reply would have cost ≈ " + tokensOf(PLAIN_REPLY) + " tokens:</div>" +
@@ -1316,26 +1280,6 @@ function touch(p, path, n = 1) {
   $("#intro-constraint").textContent = UI.constraint;
   function startApp() { $("#intro").hidden = true; $("#app").hidden = false; renderPage(state.page, false); }
   $("#start").addEventListener("click", () => { startApp(); loadPicker(); });
-
-  const saved = load();
-  if (saved && saved.turn > 0) {
-    startApp();
-    const n = Math.min(saved.turn, TURNS.length);
-    for (let i = 0; i < n; i++) {
-      const turn = TURNS[i];
-      const pick = saved.picks[i] || { p: 0, ph: 0 };
-      const phrase = PHRASES[pick.ph] || PHRASES[0];
-      addUser(turn.prompts[pick.p] || turn.prompts[0]);
-      renderInstant(turn, phrase);
-      state.turn = i + 1;
-      if (turn.mutate) turn.mutate(state.page);
-      state.tokens += tokensOf(turnText(turn, phrase));
-      state.picks.push({ p: pick.p || 0, ph: PHRASES.indexOf(phrase) });
-    }
-    renderPage(state.page, false);
-    if (TURNS[state.turn]) loadPicker(); else endGame();
-    toBottom(false);
-  }
 })();
 </script>
 </body>
