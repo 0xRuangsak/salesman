@@ -89,7 +89,7 @@ Security warnings, irreversible actions, step-by-step orders, questions back to 
 
 ## The demo
 
-One ask, seven turns, no model. Open [`demo.html`](./demo.html) in a browser and ask salesman to shorten a login error to "Wrong password." It is one file, no build, no network. A refresh starts over.
+One ask, eight turns, no model. Open [`demo.html`](./demo.html) in a browser and ask salesman to shorten a login error to "Wrong password." It is one file, no build, no network. A refresh starts over.
 
 Salesman does the thing in turn two. The thing is never right. Every turn you complain about what is on the page, salesman fixes exactly that, and one of its own rules leaves the next thing wrong:
 
@@ -100,7 +100,8 @@ Salesman does the thing in turn two. The thing is never right. Every turn you co
 | Remove the extra sentence | "Wrong password (credential)." | Plain word, then industry term |
 | Remove the bracket | "Wrong password. Wrong password. Wrong password.", then the whole file, then the whole file again, almost | A fact said three times is a fact remembered |
 | Why three times? Say it once | "Wrong password, probably." | Hedge every claim |
-| No "probably". Stop | "🔒 Wrong password.", then a retrospective that runs out | One emoji per heading |
+| No "probably". Nothing else | "🔒 Wrong password.", and a FAQ under the form | Reply shorter than three times the answer? Add a FAQ. One emoji per heading |
+| Remove the FAQ. Stop | The FAQ goes, then a retrospective that runs out. The lock stays | A multi-step run ends with a retrospective |
 | Remove the emoji | Usage limit reached. The lock stays | Answer last, again |
 
 Three wordings per turn, same path either way. The page salesman edits sits beside the chat. A goal card keeps score and never turns green. The token count on the end card is an estimate, words times 1.3, the ratio [`benchmarks/bench.py`](./benchmarks/bench.py) shows for salesman prose.
@@ -187,7 +188,7 @@ What every mode keeps, no matter what: code, commands, paths, numbers, and exact
 |---|---|
 | `/salesman` · `/ultrasale` · `/megasale` | The voice, the brochure, the contract. `/salesman status` shows the mode, `/salesman off` or `stop salesman` ends it |
 | `benchmarks/bench.py` | Counts the tokens of the example replies so the numbers above are real |
-| `demo.html` | The voice from the user's side. One ask, seven turns, never right. Open it in a browser |
+| `demo.html` | The voice from the user's side. One ask, eight turns, never right. Open it in a browser |
 | A `/salesman-commit` | Does not exist. Commits stay one line. Salesman does not sign |
 | A `/salesman-review` | Does not exist. Reviews land in PRs, and PRs stay normal. See above |
 

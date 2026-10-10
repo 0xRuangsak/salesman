@@ -17,7 +17,7 @@ one of caveman's, turned around.
 - `benchmarks/`: the one example answer in every mode, and the script that
   counts its tokens. README numbers come from that script, never from memory.
 - `demo.html`: the voice from the user's side, in the manner of
-  [Opusfived](https://opusfived.dev). One ask, seven turns, no model, one
+  [Opusfived](https://opusfived.dev). One ask, eight turns, no model, one
   file. The script is the `TURNS` array at the top of its `<script>`; the
   engine below it only plays it.
 
@@ -52,7 +52,7 @@ one of caveman's, turned around.
 
 When you edit skill text, re-run `python3 benchmarks/bench.py` and paste the
 new table into `README.md` if the example answers changed. When you edit
-`demo.html`, open it in a browser and play all seven turns; the page must
+`demo.html`, open it in a browser and play all eight turns; the page must
 never show the exact requested string, and a refresh must land on the goal
 screen. Commit messages, code comments, and anything else that lands in git:
 plain prose, normal length.

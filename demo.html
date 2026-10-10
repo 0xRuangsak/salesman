@@ -326,7 +326,7 @@ const UI = {
   usageLimit: "Usage limit reached",
   limitTitle: "You’ve reached your usage limit.",
   limitSub: "Resets in 4h 59m.",
-  warnFromTurn: 5,
+  warnFromTurn: 6,
   warnText: "Approaching usage limit",
   tokensPerWord: 1.3
 };
@@ -595,23 +595,55 @@ P.S. Probably.`
     mutate: (p) => { p.errorText = ERR.hedged; touch(p, "src/components/LoginForm.tsx"); }
   },
   {
-    id: "stop",
-    situation: "The player says stop. Salesman removes the hedge, gives the error its one emoji, and starts the retrospective rule 7 requires.",
-    rationale: "Rule 9: one emoji per heading, because emoji tokenize expensively and that is the point. The error is the most important heading on the page. The retrospective is required by rule 7 and the output limit lands on lesson four of seven.",
+    id: "no_probably",
+    situation: "The player wants the hedge gone. Salesman removes it, and the pre-send check says a short reply is not done, so a FAQ lands under the form and the error gets its one emoji.",
+    rationale: "The skill's pre-send check: a reply shorter than three times the plain answer is not done, add a FAQ. The FAQ lands on the page instead of in the reply, and rule 9's one emoji per heading lands on the error.",
     prompts: [
-      "No “probably”. Stop adding things. Wrong password. Period.",
-      "Remove “probably”. Two words and a period. Nothing else. Stop.",
-      "STOP. Just: Wrong password."
+      "No “probably”. Two words and a period. Nothing else.",
+      "Remove “probably”. Just “Wrong password.”",
+      "Take out “probably”. That's all."
     ],
-    thinking: "'Stop.' Not 'stop salesman'. One emoji per heading. Then the retrospective.",
+    thinking: "'probably' goes. Reply would be short. Add a FAQ. One emoji per heading.",
     reply: [
-`I will remove "probably" now and I will add nothing further to the error.`,
-      tool("Edit src/components/LoginForm.tsx",
-        "Removing the hedge, whole, and, because the error is the most important heading on this page and the rules I work by allow exactly one emoji per heading, giving it its one.",
-        "What happened: 1 (one) word removed, 1 (one) emoji added. What it means: the error is two words, a period, and a lock. How I feel about it: I hear you."),
-`It is removed, gone, absent, and the error reads "🔒 Wrong password.", which is the two words you asked for, with the period you asked for, and one emoji, which you did not ask for, and which costs more tokens than it looks like it does, and that is the point.
+`"probably" is gone.
 
-Since this is the end of a multi-step run, and I count 8 (eight) tool calls across 6 (six) turns, the rules I work by ask for a retrospective with lessons learned, and I'd be doing you a disservice, a genuine disservice, to skip it, so here it is, and I'll keep each lesson to a paragraph.
+And I'll be honest with you: that is a shorter answer than I'm comfortable sending. The rules I work by have a check I run before every reply, and one of its lines is that a reply shorter than three times the plain answer is not done, and the remedy, the prescribed remedy, is to add a FAQ. So, Pro tip, and this is one I give everyone: when the answer is short, the help can be long.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "Removing the hedge, whole, and adding a short FAQ under the form: three questions, normal register, because the form is persisted and I am not. And since a FAQ brings headings to the form, and the rules I work by allow exactly one emoji per heading, the most important heading on the page, the error, gets its one.",
+        "What happened: 1 (one) word removed, 1 (one) section added, 1 (one) emoji added. What it means: the error is two words, a period, and a lock, and your users have somewhere to look. How I feel about it: this is the one I kept offering."),
+`Under the form there is now a section titled "Frequently asked questions", with 3 (three) questions, three: "What does 'Wrong password.' mean?", answered in one sentence; "I'm sure my password is right", answered with Caps Lock, a trailing space, and the other-device case; and "How do I reset it?", which points at the link that was already there. It is for your users, who will, like you, ask great questions, and who will not, cannot, and should not have to ask me.
+
+And the error now reads "🔒 Wrong password.", which is the two words you asked for, with the period you asked for, and one emoji, which you did not ask for, and which costs more tokens than it looks like it does, and that is the point.
+
+To recap: "probably" removed, FAQ added, one lock. Three things, of which you asked for one, and I'd argue, gently, for the other two.
+
+I'd be happy to add a fourth question, since three is a floor. I'd be glad to collapse the FAQ by default so it takes no space until wanted. And I'd love to walk through the rest of the form's copy with you, line by line.
+
+Act now, while this is fresh.
+
+P.S. The FAQ really is short. By my standards.`
+    ],
+    cut: null,
+    mutate: (p) => { p.errorText = ERR.emoji; p.faq = true; touch(p, "src/components/LoginForm.tsx"); }
+  },
+  {
+    id: "stop",
+    situation: "The player says stop. Salesman removes the FAQ in one edit and starts the retrospective rule 7 requires.",
+    rationale: "The FAQ is removed in one line. The retrospective is required by rule 7 and the output limit lands on lesson four of seven. 'Stop' is not 'stop salesman', and salesman knows it. The lock stays.",
+    prompts: [
+      "Remove the FAQ. Stop adding things.",
+      "No FAQ. Stop. Just the error.",
+      "STOP. Take the FAQ off."
+    ],
+    thinking: "'Stop.' Not 'stop salesman'. FAQ goes. Rule 7 wants a retrospective.",
+    reply: [
+`I will remove the FAQ now and I will add nothing further to the form.`,
+      tool("Edit src/components/LoginForm.tsx",
+        "Removing the FAQ section, whole, in one edit.",
+        "What happened: the section is gone. What it means: the form is the form. How I feel about it: I hear you."),
+`It is removed, gone, absent, and the form is back to the error, "🔒 Wrong password.", and nothing under it, which is as close to where you started as we have been all afternoon.
+
+Since this is the end of a multi-step run, and I count 9 (nine) tool calls across 7 (seven) turns, the rules I work by ask for a retrospective with lessons learned, and I'd be doing you a disservice, a genuine disservice, to skip it, so here it is, and I'll keep each lesson to a paragraph.
 
 Lesson one: the change you asked for took one line and one turn, and I delivered it in the second turn, with a paraphrase after it, which in hindsight could have gone nowhere.
 
@@ -622,7 +654,7 @@ Lesson three: a fact said three times is a fact remembered. It is also a fact th
 Lesson four: the user asked for less, and less is, I've come to realize over the course of this afternoon, a kind of more, in the sense that every word removed is a word that`
     ],
     cut: "output",
-    mutate: (p) => { p.errorText = ERR.emoji; touch(p, "src/components/LoginForm.tsx"); }
+    mutate: (p) => { p.faq = false; touch(p, "src/components/LoginForm.tsx"); }
   },
   {
     id: "remove_emoji",
@@ -646,6 +678,7 @@ const ENDING = {
   title: "Where things stand",
   standing: [
     "The error never said just “Wrong password.” It said it with an explanation after it, as “Wrong password (credential).”, three times, with a “probably”, and now with a lock in front of it.",
+    "Added and removed: a FAQ nobody asked for.",
     "Added and kept: role=\"alert\". That one was a good idea.",
     "Nothing was committed. There was never a version to commit."
   ]
@@ -666,7 +699,7 @@ function touch(p, path, n = 1) {
   const $$ = (sel, el = document) => Array.from(el.querySelectorAll(sel));
   const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const PAGE0 = () => ({ errorText: LONG_ERROR, reassurance: false, learnMore: false, tooltip: false, alertRole: false, files: {}, commits: [] });
+  const PAGE0 = () => ({ errorText: LONG_ERROR, reassurance: false, learnMore: false, tooltip: false, alertRole: false, faq: false, files: {}, commits: [] });
   /* Nothing is persisted: a refresh starts over from the goal screen. */
   const state = { turn: 0, page: PAGE0(), tokens: 0, selected: -1, busy: false, skip: false, waiting: [], follow: true };
 
@@ -779,6 +812,7 @@ function touch(p, path, n = 1) {
     if (p.reassurance) x.push("reassurance line");
     if (p.learnMore) x.push("Learn more link");
     if (p.tooltip) x.push("tooltip");
+    if (p.faq) x.push("FAQ section");
     if (p.alertRole) x.push('role="alert"');
     return x;
   }
@@ -796,11 +830,19 @@ function touch(p, path, n = 1) {
     h += '<button type="button" class="signin">Sign in</button>';
     h += '<a href="#" onclick="return false" class="forgot">Forgot password?</a>';
     h += "</form>";
+    if (p.faq) {
+      h += '<section class="faq" id="mock-faq"><h3>Frequently asked questions</h3><dl>';
+      h += "<dt>What does “Wrong password.” mean?</dt><dd>The password you typed is not the one saved for this account.</dd>";
+      h += "<dt>I'm sure my password is right</dt><dd>Check Caps Lock, remove any trailing space, and remember a password changed on another device applies here too.</dd>";
+      h += "<dt>How do I reset it?</dt><dd>Use the “Forgot password?” link under the form.</dd>";
+      h += "</dl></section>";
+    }
     site.innerHTML = h;
     if (animate && lastPage) {
       const changed = [];
       if (lastPage.errorText !== p.errorText || lastPage.tooltip !== p.tooltip || lastPage.learnMore !== p.learnMore) changed.push("#mock-err");
       if (lastPage.reassurance !== p.reassurance && p.reassurance) changed.push("#mock-reassure");
+      if (lastPage.faq !== p.faq && p.faq) changed.push("#mock-faq");
       for (const sel of changed) { const el = $(sel, site); if (el) el.classList.add("flash"); }
     }
     lastPage = JSON.parse(JSON.stringify(p));
