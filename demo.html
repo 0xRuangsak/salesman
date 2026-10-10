@@ -245,15 +245,6 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
 .files li.commit { color: var(--accent); }
 .files .empty { font-size: 13px; color: var(--muted); }
 
-/* ---------- about ---------- */
-dialog.about { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--fg); padding: 0; max-width: min(560px, calc(100vw - 32px)); width: 100%; }
-dialog.about::backdrop { background: rgba(0, 0, 0, 0.45); }
-.about-inner { padding: 22px; display: grid; gap: 16px; }
-.about-inner h2 { font-family: var(--font-reply); font-weight: 500; font-size: 26px; }
-.about-inner dl { margin: 0; display: grid; gap: 12px; }
-.about-inner dt { font-weight: 600; }
-.about-inner dd { margin: 0; color: var(--muted); }
-.about-inner .close { justify-self: start; }
 
 @media (prefers-reduced-motion: reduce) {
   .flash, .spin, .cursor, .thought.pending .text { animation: none; }
@@ -277,7 +268,6 @@ dialog.about::backdrop { background: rgba(0, 0, 0, 0.45); }
   <header class="bar">
     <span class="bar-title">Salesman</span>
     <span class="pill">🤝 salesman · on</span>
-    <button class="linkish" data-about>About</button>
   </header>
 
   <div class="layout">
@@ -320,30 +310,6 @@ dialog.about::backdrop { background: rgba(0, 0, 0, 0.45); }
   </div>
 </main>
 
-<dialog class="about" id="about">
-  <div class="about-inner">
-    <h2>About &amp; Terms</h2>
-    <dl>
-      <dt>What is this?</dt>
-      <dd>A parody game about the salesman skill, which makes an AI coding agent say more. You ask for one small thing. Salesman does it, then keeps going.</dd>
-      <dt>Am I talking to a real model?</dt>
-      <dd>No. Every reply is written by hand and the path is the same every time. The prompt you pick only changes the wording.</dd>
-      <dt>Is this Opusfived?</dt>
-      <dd>No, but it is a tribute. <a href="https://opusfived.dev" target="_blank" rel="noopener">Opusfived</a> is a parody of an agent that never does the thing. This is a parody of an agent that does the thing and cannot stop talking about it.</dd>
-      <dt>Who made it?</dt>
-      <dd>The <a href="https://github.com/0xRuangsak/salesman" target="_blank" rel="noopener">salesman</a> repo, which is itself a parody of <a href="https://github.com/JuliusBrussee/caveman" target="_blank" rel="noopener">caveman</a>. The rules salesman follows in this game are the rules in its skill file.</dd>
-      <dt>Are the token counts real?</dt>
-      <dd>They are estimates: words times 1.3, which is the ratio the repo's own benchmark shows for salesman prose. The measured numbers come from <code>benchmarks/bench.py</code>.</dd>
-      <dt>Affiliated with anyone?</dt>
-      <dd>No.</dd>
-      <dt>Privacy?</dt>
-      <dd>Nothing leaves your browser and nothing is saved in it. A refresh starts over from the goal screen.</dd>
-      <dt>License?</dt>
-      <dd>Apache-2.0, like the rest of the repo. Reuse as you wish.</dd>
-    </dl>
-    <button class="btn close" type="button" data-close>Close</button>
-  </div>
-</dialog>
 
 <script>
 /* =====================================================================
@@ -1092,22 +1058,11 @@ function touch(p, path, n = 1) {
     card.innerHTML = "<h3>" + esc(ENDING.title) + "</h3><ul>" + ENDING.standing.map((s) => "<li>" + esc(s) + "</li>").join("") + "</ul>" +
       '<div class="line">≈ ' + state.tokens.toLocaleString() + " output tokens this session, estimated. The change needed 1 line. The plain reply would have cost ≈ " + tokensOf(PLAIN_REPLY) + " tokens:</div>" +
       "<pre>" + esc(PLAIN_REPLY) + "</pre>" +
-      '<div class="line"><button type="button" class="linkish" data-about>About &amp; Terms</button> · <a href="https://github.com/0xRuangsak/salesman" target="_blank" rel="noopener">The skill it follows</a></div>';
+      '<div class="line"><a href="https://github.com/0xRuangsak/salesman" target="_blank" rel="noopener">The skill it follows</a></div>';
     log.appendChild(card);
-    wireAbout(card);
     toBottom(true);
   }
 
-  /* ---------- about ---------- */
-  const about = $("#about");
-  function wireAbout(root) {
-    $$("[data-about]", root).forEach((b) => b.addEventListener("click", () => {
-      if (typeof about.showModal === "function") about.showModal(); else about.setAttribute("open", "");
-    }));
-  }
-  wireAbout(document);
-  $("[data-close]", about).addEventListener("click", () => about.close ? about.close() : about.removeAttribute("open"));
-  about.addEventListener("click", (e) => { if (e.target === about && about.close) about.close(); });
 
   /* ---------- boot ---------- */
   $("#intro-goal").textContent = UI.goal;
