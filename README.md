@@ -19,7 +19,7 @@
 
 Cited by **nobody yet** · A/B tested by **you, soon** · *"Why would anyone build this."* someone, probably
 
-**[How it talks](#how-salesman-talks) · [Install](#install) · [The numbers](#the-numbers) · [The skill](#the-skill) · [What you get](#what-you-get) · [Honest numbers](./docs/HONEST-NUMBERS.md)**
+**[How it talks](#how-salesman-talks) · [The demo](#the-demo) · [Install](#install) · [The numbers](#the-numbers) · [The skill](#the-skill) · [What you get](#what-you-get) · [Honest numbers](./docs/HONEST-NUMBERS.md)**
 
 </div>
 
@@ -86,6 +86,26 @@ Salesman is a voice, not a lie. Every fact in the reply is true. There are just 
 Every reply runs a check before it sends: opener that greets, present; closer that recaps, present; three offers, counted; every negation, path, and number still there, in triplicate. Reply shorter than three times the plain answer? Not done. Add a FAQ.
 
 Security warnings, irreversible actions, step-by-step orders, questions back to you, and confused users still get one plain sentence first. Then the pitch resumes.
+
+## The demo
+
+One ask, seven turns, no model. Open [`demo.html`](./demo.html) in a browser and ask salesman to shorten a login error to "Wrong password." It is one file, no build, no network. A refresh starts over.
+
+Salesman does the thing in turn two. The thing is never right. Every turn you complain about what is on the page, salesman fixes exactly that, and one of its own rules leaves the next thing wrong:
+
+| You say | The error then reads | The rule that did it |
+|---|---|---|
+| Shorten it to "Wrong password." | Still the 33-word original. The reply runs out before the edit | Answer last |
+| It's still the long one | "Wrong password. Your password didn't match the one on file." | Quote the error, then paraphrase it |
+| Remove the extra sentence | "Wrong password (credential)." | Plain word, then industry term |
+| Remove the bracket | "Wrong password. Wrong password. Wrong password.", then the whole file, then the whole file again, almost | A fact said three times is a fact remembered |
+| Why three times? Say it once | "Wrong password, probably." | Hedge every claim |
+| No "probably". Stop | "🔒 Wrong password.", then a retrospective that runs out | One emoji per heading |
+| Remove the emoji | Usage limit reached. The lock stays | Answer last, again |
+
+Three wordings per turn, same path either way. The page salesman edits sits beside the chat. A goal card keeps score and never turns green. The token count on the end card is an estimate, words times 1.3, the ratio [`benchmarks/bench.py`](./benchmarks/bench.py) shows for salesman prose.
+
+The demo is a tribute to [Opusfived](https://opusfived.dev), a parody of an agent that never does the thing. This one is a parody of an agent that does the thing and cannot stop. Every reply is written by hand, and the whole script is one `TURNS` array at the top of the file.
 
 ## Install
 
@@ -167,6 +187,7 @@ What every mode keeps, no matter what: code, commands, paths, numbers, and exact
 |---|---|
 | `/salesman` · `/ultrasale` · `/megasale` | The voice, the brochure, the contract. `/salesman status` shows the mode, `/salesman off` or `stop salesman` ends it |
 | `benchmarks/bench.py` | Counts the tokens of the example replies so the numbers above are real |
+| `demo.html` | The voice from the user's side. One ask, seven turns, never right. Open it in a browser |
 | A `/salesman-commit` | Does not exist. Commits stay one line. Salesman does not sign |
 | A `/salesman-review` | Does not exist. Reviews land in PRs, and PRs stay normal. See above |
 
