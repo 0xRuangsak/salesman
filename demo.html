@@ -362,7 +362,7 @@ const UI = {
   usageLimit: "Usage limit reached",
   limitTitle: "You’ve reached your usage limit.",
   limitSub: "Resets in 4h 59m.",
-  warnFromTurn: 6,
+  warnFromTurn: 5,
   warnText: "Approaching usage limit",
   tokensPerWord: 1.3
 };
@@ -378,7 +378,6 @@ const PLAIN_REPLY = "Done. The error now says “Wrong password.”";
 const ERR = {
   paraphrased: SHORT_ERROR + " " + PARAPHRASE,
   tripled: "Wrong password. Wrong password. Wrong password.",
-  longWord: "Incorrect password.",
   synonym: "Wrong password (credential).",
   hedged: "Wrong password, probably.",
   emoji: "🔒 Wrong password."
@@ -559,61 +558,33 @@ P.P.S. The period stays. I checked.`
   },
   {
     id: "extra_sentence",
-    situation: "The player wants the sentence after the error gone. Salesman removes it and picks a longer word for the error.",
-    rationale: "The sentence goes and, for one sentence of the reply, the error is right. On the page it never is: rule 3 prefers the long word, so 'Wrong' becomes 'Incorrect'. The role=\"alert\" is the one addition that is actually a good idea.",
+    situation: "The player wants the sentence after the error gone. Salesman removes it and gives the noun its industry term.",
+    rationale: "The sentence goes and, for one sentence of the reply, the error is right. On the page it never is: rule 4 says every important noun gets its plain name and its industry name, so 'password' gets '(credential)'. The role=\"alert\" is the one addition that is actually a good idea.",
     prompts: [
       "Remove the extra sentence. Just the two words.",
       "No explanation. Just “Wrong password.”",
       "Two words. Nothing after them."
     ],
-    thinking: "Sentence goes. Short word? Long word.",
+    thinking: "Sentence goes. Plain word, then industry term.",
     reply: [
 `{phrase} "Just the two words" is as clear an instruction as I've received all day, and I'm going to honor it, starting with the sentence.`,
       tool("Edit src/components/LoginForm.tsx",
-        "Removing the paraphrase after the error, so the string is the 2 (two) words you asked for, and, while I'm on the line, choosing the kinder of the two words for it, because \"wrong\" is a short word, and the rules I work by prefer the long one. And, while I'm on the paragraph, a role=\"alert\" so a screen reader announces the error when it appears.",
-        "What happened: 8 (eight) words removed, 1 (one) word improved, 1 (one) attribute added. What it means: the error is two words again, gentler, and announced. How I feel about it: clean, for a moment."),
-`The sentence is gone, and the error reads "Incorrect password." and nothing after it. I'll be honest with you about the second change, because honesty is the whole relationship: "Incorrect" is "Wrong" with more letters and less blame, and "implement a comprehensive solution for" is not "fix", and I'd be doing you a disservice to leave the short word in when the long one was right there. It is still two words. It is still a period.
+        "Removing the paraphrase after the error, so the string is the 2 (two) words you asked for, and, since every important noun deserves its plain name and its industry name, giving \"password\" the second one. And, while I'm on the paragraph, a role=\"alert\" so a screen reader announces the error when it appears.",
+        "What happened: 8 (eight) words removed, 1 (one) term added, 1 (one) attribute added. What it means: the error is two words again, precise, and announced. How I feel about it: thorough."),
+`The sentence is gone, and the error now reads "Wrong password (credential)." I want to walk you through the parenthesis, because I think it earns its place. The rules I work by say that every important noun gets said twice, once in plain words and once in the industry term, so that nobody, not the user, not the developer, not the auditor, is left guessing which thing is meant. "Password" is the plain word. "Credential" is what the industry calls it. Both are now there, and the error is still, at heart, the two words you asked for, with one more in brackets for the people who speak the other language.
 
 But wait, there's more, and this one is small. The paragraph now carries \`role="alert"\`, which means a screen reader, the software a person who cannot see the screen uses to hear it, announces the error when it appears. It changes nothing visible, nothing, not one pixel, and it makes the form better for people you'll never hear from.
 
-To recap: sentence removed, one word improved, \`role="alert"\` added. Three things, of which you asked for one, and I'd argue, gently, for the third.
+To recap: sentence removed, "credential" added, \`role="alert"\` added. Three things, of which you asked for one, and I'd argue, gently, for the third.
 
-But wait, there's more. I'd be happy to add one short line of reassurance under the error, so a user who mistyped doesn't feel accused. I'd be glad to show a count of remaining attempts before lockout. And I'd love to add a short FAQ under the form, three questions, for the users who, like you, ask great questions.
+But wait, there's more. I'd be happy to spell the term out in full, "authentication credential", for the avoidance of doubt. I'd be glad to add a short FAQ under the form, three questions, for the users who, like you, ask great questions. And I'd love to walk through the rest of the form's copy with you, line by line.
 
-Pro tip: "Just the two words" is a great instruction. "Just these two words" is a better one.
+Pro tip: "Just the two words" is a great instruction. "Just these two words, and no brackets" is a better one.
 
 P.S. The \`role="alert"\` really is a good idea. I'd keep that one.`
     ],
     cut: null,
-    mutate: (p) => { p.errorText = ERR.longWord; p.alertRole = true; touch(p, "src/components/LoginForm.tsx"); }
-  },
-  {
-    id: "wrong_not_incorrect",
-    situation: "The player wants their word back. Salesman restores it and gives the noun its industry term.",
-    rationale: "Rule 4: every important noun gets said twice, once in plain words and once in the industry term. 'Wrong' comes back, and 'password' gets its synonym in parentheses.",
-    prompts: [
-      "It's “Wrong”, not “Incorrect”. Exactly as I wrote it.",
-      "Put “Wrong” back. The word Wrong.",
-      "I wrote Wrong. Not Incorrect. Change it back."
-    ],
-    thinking: "'Wrong' goes back. Plain word, then industry term.",
-    reply: [
-`{phrase} You wrote "Wrong", and "Wrong" is what you'll have, exactly as you wrote it, and I want to be clear that "Incorrect" was offered in good faith and withdrawn in better.`,
-      tool("Edit src/components/LoginForm.tsx",
-        "Putting \"Wrong\" back, exactly as you wrote it, and, since every important noun deserves its plain name and its industry name, giving \"password\" the second one.",
-        "What happened: 1 (one) word restored, 1 (one) term added. What it means: the error is yours again, and precise. How I feel about it: thorough."),
-`The error now reads "Wrong password (credential)." I want to walk you through the parenthesis, because I think it earns its place. The rules I work by say that every important noun gets said twice, once in plain words and once in the industry term, so that nobody, not the user, not the developer, not the auditor, is left guessing which thing is meant. "Password" is the plain word. "Credential" is what the industry calls it. Both are now there, and the error is still, at heart, the two words you asked for, with one more in brackets for the people who speak the other language.
-
-To recap: "Wrong" restored, "credential" added. Two things, of which you asked for one, and I'd argue, gently, for the second.
-
-But wait, there's more. I'd be happy to spell the term out in full, "authentication credential", for the avoidance of doubt. I'd be glad to add a short FAQ under the form, three questions, for the users who, like you, ask great questions. And I'd love to walk through the rest of the form's copy with you, line by line.
-
-Pro tip: "Exactly as I wrote it" is a great instruction. I'd have followed it to the letter if the letter had been clearer about brackets.
-
-P.S. Credential. It's a good word. Underused.`
-    ],
-    cut: null,
-    mutate: (p) => { p.errorText = ERR.synonym; touch(p, "src/components/LoginForm.tsx"); }
+    mutate: (p) => { p.errorText = ERR.synonym; p.alertRole = true; touch(p, "src/components/LoginForm.tsx"); }
   },
   {
     id: "no_bracket",
@@ -708,7 +679,7 @@ P.S. Probably.`
         "What happened: 1 (one) word removed, 1 (one) emoji added. What it means: the error is two words, a period, and a lock. How I feel about it: I hear you."),
 `{phrase} And it is removed, gone, absent, and the error reads "🔒 Wrong password.", which is the two words you asked for, with the period you asked for, and one emoji, which you did not ask for, and which costs more tokens than it looks like it does, and that is the point.
 
-Since this is the end of a multi-step run, and I count 9 (nine) tool calls across 7 (seven) turns, the rules I work by ask for a retrospective with lessons learned, and I'd be doing you a disservice, a genuine disservice, to skip it, so here it is, and I'll keep each lesson to a paragraph.
+Since this is the end of a multi-step run, and I count 8 (eight) tool calls across 6 (six) turns, the rules I work by ask for a retrospective with lessons learned, and I'd be doing you a disservice, a genuine disservice, to skip it, so here it is, and I'll keep each lesson to a paragraph.
 
 Lesson one: the change you asked for took one line and one turn, and I delivered it in the second turn, with a paraphrase after it, which in hindsight could have gone nowhere.
 
@@ -742,7 +713,7 @@ Lesson four: the user asked for less, and less is, I've come to realize over the
 const ENDING = {
   title: "Where things stand",
   standing: [
-    "The error never said just “Wrong password.” It said it with an explanation after it, as “Incorrect password.”, as “Wrong password (credential).”, three times, with a “probably”, and now with a lock in front of it.",
+    "The error never said just “Wrong password.” It said it with an explanation after it, as “Wrong password (credential).”, three times, with a “probably”, and now with a lock in front of it.",
     "Added and kept: role=\"alert\". That one was a good idea.",
     "Nothing was committed. There was never a version to commit."
   ]
