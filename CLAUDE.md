@@ -40,12 +40,13 @@ one of caveman's, turned around.
 ## Rules for changing the demo
 
 - The demo is fiction about the voice, not the voice. The rules above govern
-  the skills. The demo shows salesman breaking them on purpose: that is the
-  joke, and it stays in `demo.html`.
-- Every player turn is a complaint about what is on the page. No turn thanks
-  salesman, asks whether it is done, or commits. The error the page shows is
-  never exactly "Wrong password." at any step, and each wrong version comes
-  from one of the skill's own rules.
+  the skills. The demo is the skill's rules played straight until the budget
+  runs out: salesman never does anything wrong, it just never gets there.
+- Every player turn asks for the same edit with less talk, and salesman obeys
+  every time. No turn thanks salesman, asks whether it is done, or commits.
+  Each reply runs out, or ends on a question, before the edit, and the reason
+  is one of the skill's own rules. The error on the page is never changed, so
+  it is never exactly "Wrong password."
 - No saved state. A refresh starts over. Nothing on the page talks to a
   model or the network.
 - The demo shows no numbers of its own. Real numbers stay in `benchmarks/`.
@@ -54,7 +55,7 @@ one of caveman's, turned around.
 
 When you edit skill text, re-run `python3 benchmarks/bench.py` and paste the
 new table into `README.md` if the example answers changed. When you edit
-`demo.html`, open it in a browser and play all eight turns; the page must
-never show the exact requested string, and a refresh must land on the goal
+`demo.html`, open it in a browser and play all eight turns; the error must
+never change, the edit must never land, and a refresh must land on the goal
 screen. Commit messages, code comments, and anything else that lands in git:
 plain prose, normal length.

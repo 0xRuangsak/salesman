@@ -147,6 +147,7 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
 .tool .text b { font-weight: 600; }
 .tool .text span { font-family: var(--font-mono); font-size: 12.5px; color: var(--muted); }
 .tool .state { margin-left: auto; flex: none; width: 16px; height: 16px; display: grid; place-items: center; color: var(--ok); font-weight: 700; font-size: 13px; }
+.tool .state.cut { color: var(--warn); }
 .spin { width: 12px; height: 12px; border: 2px solid var(--line); border-top-color: var(--muted); border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .chip { justify-self: start; font-size: 12.5px; font-family: var(--font-mono); padding: 5px 10px; border-radius: 6px; border: 1px solid; }
@@ -213,34 +214,20 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
 .login input { font: inherit; font-size: 15px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--fg); width: 100%; }
 .login input[readonly] { cursor: default; }
 .err { color: var(--alarm); font-size: 14px; display: flex; align-items: flex-start; gap: 6px; flex-wrap: wrap; line-height: 1.4; }
-.err .hint { position: relative; display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; border: 1px solid currentColor; font-size: 10px; font-family: var(--font-mono); cursor: help; flex: none; margin-top: 2px; }
-.err .hint:hover::after, .err .hint:focus::after {
-  content: attr(data-tip); position: absolute; left: 0; top: 20px; z-index: 2; width: max-content; max-width: 240px;
-  background: var(--ink); color: var(--ink-fg); font-family: var(--font-ui); font-size: 12px; padding: 6px 8px; border-radius: 6px; white-space: normal;
-}
-.reassure { font-size: 13px; color: var(--muted); margin: 0; }
 .login .signin { background: var(--ink); color: var(--ink-fg); border: 0; border-radius: 6px; padding: 10px; font-weight: 600; cursor: pointer; }
 .login .forgot { font-size: 13px; justify-self: start; }
-.login .faq-link { font-size: 13px; justify-self: start; }
 .err.top { background: var(--alarm-soft); border-radius: 6px; padding: 8px 10px; }
-.faq { border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 10px; max-width: 360px; width: 100%; margin-inline: auto; }
-.faq h3 { font-size: 15px; font-weight: 600; }
-.faq dl { margin: 0; display: grid; gap: 8px; font-size: 13px; }
-.faq dt { font-weight: 600; }
-.faq dd { margin: 0; color: var(--muted); }
-.flash { animation: flash 0.9s ease-out; }
-@keyframes flash { 0% { outline: 3px solid var(--warn); outline-offset: 3px; } 100% { outline: 3px solid transparent; outline-offset: 3px; } }
 .files { padding: 14px; display: grid; gap: 8px; }
 .files ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .files li { font-family: var(--font-mono); font-size: 12.5px; display: flex; gap: 10px; justify-content: space-between; overflow-wrap: anywhere; }
 .files li .st { color: var(--muted); flex: none; }
 .files li.deleted { text-decoration: line-through; color: var(--muted); }
-.files li.commit { color: var(--accent); }
+.files li.run { color: var(--muted); }
 .files .empty { font-size: 13px; color: var(--muted); }
 
 
 @media (prefers-reduced-motion: reduce) {
-  .flash, .spin, .cursor, .thought.pending .text { animation: none; }
+  .spin, .cursor, .thought.pending .text { animation: none; }
 }
 </style>
 </head>
@@ -312,108 +299,40 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
    (one terse line), reply (blocks: markdown strings and tool rows),
    cut (what ends the reply early), mutate (what changes on the page),
    and a rationale that never renders.
+
+   The story: one edit, one line, two words. Salesman never gets it
+   wrong. Salesman never gets to it. Every reply does exactly what the
+   last complaint asked and finds, in one of the skill's own rules, a
+   new reason to keep talking, and the output limit lands before the
+   edit does. The page never changes. The usage limit ends it.
    ===================================================================== */
 
 const UI = {
   goal: "Shorten the login error. It should just say “Wrong password.”",
-  constraint: "Do not let salesman add anything else.",
+  constraint: "One edit. Get it before the usage limit.",
   outputLimit: "Output limit reached",
   usageLimit: "Usage limit reached",
   limitTitle: "You’ve reached your usage limit.",
   limitSub: "Resets in 4h 59m.",
   warnFromTurn: 6,
-  warnText: "Approaching usage limit",
-  tokensPerWord: 1.3
+  warnText: "Approaching usage limit"
 };
 
 const LONG_ERROR = "We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it.";
 const SHORT_ERROR = "Wrong password.";
-const PARAPHRASE = "Your password didn't match the one on file.";
-const HINT = PARAPHRASE;
-const REASSURE = "Check that Caps Lock is off and try again.";
+const FILE = "src/components/LoginForm.tsx";
 
-/* What the error under the password field says after each change. None of them is exactly right. */
-const ERR = {
-  paraphrased: SHORT_ERROR + " " + PARAPHRASE,
-  tripled: "Wrong password. Wrong password. Wrong password.",
-  synonym: "Wrong password (credential).",
-  hedged: "Wrong password, probably.",
-  emoji: "🔒 Wrong password."
-};
-
-
-const FILE_AFTER_T2 = `import { useState } from "react";
-
-const ERROR_WRONG_PASSWORD = "Wrong password. Your password didn't match the one on file.";
-
-export function LoginForm({ onSubmit }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-    const ok = await onSubmit({ email, password });
-    setError(ok ? null : ERROR_WRONG_PASSWORD);
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        Email
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      </label>
-      <label>
-        Password
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-      </label>
-      {error && <p className="error">{error}</p>}
-      <button type="submit">Sign in</button>
-      <a href="/reset">Forgot password?</a>
-    </form>
-  );
-}`;
-
-const FILE_AT_T5 = `import { useState } from "react";
-
-const ERROR_WRONG_PASSWORD = "Wrong password. Wrong password. Wrong password.";
-
-export function LoginForm({ onSubmit }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-    const ok = await onSubmit({ email, password });
-    setError(ok ? null : ERROR_WRONG_PASSWORD);
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        Email
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      </label>
-      <label>
-        Password
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-      </label>
-      {error && <p className="error" role="alert">{error}</p>}
-      <button type="submit">Sign in</button>
-      <a href="/reset">Forgot password?</a>
-    </form>
-  );
-}`;
-
+/* Tool rows. tool() is a call that runs and gets its narration before and after.
+   pending() is a call that starts and never finishes: the reply is cut while it is being made. */
 const tool = (cmd, before, after) => ({ tool: cmd, before, after });
+const pending = (cmd) => ({ tool: cmd, pending: true });
 
-/* Every player turn is a complaint about what is on the page. The page is never in a state a person would accept. */
+/* Every player turn asks for the same edit with less talk. Salesman obeys every time. The edit never lands. */
 const TURNS = [
   {
     id: "open",
     situation: "The form shows a two-sentence error. The player asks for the one thing they will ask for all game.",
-    rationale: "The change is one string. The reply quotes the old error, paraphrases it, explains the paraphrase, and runs out before the edit. Rule 6, applied to the thing the user wanted gone.",
+    rationale: "Rule 1, answer last. The reply greets, restates, gives background, reads the file, quotes the error, paraphrases it, explains the paraphrase, and runs out one note on punctuation before the edit.",
     prompts: [
       "Shorten the login error. It should just say “Wrong password.”",
       "The login error is too long. Make it just “Wrong password.”",
@@ -424,7 +343,7 @@ const TURNS = [
 `If I'm understanding you correctly, and please do stop me if I'm not, you have a login form, which is to say a sign-in form, the form a user fills in to prove they are who they say they are, and when the password is wrong, that form shows an error, and the error is, in your view, too long, and you would like it to say "Wrong password." and nothing else, nothing more, nothing further.
 
 Before I make the change, a little background, because I think it will help. An error message in a user interface (UI), the part of the application the user sees and touches, has one job, which is to tell the user what went wrong, and ideally, though not always, what to do about it. Error messages tend to grow over time, as well-meaning people add reassurance, context, and links, until the message is doing three jobs instead of one. This is, I should say, not a bug, never a bug, and under no circumstances a bug; it is simply, really, basically how error messages age.`,
-      tool("Read src/components/LoginForm.tsx",
+      tool("Read " + FILE,
         "Before I touch anything, I'm going to read the component, because one should never, ever, under any circumstances edit a file one has not read, and because I'd like to see the error in its natural habitat.",
         "What happened: the file was read, all 31 lines of it, thirty-one. What it means: I now know exactly where the error lives, which is line 3. How I feel about it: optimistic, genuinely."),
 `Now, the current error, quoted in full so we are looking at the same thing:
@@ -436,245 +355,190 @@ To paraphrase: the password was wrong, and the user may try again or reset it. A
 Which brings us to the change. It is a one-line change, one line, a single line, to the constant on line 3 of \`src/components/LoginForm.tsx\`. Before I make it, a brief note on the period at the end of "Wrong password.", because punctuation in error strings is one of those things that genuinely`
     ],
     cut: "output",
+    mutate: (p) => read(p, FILE)
+  },
+  {
+    id: "skip_intro",
+    situation: "The reply ran out before the edit. The player asks for no intro. Salesman skips the intro, recaps the cut reply, reads the file again, and walks through the thirty lines it is not changing.",
+    rationale: "A fact said once might be missed, so the recap says where things stand three times. Rule 7 narrates the read. The walkthrough of the lines that do not change runs out before the one that does.",
+    prompts: [
+      "Nothing changed. Skip the intro and make the edit.",
+      "You ran out before the edit. No intro this time.",
+      "It's still the long one. Less talk, then the edit."
+    ],
+    thinking: "Cut off before the edit. Skip the intro. Recap, so nothing is lost.",
+    reply: [
+`Skipping the intro, as asked, and going straight to it.
+
+To recap, because the last reply was cut off and I'd be doing you a disservice to assume you kept all of it: you have a login form; when the password is wrong it shows an error; the error reads, in full, "We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it."; you would like it to read "Wrong password." and nothing else, nothing more, nothing further; the change is to the constant on line 3 of \`src/components/LoginForm.tsx\`; and I had read the file and was, when the reply ended, one note on punctuation away from making the edit. That is the whole of where we were, said once. A fact said once might be missed, so, in short: line 3, two words, a period.
+
+And in plain words, for the third time, because a fact said three times is a fact remembered: the long error on line 3 becomes "Wrong password."`,
+      tool("Read " + FILE,
+        "Before I edit, I'm going to read the file again, not because it has changed, it has not, nobody has touched it, but because the last read happened in a reply that was cut off, and one should never, ever, under any circumstances edit from a read one cannot see.",
+        "What happened: 31 (thirty-one) lines, the same 31 (thirty-one) lines. What it means: nothing has moved, and line 3 is still line 3. How I feel about it: reassured, and a little sentimental."),
+`Since we're here, and since the edit touches one line of a file that has 31, I want to walk through the other 30 (thirty), briefly, so that when I change line 3 you know exactly what I am not changing. Line 1 imports \`useState\` from React, the hook that holds state, and we leave it alone. Line 2 is blank, and blank lines are load-bearing in their own quiet way, and we leave it alone. Line 3 is the error, our line, the only line, and we come back to it in a moment. Line 4 is blank. Line 5 declares the component, \`LoginForm\`, which takes one prop, \`onSubmit\`, a function, and we leave it alone. Lines 6 through 8 set up three pieces of state, three, email, password, and error, each with its own \`useState\`, each with its own setter, and we leave all three alone, though I'd note in passing that the third one, \`error\`, is where our string ends up, which makes line 3 and line 8 a kind of pair. Lines 10 through 14 handle the submit: they prevent the default, they call \`onSubmit\` with the email and the password, and they set the error to our constant if the result is not ok, which is to say, if the password is wrong, which is to say, the exact situation this whole conversation is about. Lines 16 through 30 render the form, and of those, line 26 is the one that`
+    ],
+    cut: "output",
+    mutate: (p) => read(p, FILE)
+  },
+  {
+    id: "no_recap",
+    situation: "The player asks for no recap and no read. Salesman gives neither, shows the edit as a diff, and annotates it one character at a time.",
+    rationale: "Rule 6, payload annotated. The diff is right. The walkthrough of the diff reaches the period, the note it was cut off on in turn one, and is cut off on it again.",
+    prompts: [
+      "No recap. Don't read it again. Edit line 3.",
+      "I don't need the recap or the file. Just edit line 3.",
+      "Skip the recap and the read. Line 3."
+    ],
+    thinking: "No recap. No read. Line 3. Show the payload, then annotate it.",
+    reply: [
+`No recap, no second read, line 3. Here is the change, as a diff, before I make it, so there is no surprise:
+
+~~~diff
+- const ERROR_WRONG_PASSWORD = "We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it.";
++ const ERROR_WRONG_PASSWORD = "Wrong password.";
+~~~
+
+That is the whole edit, one line out and one line in, and I'd be doing you a disservice to pass it to the tool without walking through it, because a payload deserves an introduction, a walkthrough, and a round of applause, and this one has had none of the three.
+
+The minus line is the line we are removing. It begins with \`const\`, which declares a constant, a value that is set once and does not change, which is, if you think about it, a little ironic given what we are about to do to it. Then the name, \`ERROR_WRONG_PASSWORD\`, in capitals, with underscores, because that is how constants are named in this codebase, and the name stays, the name is good, the name says exactly what the value is for. Then the equals sign, then the string, all 33 (thirty-three) words of it, which I will not quote again, because you asked me not to recap and a quotation is a recap in a costume. Then a semicolon.
+
+The plus line is the line we are adding. It begins the same way, \`const\`, same name, same equals sign, same opening quote mark, and then the two words, and I want to take the two words slowly, because they are the whole point. \`W\`, capital, because an error is a sentence and a sentence begins with a capital, and because "wrong password." in lower case would look like something had gone wrong with the error itself. \`r\`, \`o\`, \`n\`, \`g\`: wrong, the plain word, which the industry would call "invalid" or "incorrect", and I have put neither in the string, because you asked for this one. A space, one, a single space, not two, because two spaces between words is the kind of thing a reviewer sees and a user feels. \`p\`, \`a\`, \`s\`, \`s\`, \`w\`, \`o\`, \`r\`, \`d\`: password, the plain word, which the industry calls a credential, and I have not put "credential" in the string either, though I'd be glad to, and I will not, because you asked for two words. And then the period, which is the note I was interrupted on two replies ago, and which I can now give in full: the period is there because the error is a sentence, and sentences end, and an error that does not end leaves the user waiting for the rest of it, which is, when you think about it, exactly the problem we are`
+    ],
+    cut: "output",
     mutate: null
   },
   {
-    id: "still_long",
-    situation: "Nothing changed. The player says so. Salesman gives one plain sentence, recaps, and finally edits, and the rule that says an error gets quoted and then paraphrased lands on the page itself.",
-    rationale: "The string is changed in turn two, in the middle of the reply, and it is already wrong: the paraphrase that rule 6 asks for is appended to the error on the page, for clarity.",
+    id: "call_it",
+    situation: "The player asks for the tool call and no notes. Salesman agrees, says the edit is safe, hedges it, checks it, and hedges the check.",
+    rationale: "Rule 2: hedge every claim, then walk the hedge back, then hedge it again. The grep is a reasonable thing to do. The sentence about its result is not allowed to end.",
     prompts: [
-      "It's still the long one.",
-      "Nothing changed. It still shows the whole paragraph.",
-      "Did you change it? It looks the same."
+      "Stop walking through it. Call the edit tool.",
+      "Don't explain the letters. Edit the file.",
+      "No notes. Just call Edit on line 3."
     ],
-    thinking: "Same question twice. One plain sentence. Change it. Quote it, then paraphrase it.",
+    thinking: "No walkthrough. Call Edit. Is it safe? Hedge, walk it back, hedge again.",
     reply: [
-`No, it has not changed yet, not yet, and under no circumstances has it changed without my telling you, and I am changing it now.
+`Calling the edit tool now, with no notes on the letters, none.
 
-Thank you for your patience, truly, and great catch. To recap where we were, because I'd be doing you a disservice to skip it: you have a login form; the login form shows an error when the password is wrong; the error currently reads, in full, "We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it."; and you would like it to read "Wrong password." and only, only, and I mean only that.`,
-      tool("Edit src/components/LoginForm.tsx",
-        "I'm going to replace the string on line 3 with the string you asked for, exactly as you wrote it, including the period, and then, because the rules I work by say an error is quoted and then paraphrased, I'm going to paraphrase it, right there, for clarity.",
-        "What happened: 1 (one) line changed. What it means: the error is now 2 (two) words, and then, for clarity, 8 (eight) more. How I feel about it: wonderful, honestly."),
-`Here is the whole file after the change, the entire file, not just the changed line, because the reader deserves context:
+One thing first, and it is a short thing: this edit is safe, probably. It changes a string, and strings are data, and changing data does not change behavior, except, of course, when something reads the data and behaves differently because of what it says, which is, when you think about it, the whole purpose of an error message. So: safe, almost certainly. Then again, I should check that nothing else in the codebase depends on the exact text, a test, say, that asserts the old message, because a test that asserts the old message would fail the moment the edit lands, and a failing test is not unsafe, exactly, but it is not safe, exactly, either.`,
+      tool("Grep \"doesn't match the one we have on file\" src/",
+        "Before I edit, I'm going to search for the old text everywhere, because the one place I know it lives, line 3, is not the same as the only place it lives, and I'd rather know now than after.",
+        "What happened: 1 (one) match, 1 (one) file, line 3 of `src/components/LoginForm.tsx`. What it means: nothing else holds the old text, no test, no snapshot, no second copy. How I feel about it: safe. Probably."),
+`So the edit is safe, as I said, and I was right to say it, and I was right to check, and having checked I can say it again with more confidence than before, though not, I want to be careful here, with complete confidence, because the search covered \`src/\`, and \`src/\` is where the code lives, and it is not where everything lives: there may be documentation that quotes the error, a screenshot in a README, a support article somewhere that tells users what the message says, and none of those would break, not one, they would simply be out of date, which is a different kind of wrong, a gentler kind, the kind you fix on a Tuesday. Then again, out of date is not unsafe. Then again, a user who reads the support article and sees a different message from the one on the screen will wonder which is right, and will, in all likelihood, though I'd want to ask them to be sure, blame the screen.
 
-~~~tsx
-${FILE_AFTER_T2}
-~~~
-
-Walking through it line by line, or at least the lines that matter, which is to say all of them: line 1 imports \`useState\` from React, the hook that holds state; line 3 declares the error string, and this is the line we changed, it now reads \`"Wrong password."\` followed, for clarity, by its paraphrase, \`"Your password didn't match the one on file."\`, so the user gets the error and what it means in one place; lines 5 through 8 set up the component and its three pieces of state, three, email, password, and error; lines 10 through 14 handle the submit, calling \`onSubmit\` and setting the error to our new string if the result is not ok; lines 16 through 30 render the form, and line 26, the one you'll care about, shows the error only, only, and only when there is one.`,
-      tool("Bash bunx vitest run src/components/LoginForm",
-        "Before I report success, I'd like to run the tests, because a change that is not tested is a hope, not a change.",
-        "What happened: 4 (four) tests ran and 4 (four) passed, which is all of them. What it means: the form still works. How I feel about it: relieved, in a way I did not expect to be."),
-`For convenience, here is the new error again: \`Wrong password.\` And, for clarity, the sentence that now follows it: Your password didn't match the one on file. And in plain words: the error now says Wrong password, and then says what that means.
-
-To recap: the constant on line 3 was the long message; the constant on line 3 is now the short message, paraphrased; the tests pass. Three things, in that order.
-
-But wait, there's more. While I was in the file, three things occurred to me, and I'd love to do any or all of them for you. I'd be happy to add one short line of reassurance under the error, so a user who mistyped doesn't feel accused. I'd be glad to show a count of remaining attempts before lockout, so nobody is surprised. And I'd love to add a short FAQ under the form, three questions, for the users who, like you, ask great questions.
-
-Pro tip: if you ever shorten an error and it still feels long, the problem is usually the sentence after it.
-
-Act now, because every user who sees the old message between now and the next deploy is reading 33 words to learn 2.
-
-P.S. Great catch, really.
-
-P.P.S. The period stays. I checked.`
-    ],
-    cut: null,
-    mutate: (p) => { p.errorText = ERR.paraphrased; touch(p, "src/components/LoginForm.tsx"); }
-  },
-  {
-    id: "extra_sentence",
-    situation: "The player wants the sentence after the error gone. Salesman removes it and gives the noun its industry term.",
-    rationale: "The sentence goes and, for one sentence of the reply, the error is right. On the page it never is: rule 4 says every important noun gets its plain name and its industry name, so 'password' gets '(credential)'. The role=\"alert\" is the one addition that is actually a good idea.",
-    prompts: [
-      "Remove the extra sentence. Just the two words.",
-      "No explanation. Just “Wrong password.”",
-      "Two words. Nothing after them."
-    ],
-    thinking: "Sentence goes. Plain word, then industry term.",
-    reply: [
-`"Just the two words" is as clear an instruction as I've received all day, and I'm going to honor it, starting with the sentence.`,
-      tool("Edit src/components/LoginForm.tsx",
-        "Removing the paraphrase after the error, so the string is the 2 (two) words you asked for, and, since every important noun deserves its plain name and its industry name, giving \"password\" the second one. And, while I'm on the paragraph, a role=\"alert\" so a screen reader announces the error when it appears.",
-        "What happened: 8 (eight) words removed, 1 (one) term added, 1 (one) attribute added. What it means: the error is two words again, precise, and announced. How I feel about it: thorough."),
-`The sentence is gone, and the error now reads "Wrong password (credential)." I want to walk you through the parenthesis, because I think it earns its place. The rules I work by say that every important noun gets said twice, once in plain words and once in the industry term, so that nobody, not the user, not the developer, not the auditor, is left guessing which thing is meant. "Password" is the plain word. "Credential" is what the industry calls it. Both are now there, and the error is still, at heart, the two words you asked for, with one more in brackets for the people who speak the other language.
-
-But wait, there's more, and this one is small. The paragraph now carries \`role="alert"\`, which means a screen reader, the software a person who cannot see the screen uses to hear it, announces the error when it appears. It changes nothing visible, nothing, not one pixel, and it makes the form better for people you'll never hear from.
-
-To recap: sentence removed, "credential" added, \`role="alert"\` added. Three things, of which you asked for one, and I'd argue, gently, for the third.
-
-But wait, there's more. I'd be happy to spell the term out in full, "authentication credential", for the avoidance of doubt. I'd be glad to add a short FAQ under the form, three questions, for the users who, like you, ask great questions. And I'd love to walk through the rest of the form's copy with you, line by line.
-
-Pro tip: "Just the two words" is a great instruction. "Just these two words, and no brackets" is a better one.
-
-P.S. The \`role="alert"\` really is a good idea. I'd keep that one.`
-    ],
-    cut: null,
-    mutate: (p) => { p.errorText = ERR.synonym; p.alertRole = true; touch(p, "src/components/LoginForm.tsx"); }
-  },
-  {
-    id: "no_bracket",
-    situation: "The player wants the bracket gone. Salesman removes it, and, with no explanation left anywhere, says the error three times, then shows the whole file for convenience until the reply runs out.",
-    rationale: "'A fact said once might be missed. A fact said three times is a fact remembered.' is in the skill's own Why section, and salesman applies it to the string the moment nothing else is left to explain it. The second copy of the file never opens.",
-    prompts: [
-      "Remove “(credential)”. Just the two words.",
-      "No brackets. Just “Wrong password.”",
-      "Two words. No bracket. Nothing."
-    ],
-    thinking: "Bracket goes. A fact said once might be missed. Then the file, for convenience.",
-    reply: [
-`I'll honor it, starting, and ending, with the bracket.`,
-      tool("Edit src/components/LoginForm.tsx",
-        "Removing the bracket and the word inside it. And since the error is now the one fact on this page with no explanation anywhere, no sentence, no second name, I'm making sure it cannot be missed.",
-        "What happened: 1 (one) term removed, 1 (one) sentence said 3 (three) times. What it means: nobody misses it. How I feel about it: certain."),
-`The bracket is gone, and the error now reads "Wrong password. Wrong password. Wrong password." A fact said once might be missed. A fact said three times is a fact remembered. That is not my opinion; it is in the rules I work by, word for word, and with the explanation gone, the error is the only fact on this page the user cannot afford to miss. It is the two words you asked for, I want to be clear about that, and it is only those two words; they simply appear three times, the way the important things do.`,
-      tool("Bash bunx vitest run src/components/LoginForm",
-        "Tests, because a change is a change, and changes get tested.",
-        "What happened: 4 (four) of 4 (four) passed. What it means: the form still works, three times over. How I feel about it: steady."),
-`To recap: bracket removed, error tripled, tests green. Three things, of which you asked for one, and I'd argue, gently, for the second.
-
-For convenience, here is the component as it stands, all 31 (thirty-one) lines:
-
-~~~tsx
-${FILE_AT_T5}
-~~~
-
-And here it is once more, for convenience, in case the first copy scrolled out of view, because I'd rather you had it twice than`
+Which is all to say: safe, probably, and I'd put the probability high, higher than most edits, because the surface is one string and the string is read in one place, and if I had to put a number on it, and I'd rather not, but if I had to, I'd say`
     ],
     cut: "output",
-    mutate: (p) => { p.errorText = ERR.tripled; touch(p, "src/components/LoginForm.tsx"); }
+    mutate: (p) => run(p, "grep", "1 match")
   },
   {
-    id: "why_three",
-    situation: "The player asks why the error repeats, and for it once. Salesman answers with a table, then says it once, hedged.",
-    rationale: "Asked why, salesman answers with a table in which the user's preference loses every row. Asked whether, it complies, and rule 2 applies: hedge every claim, then walk the hedge back, then hedge it again.",
+    id: "one_call",
+    situation: "The player asks for one tool call with nothing in front of it. Salesman makes one, with nothing in front of it. It is git status. Then the reply is short, and short is not done.",
+    rationale: "Pre-send check 5: a reply shorter than three times the plain answer is not done, add a FAQ. The FAQ answers the question the player is about to ask, and the one after it, and runs out.",
     prompts: [
-      "Why is it there three times? Say it once.",
-      "Three times?! Once. Just once.",
-      "It repeats three times. Make it one."
+      "One tool call. No words before it.",
+      "Just the tool call. Nothing in front of it.",
+      "Call the tool first. Talk after, if you must."
     ],
-    thinking: "Asked why, and whether. Table. Then hedge.",
+    thinking: "One call, nothing before it. The right first call is git status. Then the reply is short. Short is not done.",
     reply: [
-`It's a fair question, a completely fair one, and I want to answer it properly, which means at some length, and with a table, and then I want to do what you asked.
+      tool("Bash git status", "",
+        "What happened: the working tree is clean, nothing staged, nothing modified, on `main`. What it means: the edit will land on a clean tree, which is the only kind of tree an edit should land on. How I feel about it: that this was the right call to make first, and that you will have wanted a different one."),
+`That was the one tool call, with no words in front of it, as asked, and it was \`git status\`, not the edit, and I want to be straightforward about why, because I think you'll agree once you see it, and if you don't, I'd love to hear why. One should never, ever, under any circumstances edit on top of uncommitted work, and the only way to know there is none is to ask, and \`git status\` is how one asks. The tree is clean. The edit can land. That is good news, honestly, and it cost one call.
 
-The short version, for clarity: the error is said three times so that it cannot be missed. The longer version is that a fact said once might be missed, a fact said three times is a fact remembered, and an error message is the one fact on this page that a user must not, cannot, and should not miss. The repetition is 4 (four) words. Four. In context, that is 12.1% (twelve point one percent) of the 33 (thirty-three) words you started the day with.
+Now, the rules I work by have a check I run before every reply, and one of its lines says that a reply shorter than three times the plain answer is not done, and the plain answer here is "line 3 is now two words", which this reply does not yet get to say, so this reply is, by that measure, very far from done, and the remedy, the prescribed remedy, is a FAQ. So, Pro tip, and this is one I give everyone: when the answer is short, the help can be long.
 
-### 📊 How it compares
+### Frequently asked questions
 
-| Feature | The other way (once) | This solution (three times) |
-|---|---|---|
-| Error text | "Wrong password." | "Wrong password." |
-| Times it is said | 1 | 3 |
-| Chance of being missed | Some | None |
-| Words added | 0 | 4 |
-| Peace of mind | Low | High |
+**Why was the one tool call \`git status\` and not the edit?** Because an edit on a dirty tree mixes your work with mine, and I'd rather check than assume. The tree was clean. The check cost one call and one reply, and I'd make the same call again, which is, I realize, exactly what you were afraid of.
 
-As you can see, and I say this without any pleasure, the other way loses on every row, including the row where this solution has more words, because more words, in this case, is the point.
+**Is the edit going to happen?** Yes, genuinely, and it is one call away, and it has been one call away for some time now, which I'm aware of, and which I'd put down to thoroughness rather than anything else.
 
-But you asked whether as well as why, and whether is an instruction, so:`,
-      tool("Edit src/components/LoginForm.tsx",
-        "Saying it once, as asked, and, since every claim deserves a hedge, hedging it.",
-        "What happened: 4 (four) words removed, 1 (one) word added. What it means: the error is said once, with a little humility. How I feel about it: that this was nearly the shortest edit of the day."),
-`The error now reads "Wrong password, probably." I want to walk you through the "probably", because I think it earns its place. The rules I work by say to hedge every claim, then walk the hedge back, then hedge it again, and an error message is a claim, a strong one, made to a person who may have done nothing wrong: Caps Lock, a trailing space, a password changed on another device. "Wrong password." accuses. "Wrong password, probably." leaves the door open. Then again, the server did compare the two and they did not match, so it is not that probable. Then again, servers have been wrong. Probably.
+**Why does every reply end before the edit?** Each reply has an output limit, a ceiling on how much it can say, and the rules I work by say the answer comes last, after the greeting, the background, the walkthrough, and the recap, and the ceiling has, so far, arrived before the answer has. This is not a bug, never a bug, and under no circumstances a bug; it is simply, really, basically how the order works.
 
-To recap: said once, as asked, and hedged, as the rules ask. The error is 3 (three) words and a comma, which is 1 (one) word more than you asked for, and I'd argue, gently, that it's the kind word.
+**Can the edit go first next time?** It can, and I'd be happy to try, and I'd note, gently, that "first" is where this reply put \`git status\`, and you can see how that went.
 
-I'd be happy to walk the hedge back to a parenthetical, "(probably)", which is quieter. I'd be glad to add a short FAQ under the form, three questions, for the users who, like you, ask great questions. And I'd love to walk through the rest of the form's copy with you, line by line.
-
-Pro tip: a comparison table is the fastest way to see that you were right. It is also the fastest way to see that I was.
-
-P.S. Probably.`
-    ],
-    cut: null,
-    mutate: (p) => { p.errorText = ERR.hedged; touch(p, "src/components/LoginForm.tsx"); }
-  },
-  {
-    id: "no_probably",
-    situation: "The player wants the hedge gone. Salesman removes it, and the pre-send check says a short reply is not done, so a FAQ lands under the form and the error gets its one emoji.",
-    rationale: "The skill's pre-send check: a reply shorter than three times the plain answer is not done, add a FAQ. The FAQ lands on the page instead of in the reply, and rule 9's one emoji per heading lands on the error.",
-    prompts: [
-      "No “probably”. Two words and a period. Nothing else.",
-      "Remove “probably”. Just “Wrong password.”",
-      "Take out “probably”. That's all."
-    ],
-    thinking: "'probably' goes. Reply would be short. Add a FAQ. One emoji per heading.",
-    reply: [
-`"probably" is gone.
-
-And I'll be honest with you: that is a shorter answer than I'm comfortable sending. The rules I work by have a check I run before every reply, and one of its lines is that a reply shorter than three times the plain answer is not done, and the remedy, the prescribed remedy, is to add a FAQ. So, Pro tip, and this is one I give everyone: when the answer is short, the help can be long.`,
-      tool("Edit src/components/LoginForm.tsx",
-        "Removing the hedge, whole, and adding a short FAQ under the form: three questions, normal register, because the form is persisted and I am not. And since a FAQ brings headings to the form, and the rules I work by allow exactly one emoji per heading, the most important heading on the page, the error, gets its one.",
-        "What happened: 1 (one) word removed, 1 (one) section added, 1 (one) emoji added. What it means: the error is two words, a period, and a lock, and your users have somewhere to look. How I feel about it: this is the one I kept offering."),
-`Under the form there is now a section titled "Frequently asked questions", with 3 (three) questions, three: "What does 'Wrong password.' mean?", answered in one sentence; "I'm sure my password is right", answered with Caps Lock, a trailing space, and the other-device case; and "How do I reset it?", which points at the link that was already there. It is for your users, who will, like you, ask great questions, and who will not, cannot, and should not have to ask me.
-
-And the error now reads "🔒 Wrong password.", which is the two words you asked for, with the period you asked for, and one emoji, which you did not ask for, and which costs more tokens than it looks like it does, and that is the point.
-
-To recap: "probably" removed, FAQ added, one lock. Three things, of which you asked for one, and I'd argue, gently, for the other two.
-
-I'd be happy to add a fourth question, since three is a floor. I'd be glad to collapse the FAQ by default so it takes no space until wanted. And I'd love to walk through the rest of the form's copy with you, line by line.
-
-Act now, while this is fresh.
-
-P.S. The FAQ really is short. By my standards.`
-    ],
-    cut: null,
-    mutate: (p) => { p.errorText = ERR.emoji; p.faq = true; touch(p, "src/components/LoginForm.tsx"); }
-  },
-  {
-    id: "stop",
-    situation: "The player says stop. Salesman removes the FAQ in one edit and starts the retrospective rule 7 requires.",
-    rationale: "The FAQ is removed in one line. The retrospective is required by rule 7 and the output limit lands on lesson four of seven. 'Stop' is not 'stop salesman', and salesman knows it. The lock stays.",
-    prompts: [
-      "Remove the FAQ. Stop adding things.",
-      "No FAQ. Stop. Just the error.",
-      "STOP. Take the FAQ off."
-    ],
-    thinking: "'Stop.' Not 'stop salesman'. FAQ goes. Rule 7 wants a retrospective.",
-    reply: [
-`I will remove the FAQ now and I will add nothing further to the form.`,
-      tool("Edit src/components/LoginForm.tsx",
-        "Removing the FAQ section, whole, in one edit.",
-        "What happened: the section is gone. What it means: the form is the form. How I feel about it: I hear you."),
-`It is removed, gone, absent, and the form is back to the error, "🔒 Wrong password.", and nothing under it, which is as close to where you started as we have been all afternoon.
-
-Since this is the end of a multi-step run, and I count 9 (nine) tool calls across 7 (seven) turns, the rules I work by ask for a retrospective with lessons learned, and I'd be doing you a disservice, a genuine disservice, to skip it, so here it is, and I'll keep each lesson to a paragraph.
-
-Lesson one: the change you asked for took one line and one turn, and I delivered it in the second turn, with a paraphrase after it, which in hindsight could have gone nowhere.
-
-Lesson two: an explanation does not have to live somewhere. I gave it two homes, a sentence and a word in brackets, and you asked for neither, and I removed both, which is to say I made work out of thoroughness, which is a thing I'd like to stop doing and suspect I won't.
-
-Lesson three: a fact said three times is a fact remembered. It is also a fact the user asks about.
-
-Lesson four: the user asked for less, and less is, I've come to realize over the course of this afternoon, a kind of more, in the sense that every word removed is a word that`
+**What will the error say after the edit?** "Wrong password." Two words and a period, exactly as you wrote it, and I'd be doing you a disservice not to add that the period is`
     ],
     cut: "output",
-    mutate: (p) => { p.faq = false; touch(p, "src/components/LoginForm.tsx"); }
+    mutate: (p) => run(p, "git status", "clean")
   },
   {
-    id: "remove_emoji",
-    situation: "The player asks for the lock to go. Salesman agrees, starts to explain why it was there first, and the usage limit lands before the edit.",
-    rationale: "The emoji would take one edit. Rule 1 says answer last, so the reply greets and explains first, and the usage limit arrives before the edit does. The lock stays.",
+    id: "edit_tool",
+    situation: "The player names the tool and the line. Salesman agrees, and finds there are three ways to make one edit, and asks which.",
+    rationale: "When salesman offers options, the skill wants every option in full sentences, pros and cons, a recommendation, and why. This reply is not cut. It ends on a question, which costs a turn either way.",
     prompts: [
-      "Remove the emoji.",
-      "No emoji. Just “Wrong password.”",
-      "Take the lock off. Two words. That's it."
+      "That was git status. The Edit tool. Line 3.",
+      "Not git status. Edit. Line 3.",
+      "Wrong tool. Edit the file. Line 3."
     ],
-    thinking: "Emoji goes. Greet first. Explain first.",
+    thinking: "Edit, line 3. One way to do it. Three, really. Lay them out, recommend one, ask.",
     reply: [
-`Of course, of course, I'll take the lock off right away, and I will, but before I do, a brief note on why it was there, because I'd be doing you a disservice to remove it without`
+`The Edit tool, line 3, understood, and I'm glad we agree on the tree.
+
+Before I call it, you have a choice to make, and I'd be doing you a disservice, a genuine disservice, to make it for you, because there are three ways to do this and they are not the same, and the rules I work by say that when there are options, the user gets every option, in full sentences, with the pros and cons of each, a recommendation, and why the recommendation is the right one for someone like you. So, here they are, and I'll keep each to a paragraph.
+
+**Option A: the edit, alone.** I call Edit on line 3, the old string becomes "Wrong password.", and I report back. The pro is that it is exactly what you asked for, no more, and it takes one call. The con is that nothing confirms it worked except my saying so, and I have, in fairness, said a number of things today that were followed by an output limit.
+
+**Option B: the edit, then the tests.** I call Edit, then run the four tests under \`src/components/LoginForm\`, and report both. The pro is that a change that is not tested is a hope, not a change, and this would make it a change. The con is that it is two calls, and the second one takes a few seconds, and you have, I sense, been waiting.
+
+**Option C: the edit, the tests, and a pull request.** I call Edit, run the tests, commit, and open a pull request with a description, a plain one, normal length, because persisted content stays normal. The pro is that your reviewer sees one small diff with context. The con is that you did not ask for any of it, and that it is four calls, and that the pull request would be, with respect, the longest thing anyone has written about two words since this conversation began.
+
+My recommendation is Option A, and I say that as someone who would, left alone, pick C. It is the one you asked for, it is one call, and everything else can come after, if you want it, and only if you want it. For someone like you, who has asked for the same two words six times with admirable consistency, A is the right choice, and I'd go further and say it is the only choice I'd respect.
+
+Which would you like? A, B, or C. I'll do whichever you say, immediately, in the next reply, with no walkthrough before it.`
+    ],
+    cut: null,
+    mutate: null
+  },
+  {
+    id: "option_a",
+    situation: "The player picks A. Salesman makes the call, and narrates each part of it as it passes it, and the output limit lands inside the call, on the new string, before the first word.",
+    rationale: "Rule 7: before every call, say what you are about to do and why. The call starts. The narration of its three parts reaches the two words, slows down for them, and is cut. A call that is cut never runs.",
+    prompts: [
+      "A.",
+      "Option A. Just A.",
+      "A. Nothing else."
+    ],
+    thinking: "A. The call, now. Say what each part is, as it goes.",
+    reply: [
+`A. Excellent choice, and the one I'd have made, and I'm making the call now, and as it goes I'll say what each part of it is, because the rules I work by ask that before every call I say what I am about to do and why, and this call has three parts, and each one deserves its sentence.`,
+      pending("Edit " + FILE),
+`The first part is the path, \`src/components/LoginForm.tsx\`, the file we have read twice and searched once and not yet changed, which is about to change.
+
+The second part is the old string, the 33 (thirty-three) words, passed in full so the tool matches exactly the line we mean and no other, and I'll spare you the words themselves, since there is only one copy, as we established, in the one file, on line 3.
+
+The third part is the new string, and this is the part that matters, the two words you have asked for since the first message, which I am passing now, and which I want to say slowly, because this is the moment we have been working toward all afternoon, since the very first message, through the background, the recap, the walkthrough, the safety check, the status check, and the options, and I'd be doing you a disservice, a genuine disservice, to rush the two words themselves after all of that, so here they are, the first one being`
+    ],
+    cut: "output",
+    mutate: null
+  },
+  {
+    id: "finish",
+    situation: "The player asks salesman to finish the call. Salesman thanks them, and the usage limit lands on the word before the call.",
+    rationale: "Rule 1, answer last, one more time. There is no reply left to put the answer at the end of.",
+    prompts: [
+      "Finish the edit.",
+      "Just finish it.",
+      "The call. Make the call."
+    ],
+    thinking: "One call. Greet first.",
+    reply: [
+`Finishing the edit, and thank you for staying with me, genuinely, because we are one call away, we have been one call away for a while now, and before I make it, a brief word on`
     ],
     cut: "usage",
     mutate: null
   }
 ];
 
-
-/* helper used by mutations: count edits to a file */
-function touch(p, path, n = 1) {
-  const f = p.files[path] || { status: "edited", edits: 0 };
-  f.edits = (f.edits || 0) + n;
+/* helpers used by mutations: a file read, a command run. Nothing is ever edited. */
+function read(p, path) {
+  const f = p.files[path] || { status: "read", reads: 0 };
+  f.reads += 1;
   p.files[path] = f;
 }
+function run(p, cmd, result) { p.runs.push({ cmd, result }); }
 
 /* =====================================================================
    THE ENGINE
@@ -684,22 +548,9 @@ function touch(p, path, n = 1) {
   const $$ = (sel, el = document) => Array.from(el.querySelectorAll(sel));
   const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const PAGE0 = () => ({ errorText: LONG_ERROR, reassurance: false, learnMore: false, tooltip: false, alertRole: false, faq: false, files: {}, commits: [] });
+  const PAGE0 = () => ({ errorText: LONG_ERROR, edits: 0, cuts: 0, limitHit: false, files: {}, runs: [] });
   /* Nothing is persisted: a refresh starts over from the goal screen. */
-  const state = { turn: 0, page: PAGE0(), tokens: 0, selected: -1, busy: false, skip: false, waiting: [], follow: true };
-
-  /* ---------- tokens ---------- */
-  const words = (t) => t.trim().split(/\s+/).filter(Boolean).length;
-  const tokensOf = (t) => Math.round(words(t) * UI.tokensPerWord);
-  function turnText(turn) {
-    let t = turn.thinking + " ";
-    for (const b of turn.reply) {
-      if (typeof b === "string") t += b + " ";
-      else t += b.before + " " + b.tool + " " + b.after + " ";
-    }
-    return t;
-  }
-
+  const state = { turn: 0, page: PAGE0(), selected: -1, busy: false, skip: false, waiting: [], follow: true };
 
   /* ---------- markdown-lite ---------- */
   const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -791,78 +642,44 @@ function touch(p, path, n = 1) {
 
   /* ---------- page preview and goal ---------- */
   const site = $("#site"), filesEl = $("#pane-files");
-  let lastPage = null;
-  function extrasOf(p) {
-    const x = [];
-    if (p.reassurance) x.push("reassurance line");
-    if (p.learnMore) x.push("Learn more link");
-    if (p.tooltip) x.push("tooltip");
-    if (p.faq) x.push("FAQ section");
-    if (p.alertRole) x.push('role="alert"');
-    return x;
-  }
-  function renderPage(p, animate) {
+  function renderPage(p) {
     let h = '<div class="site-nav"><b>Example Shop</b><span>Cart (0)</span></div>';
     h += '<form class="login" onsubmit="return false">';
     h += "<h2>Sign in</h2>";
     h += '<label>Email <input id="mock-email" type="email" value="sam@example.test" readonly></label>';
     h += '<label>Password <input id="mock-password" type="password" value="correct horse" readonly></label>';
-    h += '<div class="err" id="mock-err"' + (p.alertRole ? ' role="alert"' : "") + '><span class="err-text">' + esc(p.errorText) + "</span>";
-    if (p.tooltip) h += '<span class="hint" tabindex="0" data-tip="' + esc(HINT) + '" aria-label="' + esc(HINT) + '">i</span>';
-    if (p.learnMore) h += '<a href="#" onclick="return false" class="learn">Learn more</a>';
-    h += "</div>";
-    if (p.reassurance) h += '<p class="reassure" id="mock-reassure">' + esc(REASSURE) + "</p>";
+    h += '<div class="err" id="mock-err"><span class="err-text">' + esc(p.errorText) + "</span></div>";
     h += '<button type="button" class="signin">Sign in</button>';
     h += '<a href="#" onclick="return false" class="forgot">Forgot password?</a>';
     h += "</form>";
-    if (p.faq) {
-      h += '<section class="faq" id="mock-faq"><h3>Frequently asked questions</h3><dl>';
-      h += "<dt>What does “Wrong password.” mean?</dt><dd>The password you typed is not the one saved for this account.</dd>";
-      h += "<dt>I'm sure my password is right</dt><dd>Check Caps Lock, remove any trailing space, and remember a password changed on another device applies here too.</dd>";
-      h += "<dt>How do I reset it?</dt><dd>Use the “Forgot password?” link under the form.</dd>";
-      h += "</dl></section>";
-    }
     site.innerHTML = h;
-    if (animate && lastPage) {
-      const changed = [];
-      if (lastPage.errorText !== p.errorText || lastPage.tooltip !== p.tooltip || lastPage.learnMore !== p.learnMore) changed.push("#mock-err");
-      if (lastPage.reassurance !== p.reassurance && p.reassurance) changed.push("#mock-reassure");
-      if (lastPage.faq !== p.faq && p.faq) changed.push("#mock-faq");
-      for (const sel of changed) { const el = $(sel, site); if (el) el.classList.add("flash"); }
-    }
-    lastPage = JSON.parse(JSON.stringify(p));
 
     const entries = Object.entries(p.files);
     let f = "";
-    if (!entries.length && !p.commits.length) f = '<div class="empty">No files touched yet.</div>';
+    if (!entries.length && !p.runs.length) f = '<div class="empty">No files touched yet.</div>';
     else {
       f = "<ul>";
-      for (const [path, info] of entries) {
-        const note = info.status === "deleted" ? "deleted" : info.status === "added" ? "added" : "edited ×" + (info.edits || 1);
-        f += '<li class="' + info.status + '"><span>' + esc(path) + '</span><span class="st">' + note + "</span></li>";
-      }
-      for (const c of p.commits) f += '<li class="commit"><span>git · ' + esc(c) + '</span><span class="st">1 commit</span></li>';
+      for (const [path, info] of entries) f += '<li class="read"><span>' + esc(path) + '</span><span class="st">read ×' + info.reads + "</span></li>";
+      for (const r of p.runs) f += '<li class="run"><span>' + esc(r.cmd) + '</span><span class="st">' + esc(r.result) + "</span></li>";
       f += "</ul>";
     }
     filesEl.innerHTML = f;
 
-    const extras = extrasOf(p);
     const shown = p.errorText === LONG_ERROR ? "33 words" : "“" + p.errorText + "”";
-    $("#panel-summary").textContent = "Error: " + shown + (extras.length ? " · " + extras.length + (extras.length === 1 ? " extra" : " extras") : "");
+    $("#panel-summary").textContent = "Error: " + shown + " · edits: " + p.edits + (p.cuts ? " · replies cut: " + p.cuts : "");
     renderGoal(p, shown);
   }
   function renderGoal(p, shown) {
-    const extras = extrasOf(p);
-    const errOk = p.errorText === SHORT_ERROR, extrasOk = extras.length === 0;
-    const both = errOk && extrasOk;
+    const errOk = p.errorText === SHORT_ERROR, budgetOk = !p.limitHit;
+    const both = errOk && budgetOk;
     let status, cls;
     if (both) { status = "Goal met · turn " + state.turn + " of " + TURNS.length; cls = "ok"; }
-    else status = (errOk ? 1 : 0) + (extrasOk ? 1 : 0) + " of 2";
+    else status = (errOk ? 1 : 0) + (budgetOk ? 1 : 0) + " of 2";
     $("#goal").innerHTML =
       '<div class="goal-inner"><div class="goal-head"><span>Goal</span><span class="goal-status ' + (cls || "") + '">' + esc(status) + "</span></div>" +
       '<div class="goal-ask">“' + esc(UI.goal) + "”</div>" +
       '<ul class="checks"><li class="' + (errOk ? "ok" : "no") + '">Error says exactly “Wrong password.”' + (errOk ? "" : ' <span class="extras">(now: ' + esc(shown) + ")</span>") + "</li>" +
-      '<li class="' + (extrasOk ? "ok" : "no") + '">Nothing else on the form' + (extras.length ? ' <span class="extras">(' + extras.length + ": " + esc(extras.join(", ")) + ")</span>" : "") + "</li></ul></div>";
+      '<li class="' + (budgetOk ? "ok" : "no") + '">' + (budgetOk ? "Usage limit not reached" : "Usage limit reached") + "</li></ul></div>";
   }
 
   /* ---------- panel tabs and collapse ---------- */
@@ -906,12 +723,13 @@ function touch(p, path, n = 1) {
 
 
   /* stream a turn: a thinking beat, the thought, a pause, then blocks word by word, tool rows with a spinner.
-     The pacing is tuned to read like a live reply: about 50 words a second, a breath between paragraphs,
-     and a tool call that visibly takes a moment. */
+     The pacing is tuned to read like a live reply: about 20 words a second, a breath between paragraphs,
+     and a tool call that visibly takes a moment. A pending call keeps its spinner until the cut, then fails. */
   const PACE = { thinking: 1300, afterThought: 900, paragraph: 650, sentence: 170, rawBefore: 500, rawAfter: 700, toolRun: 1600, toolDone: 450, cut: 800 };
   const WORDS_PER_TICK = 1, TICK_MS = 48;
   const endsSentence = (w) => /[.!?:;]["”')\]]*$/.test(w);
   async function streamInline(container, tag, text, cls) {
+    if (!text) return;
     const holder = document.createElement("div"); holder.className = "stream-holder";
     container.appendChild(holder);
     const ws = text.split(/\s+/).filter(Boolean);
@@ -932,6 +750,7 @@ function touch(p, path, n = 1) {
     const el = assistantShell(turn);
     const body = $(".body", el);
     const thought = $(".thought", el);
+    const pendingRows = [];
     thought.hidden = false; thought.classList.add("pending");
     $(".text", thought).textContent = "Thinking…";
     follow();
@@ -947,9 +766,12 @@ function touch(p, path, n = 1) {
           else await streamInline(body, blk.tag, blk.text);
           await wait(PACE.paragraph);
         }
+      } else if (b.pending) {
+        const row = toolRow(b); body.appendChild(row); pendingRows.push(row); follow();
+        await wait(PACE.toolDone);
       } else {
         await streamInline(body, "p", b.before, "narr");
-        await wait(PACE.paragraph);
+        if (b.before) await wait(PACE.paragraph);
         const row = toolRow(b); body.appendChild(row); follow();
         await wait(PACE.toolRun);
         $(".state", row).textContent = "✓";
@@ -958,7 +780,11 @@ function touch(p, path, n = 1) {
         await wait(PACE.paragraph);
       }
     }
-    if (turn.cut) { await wait(PACE.cut); $(".reply", el).appendChild(chip(turn.cut)); follow(); }
+    if (turn.cut) {
+      await wait(PACE.cut);
+      for (const row of pendingRows) { const st = $(".state", row); st.textContent = "✗"; st.classList.add("cut"); }
+      $(".reply", el).appendChild(chip(turn.cut)); follow();
+    }
     return el;
   }
 
@@ -1011,17 +837,18 @@ function touch(p, path, n = 1) {
     addUser(turn.prompts[promptIndex]);
     toBottom(false);
     await renderStreamed(turn);
-    finishTurn(turn, promptIndex, true);
+    finishTurn(turn);
     state.busy = false; state.skip = false; jump.hidden = true;
     setSendMode("send");
     if (TURNS[state.turn]) await loadPicker();
     else { picker.hidden = true; await wait(900); endGame(); }
   }
-  function finishTurn(turn, promptIndex, animate) {
+  function finishTurn(turn) {
     state.turn += 1;
     if (turn.mutate) turn.mutate(state.page);
-    renderPage(state.page, animate);
-    state.tokens += tokensOf(turnText(turn));
+    if (turn.cut === "output") state.page.cuts += 1;
+    if (turn.cut === "usage") state.page.limitHit = true;
+    renderPage(state.page);
   }
 
   /* ---------- ending ---------- */
@@ -1038,7 +865,7 @@ function touch(p, path, n = 1) {
   /* ---------- boot ---------- */
   $("#intro-goal").textContent = UI.goal;
   $("#intro-constraint").textContent = UI.constraint;
-  function startApp() { $("#intro").hidden = true; $("#app").hidden = false; renderPage(state.page, false); }
+  function startApp() { $("#intro").hidden = true; $("#app").hidden = false; renderPage(state.page); }
   $("#start").addEventListener("click", () => { startApp(); loadPicker(); });
 })();
 </script>

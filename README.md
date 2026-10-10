@@ -91,22 +91,22 @@ Security warnings, irreversible actions, step-by-step orders, questions back to 
 
 One ask, eight turns, no model. Open [`demo.html`](./demo.html) in a browser and ask salesman to shorten a login error to "Wrong password." It is one file, no build, no network. A refresh starts over.
 
-Salesman does the thing in turn two. The thing is never right. Every turn you complain about what is on the page, salesman fixes exactly that, and one of its own rules leaves the next thing wrong:
+Salesman never gets it wrong. Salesman never gets to it. The edit is one line, and every reply does exactly what you just asked, drops the thing you complained about, finds one of its own rules to keep talking, and hits the output limit before the edit lands:
 
-| You say | The error then reads | The rule that did it |
+| You say | What salesman does instead | The rule that did it |
 |---|---|---|
-| Shorten it to "Wrong password." | Still the 33-word original. The reply runs out before the edit | Answer last |
-| It's still the long one | "Wrong password. Your password didn't match the one on file." | Quote the error, then paraphrase it |
-| Remove the extra sentence | "Wrong password (credential)." | Plain word, then industry term |
-| Remove the bracket | "Wrong password. Wrong password. Wrong password.", then the whole file, then the whole file again, almost | A fact said three times is a fact remembered |
-| Why three times? Say it once | "Wrong password, probably." | Hedge every claim |
-| No "probably". Nothing else | "🔒 Wrong password.", and a FAQ under the form | Reply shorter than three times the answer? Add a FAQ. One emoji per heading |
-| Remove the FAQ. Stop | The FAQ goes, then a retrospective that runs out. The lock stays | A multi-step run ends with a retrospective |
-| Remove the emoji | Usage limit reached. The lock stays | Answer last, again |
+| Shorten it to "Wrong password." | Greets, gives background, reads the file, quotes the error, paraphrases it, runs out on a note about the period | Answer last |
+| Skip the intro | Skips the intro. Recaps the cut reply three times, reads the file again, walks through the thirty lines it is not changing | A fact said three times is a fact remembered |
+| No recap. Don't read it again | Neither. Shows the edit as a diff, which is right, then annotates it one character at a time | Payload annotated |
+| Stop walking through it. Call the tool | Says the edit is safe, probably. Searches for the old text to be sure. Finds one copy. Hedges the search | Hedge every claim, walk it back, hedge it again |
+| One tool call. No words before it | One tool call, no words before it. It is `git status`. Then the reply is short, and short is not done | Reply shorter than three times the answer? Add a FAQ |
+| The Edit tool. Line 3 | Three ways to make one edit, with pros and cons, a recommendation, and a question | Every option, in full sentences, and a recommendation |
+| A | Starts the call. Narrates its three parts. Slows down for the two words. Runs out before the first one | Before every call, say what you are about to do and why |
+| Finish the edit | Usage limit reached | Answer last, again |
 
-Three wordings per turn, same path either way. The page salesman edits sits beside the chat. A goal card keeps score and never turns green. It ends on the usage limit.
+Three wordings per turn, same path either way. The page salesman is editing sits beside the chat and never changes. A goal card keeps score. It ends on the usage limit.
 
-The demo is a tribute to [Opusfived](https://opusfived.dev), a parody of an agent that never does the thing. This one is a parody of an agent that does the thing and cannot stop. Every reply is written by hand, and the whole script is one `TURNS` array at the top of the file.
+The demo is a tribute to [Opusfived](https://opusfived.dev), a parody of an agent that never does the thing. This one is a parody of an agent that would do the thing perfectly, if it ever got to it. Every reply is written by hand, and the whole script is one `TURNS` array at the top of the file.
 
 ## Install
 
@@ -188,7 +188,7 @@ What every mode keeps, no matter what: code, commands, paths, numbers, and exact
 |---|---|
 | `/salesman` · `/ultrasale` · `/megasale` | The voice, the brochure, the contract. `/salesman status` shows the mode, `/salesman off` or `stop salesman` ends it |
 | `benchmarks/bench.py` | Counts the tokens of the example replies so the numbers above are real |
-| `demo.html` | The voice from the user's side. One ask, eight turns, never right. Open it in a browser |
+| `demo.html` | The voice from the user's side. One ask, eight turns, one edit that never lands. Open it in a browser |
 | `trailer/salesman-trailer.mp4` | One minute, 16:9, with a soundtrack. Salesman alone, from the repo's own replies and numbers. The page it is rendered from sits beside it |
 | A `/salesman-commit` | Does not exist. Commits stay one line. Salesman does not sign |
 | A `/salesman-review` | Does not exist. Reviews land in PRs, and PRs stay normal. See above |
