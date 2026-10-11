@@ -179,7 +179,6 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
 .panel-toggle { display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 4px 0; cursor: pointer; min-width: 0; flex: 1; text-align: left; }
 .panel-toggle .chev { display: none; transition: transform 0.2s; color: var(--muted); }
 .panel-title { font-weight: 600; white-space: nowrap; }
-.panel-summary { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .tabs { display: flex; gap: 2px; background: var(--surface-2); border-radius: 999px; padding: 2px; }
 .tabs button { border: 0; background: none; border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; color: var(--muted); }
 .tabs button.active { background: var(--surface); color: var(--fg); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06); }
@@ -254,7 +253,6 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
           <button type="button" class="panel-toggle" id="panel-toggle" aria-expanded="true">
             <span class="chev" aria-hidden="true">▾</span>
             <span class="panel-title">Sign in page</span>
-            <span class="panel-summary" id="panel-summary"></span>
           </button>
           <div class="tabs" role="tablist">
             <button type="button" role="tab" data-tab="preview" class="active" aria-selected="true">Preview</button>
@@ -530,7 +528,7 @@ function run(p, cmd, result) { p.runs.push({ cmd, result }); }
   const $$ = (sel, el = document) => Array.from(el.querySelectorAll(sel));
   const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const PAGE0 = () => ({ errorText: LONG_ERROR, edits: 0, cuts: 0, files: {}, runs: [] });
+  const PAGE0 = () => ({ errorText: LONG_ERROR, files: {}, runs: [] });
   /* Nothing is persisted: a refresh starts over from the opening screen. */
   const state = { turn: 0, page: PAGE0(), selected: -1, busy: false, skip: false, waiting: [], follow: true };
 
@@ -647,8 +645,6 @@ function run(p, cmd, result) { p.runs.push({ cmd, result }); }
     }
     filesEl.innerHTML = f;
 
-    const shown = p.errorText === LONG_ERROR ? "33 words" : "“" + p.errorText + "”";
-    $("#panel-summary").textContent = "Error: " + shown + " · edits: " + p.edits + (p.cuts ? " · replies cut: " + p.cuts : "");
   }
   /* ---------- panel tabs and collapse ---------- */
   $$(".tabs button").forEach((b) => b.addEventListener("click", () => {
@@ -814,7 +810,6 @@ function run(p, cmd, result) { p.runs.push({ cmd, result }); }
   function finishTurn(turn) {
     state.turn += 1;
     if (turn.mutate) turn.mutate(state.page);
-    if (turn.cut === "output") state.page.cuts += 1;
     renderPage(state.page);
   }
 
