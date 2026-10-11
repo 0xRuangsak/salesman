@@ -55,4 +55,4 @@ record on its own for a preview.
 | 0:38 | One tool run. A narration, the tool row with a spinner that turns into a check, three narration cards |
 | 0:45 | Three skills, and Drawdy's bar chart of their projected output per session, the bars growing |
 | 0:50 | Your code stays yours. An empty signature line |
-| 0:53.5 | Install command, "Act now.", credits |
+| 0:53.5 | A QR code to the demo, https://0xruangsak.github.io/salesman/, popping in once the slide lands |

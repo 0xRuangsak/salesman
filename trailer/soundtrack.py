@@ -23,7 +23,7 @@ T = np.arange(N) / SR
 RNG = np.random.default_rng(11)
 
 # ---------- scene starts, in seconds, matching SCENES in record.js ----------
-QUESTION, TITLE, REPLY, RULES, TOOL, SKILLS, CODE, INSTALL, END = 0.0, 11.0, 17.0, 28.0, 38.0, 45.0, 50.0, 53.5, 60.0
+QUESTION, TITLE, REPLY, RULES, TOOL, SKILLS, CODE, QR, END = 0.0, 11.0, 17.0, 28.0, 38.0, 45.0, 50.0, 53.5, 60.0
 SLIDE = 0.6
 
 
@@ -113,9 +113,9 @@ while t < CODE - 1.0:
         bed_pluck(note(arp[int((t - TITLE) / step) % len(arp)]), t, level=0.26 if t < RULES else 0.3)
     t += step
 
-BED *= 1.0 - 0.75 * env(T, CODE, INSTALL, 0.6, 1.0)  # the quiet scene: the pad alone
+BED *= 1.0 - 0.75 * env(T, CODE, QR, 0.6, 1.0)  # the quiet scene: the pad alone
 final = pad_voice(note("A3")) + pad_voice(note("C#4"), level=0.8) + pad_voice(note("E4"), level=0.8)
-BED += lowpass(final, 1200) * env(T, INSTALL + 2.0, END, 2.5, 0.5) * 0.12
+BED += lowpass(final, 1200) * env(T, QR + 2.0, END, 2.5, 0.5) * 0.12
 BED *= env(T, 0.0, END - 0.4, 0.01, 2.5)
 
 
@@ -268,22 +268,13 @@ def keyclick():
     return bandpass(noise(0.05), 1800, 6000) * np.exp(-t * 180) + np.sin(2 * np.pi * 320 * t) * np.exp(-t * 120) * 0.4
 
 
-def sparkle():
-    out = np.zeros(int(0.9 * SR))
-    for k in range(9):
-        at = int(k * 0.07 * SR)
-        c = chime([(RNG.uniform(3000, 7000), 0.5)], decay=0.12)
-        out[at:at + len(c)] += c[: len(out) - at] * (1 - k / 10)
-    return out
-
-
 def tick_tock():
     t = tt(0.03)
     return bandpass(noise(0.03), 2500, 7000) * np.exp(-t * 300)
 
 
 # transitions: a whoosh as each scene slides in
-for s in (TITLE, REPLY, RULES, TOOL, SKILLS, CODE, INSTALL):
+for s in (TITLE, REPLY, RULES, TOOL, SKILLS, CODE, QR):
     place(whoosh(0.7), s - 0.05, 0.22, pan=0.4)
 
 # 1. the question: the bubble pops in, every paragraph taps, the meter rises, and the till rings at 644
@@ -333,11 +324,9 @@ for k, (value, at) in enumerate([(10_000, 1.2), (32_431, 1.35), (36_660, 1.5), (
 # 7. your code stays yours: quiet, a pen drawing the empty signature line
 place(marker(0.7) * 0.8, CODE + 1.7, 0.1, pan=0.1)
 
-# 8. install and sign-off: typing, the till again on "Act now.", a sparkle for the star
-for k in range(10):
-    place(keyclick(), INSTALL + 0.3 + 0.055 * k + RNG.random() * 0.02, 0.22, pan=-0.2 + 0.04 * k)
-place(kaching(), INSTALL + 2.25, 0.4, pan=0.0)
-place(sparkle(), INSTALL + 2.8, 0.2, pan=0.35)
+# 8. the QR code to the demo: it pops in once the slide has landed, with a chime under the last chord
+place(pop(420), QR + 0.94, 0.55, pan=0.0)
+place(chime([(note("A5"), 1.0), (note("E6"), 0.5), (note("A6"), 0.25)], decay=1.6), QR + 1.0, 0.3, pan=0.0)
 
 # =====================================================================
 # the mix: the bed under the effects, a little room on the effects, a soft limiter

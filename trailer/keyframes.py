@@ -44,16 +44,16 @@ def anim(total, **fns):
 
 
 def fade_up(d, dur=500, dy=26):
-    return anim(d + dur, center=d + dur / 2, opacity=lambda t: out_cubic(prog(t, d, dur)),
+    return anim(d + dur, opacity=lambda t: out_cubic(prog(t, d, dur)),
                 y=lambda t: dy * (1 - out_cubic(prog(t, d, dur))))
 
 
 def fade(d, dur=400):
-    return anim(d + dur, center=d + dur / 2, opacity=lambda t: prog(t, d, dur))
+    return anim(d + dur, opacity=lambda t: prog(t, d, dur))
 
 
 def drop(d, dur=450, dy=-34):
-    return anim(d + dur, center=d + dur / 2, opacity=lambda t: clamp(prog(t, d, dur) * 2.5),
+    return anim(d + dur, opacity=lambda t: clamp(prog(t, d, dur) * 2.5),
                 y=lambda t: dy * (1 - out_cubic(prog(t, d, dur))))
 
 
@@ -68,7 +68,7 @@ def pop(d, dur=550, s0=0.4, rot0=0.0, extra_total=0, after_rot=0.0):
     fns = {"opacity": lambda t: clamp(prog(t, d, dur) * 3), "width": s, "height": s}
     if rot0 or after_rot:
         fns["rotation"] = r
-    return anim(total, center=None if extra_total else d + dur / 2, **fns)
+    return anim(total, **fns)
 
 
 def grow_up(d, dur, h, shape=out_cubic):

@@ -25,7 +25,7 @@ const SCENES = [
   { name: "tool run", frame: [0, 1020], seconds: 7 },
   { name: "skills", frame: [1720, 1020], seconds: 5 },
   { name: "code", frame: [3440, 1020], seconds: 3.5 },
-  { name: "install", frame: [5160, 1020], seconds: 6.5 },
+  { name: "qr code", frame: [5160, 1020], seconds: 6.5 },
 ];
 const FRAME = [1600, 900];
 const VIEW = [1920, 1080];
