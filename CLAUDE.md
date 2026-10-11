@@ -14,16 +14,18 @@ one of caveman's, turned around.
   clauses, Exhibits.
 - `commands/*.toml`: Gemini CLI slash commands. Claude Code invokes the skills
   directly as `/salesman`, `/ultrasale`, `/megasale`.
-- `benchmarks/`: the one example answer in every mode, and the script that
-  counts its tokens. README numbers come from that script, never from memory.
-- `demo.html`: the voice from the user's side, in the manner of
-  [Opusfived](https://opusfived.dev). One ask, eight turns, no model, one
-  file. The script is the `TURNS` array at the top of its `<script>`; the
-  engine below it only plays it.
+- `benchmarks/`: the one example answer in every mode, the script that
+  counts its tokens (`bench.py`), and the script that projects them onto a
+  whole agent session from published usage data (`session.py`, sources in its
+  docstring). README numbers come from those scripts, never from memory.
+- `index.html`: the demo, the voice from the user's side, in the manner of
+  [Opusfived](https://opusfived.dev), served by GitHub Pages. One ask, eight
+  turns, no model, one file. The script is the `TURNS` array at the top of
+  its `<script>`; the engine below it only plays it.
 - `trailer/`: the one-minute trailer, recorded from a Drawdy board, and what
   makes it: the recorder, the soundtrack in code, the keyframe helpers.
   Salesman only, no caveman on screen. Numbers in it come from
-  `benchmarks/bench.py`.
+  `benchmarks/bench.py` and `benchmarks/session.py`.
 
 ## Rules for changing the skills
 
@@ -33,7 +35,8 @@ one of caveman's, turned around.
 - Persisted content stays normal: code, comments, commits, docs, issues, PRs.
   Salesman talks, salesman does not sign. Do not weaken this rule.
 - No invented real people, companies, or studies. Testimonials are labeled
-  fictional. The README's "numbers" are measured by `benchmarks/bench.py`.
+  fictional. The README's "numbers" are measured by `benchmarks/bench.py` or
+  projected by `benchmarks/session.py` from cited sources.
 - Keep the mirror. Each rule in `skills/salesman/SKILL.md` answers a rule in
   caveman's `SKILL.md` in the same position. New rule in one? Find its
   opposite.
@@ -54,9 +57,10 @@ one of caveman's, turned around.
 
 ## Working in this repo
 
-When you edit skill text, re-run `python3 benchmarks/bench.py` and paste the
-new table into `README.md` if the example answers changed. When you edit
-`demo.html`, open it in a browser and play all eight turns; the error must
+When you edit skill text, re-run `python3 benchmarks/bench.py` and
+`python3 benchmarks/session.py` and paste the new tables into `README.md` if
+the example answers changed. When you edit `index.html`, open it in a
+browser and play all eight turns; the error must
 never change, the edit must never land, and a refresh must land on the opening
 screen. Commit messages, code comments, and anything else that lands in git:
 plain prose, normal length.

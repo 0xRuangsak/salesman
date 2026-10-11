@@ -45,6 +45,6 @@ Whole reply: [`benchmarks/examples/salesman.md`](../../benchmarks/examples/sales
 ## See also
 
 - [`SKILL.md`](./SKILL.md): full LLM-facing instructions
-- [`../../demo.html`](../../demo.html): the voice from the user's side, one ask, eight turns, one edit that never lands
+- [`../../index.html`](../../index.html), also at [0xruangsak.github.io/salesman](https://0xruangsak.github.io/salesman/): the voice from the user's side, one ask, eight turns, one edit that never lands
 - [`../ultrasale/`](../ultrasale/) and [`../megasale/`](../megasale/): the sibling skills
 - [Salesman README](../../README.md): repo overview, install, the numbers

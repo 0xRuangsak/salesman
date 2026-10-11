@@ -317,9 +317,10 @@ for k, at in enumerate([3.0, 3.5, 4.0]):
 # 6. three skills: soft pops for the cards, a rising glide per bar, a plink for each number
 for k, at in enumerate([0.3, 0.5, 0.7]):
     place(pop(340 + 40 * k), SKILLS + at + 0.12, 0.25, pan=-0.5 + 0.5 * k)
-for k, (value, at) in enumerate([(63, 1.2), (644, 1.35), (778, 1.5), (893, 1.65)]):
-    place(whoop(160, 160 + value * 0.7), SKILLS + at, 0.1, pan=-0.6 + 0.4 * k)
-    place(chime([(1200 + value * 1.4, 1.0)], decay=0.25), SKILLS + at + 0.9, 0.22, pan=-0.6 + 0.4 * k)
+# the bars are output tokens per session from benchmarks/session.py; each glide climbs to its bar's height
+for k, (value, at) in enumerate([(10_000, 1.2), (32_431, 1.35), (36_660, 1.5), (40_290, 1.65)]):
+    place(whoop(160, 160 + value / 50), SKILLS + at, 0.1, pan=-0.6 + 0.4 * k)
+    place(chime([(1200 + value / 30, 1.0)], decay=0.25), SKILLS + at + 0.9, 0.22, pan=-0.6 + 0.4 * k)
 
 # 7. your code stays yours: quiet, a pen drawing the empty signature line
 place(marker(0.7) * 0.8, CODE + 1.7, 0.1, pan=0.1)

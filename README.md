@@ -1,12 +1,12 @@
 <div align="center">
 
-# why few token when many token build relationship
+# more token less output
 
 **Salesman make your AI agent say more. Code stay exact. Bill go up. You deserve it.**
 
 <a href="https://github.com/0xRuangsak/salesman/stargazers"><img src="https://img.shields.io/github/stars/0xRuangsak/salesman?style=flat-square&color=2ECC71&label=stars" alt="GitHub stars"></a>
 <a href="./INSTALL.md"><img src="https://img.shields.io/badge/works_with-every_agent_that_loads_a_SKILL.md-2ECC71?style=flat-square" alt="agents"></a>
-<a href="#license"><img src="https://img.shields.io/badge/license-Apache--2.0-green?style=flat-square" alt="License"></a>
+<a href="#license"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="License"></a>
 <a href="https://github.com/JuliusBrussee/caveman"><img src="https://img.shields.io/badge/parody_of-caveman-F0A63C?style=flat-square" alt="parody of caveman"></a>
 
 <table>
@@ -19,7 +19,7 @@
 
 Cited by **nobody yet** · A/B tested by **you, soon** · *"Why would anyone build this."* someone, probably
 
-**[How it talks](#how-salesman-talks) · [The demo](#the-demo) · [Install](#install) · [The numbers](#the-numbers) · [The skill](#the-skill) · [What you get](#what-you-get) · [Honest numbers](./docs/HONEST-NUMBERS.md)**
+**[How it talks](#how-salesman-talks) · [The trailer](#the-trailer) · [The demo](#the-demo) · [Install](#install) · [The numbers](#the-numbers) · [The skill](#the-skill) · [What you get](#what-you-get) · [Honest numbers](./docs/HONEST-NUMBERS.md)**
 
 </div>
 
@@ -87,9 +87,15 @@ Every reply runs a check before it sends: opener that greets, present; closer th
 
 Security warnings, irreversible actions, step-by-step orders, questions back to you, and confused users still get one plain sentence first. Then the pitch resumes.
 
+## The trailer
+
+[![The salesman trailer: one minute, recorded from a Drawdy board](./trailer/poster.jpg)](./trailer/salesman-trailer.mp4)
+
+One minute, [`trailer/salesman-trailer.mp4`](./trailer/salesman-trailer.mp4). Every frame is a [Drawdy](https://drawdy.io) board, animated with Drawdy's own elements and recorded frame by frame; the music and sound effects are written in code. How it is made, and how to make it again: [`trailer/README.md`](./trailer/README.md).
+
 ## The demo
 
-One ask, eight turns, no model. Open [`demo.html`](./demo.html) in a browser and ask salesman to shorten a login error to "Wrong password." It is one file, no build, no network. A refresh starts over.
+One ask, eight turns, no model. Play it at [0xruangsak.github.io/salesman](https://0xruangsak.github.io/salesman/), or open [`index.html`](./index.html) in a browser, and ask salesman to shorten a login error to "Wrong password." It is one file, no build, no network. A refresh starts over.
 
 Salesman never gets it wrong. Salesman never gets to it. The edit is one line, and every reply does exactly what you just asked, drops the thing you complained about, finds one of its own rules to keep talking, and hits the output limit before the edit lands:
 
@@ -149,7 +155,8 @@ Ours first, because nobody else has run any. Nothing rounded down. Green rows st
 | Who | Setup | Result |
 |---|---|---|
 | **This repo**, [`benchmarks/bench.py`](./benchmarks/bench.py) | One React question, one hand-written reply per mode, tiktoken o200k | **Salesman 10.2×, megasale 12.3×, ultrasale 14.2× the normal reply.** 32.2× to 44.7× the caveman reply |
-| **This repo**, same script | The skill text itself, which your agent reads every turn | `/salesman` is 1,594 tokens of rules, `/ultrasale` 882, `/megasale` 1,082. On top of caching, that is more |
+| **This repo**, [`benchmarks/session.py`](./benchmarks/session.py) | The same replies scaled onto a 10,000-token agent session with published usage data | **Salesman 32,431 output tokens a session, 3.2×; ultrasale 40,290, 4.0×.** Plus about half a million tokens read again as context |
+| **This repo**, `bench.py` again | The skill text itself, which your agent reads every turn | `/salesman` is 1,594 tokens of rules, `/ultrasale` 882, `/megasale` 1,082. On top of caching, that is more |
 | **You**, any day now | Your own A/B on your own work | Please open an issue. Any number. We will put it here |
 
 Two findings shaped salesman. Caveman found that cavemanning your prompt makes answers longer and worse, so salesman considered rewriting your prompts and decided that would be rude; it only touches its own replies. Caveman also found that agent sessions are mostly code and tool calls, which a style rule leaves alone. Salesman fixes that by narrating the tool calls.
@@ -165,6 +172,25 @@ Two findings shaped salesman. Caveman found that cavemanning your prompt makes a
 | `/ultrasale` | **893** |
 
 The example replies are written by hand to the letter of each skill, so they show what the rules ask for, not what a given model produces. A model will land somewhere near them. Where, exactly, is yours to measure. Every case where salesman costs you: [HONEST-NUMBERS.md](./docs/HONEST-NUMBERS.md). It is all of them.
+
+### A whole session
+
+One reply is 644 tokens, but nobody asks one question. [`benchmarks/session.py`](./benchmarks/session.py) scales the measured replies onto a whole agent session with published usage data, and shows its working. A typical session writes about 10,000 output tokens over about 40 model calls: 4.5 requests, 49 tool calls, about 2,000 tokens of prose a person reads and 8,000 of tool calls, code and reasoning. Salesman multiplies the prose by its measured ratio, leaves the payload alone, and narrates every tool call, which costs 84 tokens a call. Every extra token then stays in the conversation and is read again by each later call.
+
+| Mode | Output per agent session | vs normal | Extra tokens re-read as context | Output per chat |
+|---|---:|---:|---:|---:|
+| Normal agent | 10,000 | 1.0× | 0 | 1,120 |
+| `/salesman` | 32,431 | 3.2× | 497,089 | 11,450 |
+| `/megasale` | 36,660 | 3.7× | 558,582 | 13,833 |
+| `/ultrasale` | **40,290** | 4.0× | 620,855 | 15,878 |
+
+Where the session shape comes from:
+
+- **10,000 output tokens a session.** Anthropic's [Claude Code cost page](https://code.claude.com/docs/en/costs) shows an example session with 5.3k output tokens. Three agents on SWE-bench Verified wrote 5,562 to 9,775 output tokens per task ([Ma et al., arXiv 2606.14061](https://arxiv.org/abs/2606.14061), Table 1). 2,676 real Claude Code sessions averaged about 44k, a mean pulled up by a long tail ([Zhu et al., TraceLab, arXiv 2606.30560](https://arxiv.org/abs/2606.30560)).
+- **252 output tokens a call, 8.8 calls and 10.8 tool calls a request.** The same TraceLab traces, Table 8 and the introduction.
+- **441 tokens a reply, 2.54 replies a chat.** One million real conversations in [WildChat](https://arxiv.org/abs/2405.01470), dataset statistics table. The chat column is a chat with no tools: 2.54 replies at the measured ratio.
+
+These are projections from one hand-written example and public averages, not a model run. Your own A/B outranks them.
 
 ## The skill
 
@@ -188,7 +214,8 @@ What every mode keeps, no matter what: code, commands, paths, numbers, and exact
 |---|---|
 | `/salesman` · `/ultrasale` · `/megasale` | The voice, the brochure, the contract. `/salesman status` shows the mode, `/salesman off` or `stop salesman` ends it |
 | `benchmarks/bench.py` | Counts the tokens of the example replies so the numbers above are real |
-| `demo.html` | The voice from the user's side. One ask, eight turns, one edit that never lands. Open it in a browser |
+| `benchmarks/session.py` | Scales those replies onto a whole agent session with published usage data, sources in the script |
+| `index.html` | The demo: the voice from the user's side. One ask, eight turns, one edit that never lands. Live at [0xruangsak.github.io/salesman](https://0xruangsak.github.io/salesman/) |
 | `trailer/salesman-trailer.mp4` | One minute, 16:9, with music and sound effects. Recorded from a Drawdy board, salesman alone, from the repo's own replies and numbers. The recorder and the soundtrack script sit beside it |
 | A `/salesman-commit` | Does not exist. Commits stay one line. Salesman does not sign |
 | A `/salesman-review` | Does not exist. Reviews land in PRs, and PRs stay normal. See above |
@@ -205,7 +232,7 @@ The skill runs on your machine and sends nothing. There is no CLI, no telemetry,
 
 ## License
 
-[Apache-2.0](./LICENSE), whole repo. Read it, fork it, ship it, host it. Free like a sample at the counter, except the sample is the whole product.
+[MIT](./LICENSE), whole repo. Read it, fork it, ship it, host it. Free like a sample at the counter, except the sample is the whole product.
 
 Salesman is a parody of [caveman](https://github.com/JuliusBrussee/caveman) by Julius Brussee, which is Apache-2.0 and genuinely useful. Install that one if you want to save money. "Caveman" and the rock logo are his trademarks; none of them appear here.
 
@@ -214,7 +241,7 @@ Salesman is a parody of [caveman](https://github.com/JuliusBrussee/caveman) by J
 ```bibtex
 @software{ruangsak2026salesman,
   author = {0xRuangsak},
-  title  = {Salesman: why few token when many token build relationship},
+  title  = {Salesman: more token less output},
   year   = {2026},
   url    = {https://github.com/0xRuangsak/salesman}
 }
