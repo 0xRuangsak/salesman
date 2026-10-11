@@ -85,15 +85,23 @@ PROGRESSION = [
 CHORD = 8.0
 
 drone = pad_voice(note("A2"), level=0.5) + pad_voice(note("E3"), level=0.25)
-BED += lowpass(drone, 420) * env(T, 0.0, END, 2.5, 2.0) * (0.55 + 0.45 * smooth(np.clip((T - 6.0) / (TITLE - 6.0), 0, 1))) * 0.22
+BED += lowpass(drone, 420) * env(T, 0.0, END, 0.3, 2.0) * (0.8 + 0.2 * smooth(np.clip((T - 6.0) / (TITLE - 6.0), 0, 1))) * 0.22
 
-t_chord, i = TITLE, 0
-while t_chord < END:
+
+def chord(i, start, end, attack=2.4):
     root, tones, _ = PROGRESSION[i % 4]
-    gate = env(T, t_chord, min(END, t_chord + CHORD) + 1.2, 2.4, 2.4)
+    gate = env(T, start, end, attack, 2.4)
     pad = sum(pad_voice(note(n)) for n in tones) / 3
     bass = np.sin(2 * np.pi * note(root) * T) + 0.4 * np.sin(4 * np.pi * note(root) * T)
-    BED += lowpass(pad, 1400) * gate * 0.16 + lowpass(bass, 200) * gate * 0.12
+    return lowpass(pad, 1400) * gate * 0.16 + lowpass(bass, 200) * gate * 0.12
+
+
+# the question scene opens on the last chord of the progression, so the music is audible from the
+# first second and resolves into the first chord as the title lands
+BED += chord(3, QUESTION, TITLE + 1.2, attack=0.3) * 0.8
+t_chord, i = TITLE, 0
+while t_chord < END:
+    BED += chord(i, t_chord, min(END, t_chord + CHORD) + 1.2)
     t_chord += CHORD
     i += 1
 
@@ -338,7 +346,8 @@ FX_L, FX_R = reverb(FX_L, 0.18), reverb(FX_R, 0.18)
 shift = int(0.011 * SR)
 bed_l, bed_r = BED, np.concatenate([np.zeros(shift), BED[:-shift]]) * 0.97 + BED * 0.03
 mix = np.stack([bed_l + FX_L, bed_r + FX_R], axis=1)
-mix = np.tanh(mix * 1.1) / np.tanh(1.1)
+# the drive sets the loudness: 1.8 lands the mix at about -14 LUFS, where streaming sites play
+mix = np.tanh(mix * 1.8) / np.tanh(1.8)
 mix = mix / (np.max(np.abs(mix)) + 1e-9) * 0.89
 
 out = sys.argv[1] if len(sys.argv) > 1 else "soundtrack.wav"
