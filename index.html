@@ -166,6 +166,10 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
 .limit .t { font-weight: 600; }
 .limit .s { color: var(--muted); font-size: 13.5px; }
 .limit .btn { margin-left: auto; }
+/* short screens: while a reply streams the options make way for it; the chosen one is already in the log */
+@media (max-height: 700px) { .picker.busy .options { display: none; } }
+/* phones held sideways: the composer scrolls with the page instead of covering most of it */
+@media (max-height: 500px) { .composer { position: static; } }
 .jump {
   position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(140px + env(safe-area-inset-bottom, 0px)); z-index: 7;
   border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -804,7 +808,7 @@ function run(p, cmd, result) { p.runs.push({ cmd, result }); }
     finishTurn(turn);
     state.busy = false; state.skip = false; jump.hidden = true;
     setSendMode("send");
-    if (TURNS[state.turn]) await loadPicker();
+    if (TURNS[state.turn]) { await loadPicker(); follow(); }
     else { picker.hidden = true; await wait(900); endGame(); }
   }
   function finishTurn(turn) {
