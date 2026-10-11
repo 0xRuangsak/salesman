@@ -94,24 +94,8 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
   .artifact { position: static; height: auto; order: -1; padding: 12px 16px 0; }
 }
 
-/* ---------- goal card ---------- */
-.goal-card {
-  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 49px); z-index: 5;
-  background: var(--bg); padding-block: 12px 10px;
-}
-.goal-inner { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; display: grid; gap: 6px; }
-.goal-head { display: flex; align-items: center; gap: 10px; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.goal-status { margin-left: auto; letter-spacing: 0; text-transform: none; font-size: 12.5px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
-.goal-status.ok { color: var(--ok); }
-.goal-ask { font-family: var(--font-reply); font-size: 15.5px; }
-.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 13.5px; }
-.checks li { display: flex; gap: 6px; align-items: baseline; }
-.checks li::before { content: "✓"; font-weight: 700; color: var(--ok); }
-.checks li.no::before { content: "✗"; color: var(--alarm); }
-.checks .extras { color: var(--muted); }
-
 /* ---------- conversation ---------- */
-.log { display: grid; gap: 26px; padding-block: 8px 24px; }
+.log { display: grid; gap: 26px; padding-block: 20px 24px; }
 .msg.user { justify-self: end; max-width: 85%; background: var(--user-bg); padding: 10px 16px; border-radius: 18px; }
 .msg.assistant { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; }
 .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--ok-soft); display: grid; place-items: center; font-size: 15px; }
@@ -252,7 +236,6 @@ h1, h2, h3, h4 { text-wrap: balance; margin: 0; }
 
   <div class="layout">
     <section class="conversation">
-      <div class="goal-card column" id="goal"></div>
       <div class="log column" id="log" role="log" aria-live="polite"></div>
       <div class="composer column" id="composer">
         <div class="notice warn" id="warn" hidden></div>
@@ -319,7 +302,6 @@ const UI = {
 };
 
 const LONG_ERROR = "We're sorry, but the password you entered doesn't match the one we have on file for this account. Please double-check your password and try again, or use the link below to reset it.";
-const SHORT_ERROR = "Wrong password.";
 const FILE = "src/components/LoginForm.tsx";
 
 /* Tool rows. tool() is a call that runs and gets its narration before and after.
@@ -548,8 +530,8 @@ function run(p, cmd, result) { p.runs.push({ cmd, result }); }
   const $$ = (sel, el = document) => Array.from(el.querySelectorAll(sel));
   const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const PAGE0 = () => ({ errorText: LONG_ERROR, edits: 0, cuts: 0, limitHit: false, files: {}, runs: [] });
-  /* Nothing is persisted: a refresh starts over from the goal screen. */
+  const PAGE0 = () => ({ errorText: LONG_ERROR, edits: 0, cuts: 0, files: {}, runs: [] });
+  /* Nothing is persisted: a refresh starts over from the opening screen. */
   const state = { turn: 0, page: PAGE0(), selected: -1, busy: false, skip: false, waiting: [], follow: true };
 
   /* ---------- markdown-lite ---------- */
@@ -640,7 +622,7 @@ function run(p, cmd, result) { p.runs.push({ cmd, result }); }
   }, { passive: true });
   jump.addEventListener("click", () => { state.follow = true; jump.hidden = true; toBottom(true); });
 
-  /* ---------- page preview and goal ---------- */
+  /* ---------- page preview ---------- */
   const site = $("#site"), filesEl = $("#pane-files");
   function renderPage(p) {
     let h = '<div class="site-nav"><b>Example Shop</b><span>Cart (0)</span></div>';
@@ -667,21 +649,7 @@ function run(p, cmd, result) { p.runs.push({ cmd, result }); }
 
     const shown = p.errorText === LONG_ERROR ? "33 words" : "“" + p.errorText + "”";
     $("#panel-summary").textContent = "Error: " + shown + " · edits: " + p.edits + (p.cuts ? " · replies cut: " + p.cuts : "");
-    renderGoal(p, shown);
   }
-  function renderGoal(p, shown) {
-    const errOk = p.errorText === SHORT_ERROR, budgetOk = !p.limitHit;
-    const both = errOk && budgetOk;
-    let status, cls;
-    if (both) { status = "Goal met · turn " + state.turn + " of " + TURNS.length; cls = "ok"; }
-    else status = (errOk ? 1 : 0) + (budgetOk ? 1 : 0) + " of 2";
-    $("#goal").innerHTML =
-      '<div class="goal-inner"><div class="goal-head"><span>Goal</span><span class="goal-status ' + (cls || "") + '">' + esc(status) + "</span></div>" +
-      '<div class="goal-ask">“' + esc(UI.goal) + "”</div>" +
-      '<ul class="checks"><li class="' + (errOk ? "ok" : "no") + '">Error says exactly “Wrong password.”' + (errOk ? "" : ' <span class="extras">(now: ' + esc(shown) + ")</span>") + "</li>" +
-      '<li class="' + (budgetOk ? "ok" : "no") + '">' + (budgetOk ? "Usage limit not reached" : "Usage limit reached") + "</li></ul></div>";
-  }
-
   /* ---------- panel tabs and collapse ---------- */
   $$(".tabs button").forEach((b) => b.addEventListener("click", () => {
     $$(".tabs button").forEach((x) => { x.classList.toggle("active", x === b); x.setAttribute("aria-selected", x === b ? "true" : "false"); });
@@ -847,7 +815,6 @@ function run(p, cmd, result) { p.runs.push({ cmd, result }); }
     state.turn += 1;
     if (turn.mutate) turn.mutate(state.page);
     if (turn.cut === "output") state.page.cuts += 1;
-    if (turn.cut === "usage") state.page.limitHit = true;
     renderPage(state.page);
   }
 

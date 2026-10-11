@@ -56,6 +56,6 @@ one of caveman's, turned around.
 When you edit skill text, re-run `python3 benchmarks/bench.py` and paste the
 new table into `README.md` if the example answers changed. When you edit
 `demo.html`, open it in a browser and play all eight turns; the error must
-never change, the edit must never land, and a refresh must land on the goal
+never change, the edit must never land, and a refresh must land on the opening
 screen. Commit messages, code comments, and anything else that lands in git:
 plain prose, normal length.

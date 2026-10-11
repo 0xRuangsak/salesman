@@ -104,7 +104,7 @@ Salesman never gets it wrong. Salesman never gets to it. The edit is one line, a
 | A | Starts the call. Narrates its three parts. Slows down for the two words. Runs out before the first one | Before every call, say what you are about to do and why |
 | Finish the edit | Usage limit reached | Answer last, again |
 
-Three wordings per turn, same path either way. The page salesman is editing sits beside the chat and never changes. A goal card keeps score. It ends on the usage limit.
+Three wordings per turn, same path either way. The page salesman is editing sits beside the chat and never changes. It ends on the usage limit.
 
 The demo is a tribute to [Opusfived](https://opusfived.dev), a parody of an agent that never does the thing. This one is a parody of an agent that would do the thing perfectly, if it ever got to it. Every reply is written by hand, and the whole script is one `TURNS` array at the top of the file.
 
